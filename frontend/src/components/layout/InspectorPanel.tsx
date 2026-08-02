@@ -24,6 +24,7 @@ export function InspectorPanel({ state, selectedAssetId }: InspectorPanelProps) 
 
   return (
     <aside
+      data-testid="inspector-panel"
       className="flex shrink-0 flex-col border-l"
       style={{
         width: 'var(--gc-inspector-width)',

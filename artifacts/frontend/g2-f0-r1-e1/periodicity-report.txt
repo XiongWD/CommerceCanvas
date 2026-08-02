@@ -1,0 +1,52 @@
+=== 平移周期检测报告 ===
+生成时间: 2026-08-02T13:56:18Z
+脚本: scripts/check-screenshot-periodicity.mjs
+判定阈值: 任一方向最低 MAE < 0.5 → FAIL（平移复制）
+
+--- 旧 R1 截图 (g2-f0-r1) — 预期 FAIL ---
+❌ FAIL  full-1280x800.png  1280x800
+   横向最低 MAE=0.005 @offset=704
+   纵向最低 MAE=0.0042 @offset=440
+   sha256=687893d06bbeffc7…
+❌ FAIL  full-1440x900.png  1440x900
+   横向最低 MAE=0.0056 @offset=792
+   纵向最低 MAE=0.0052 @offset=495
+   sha256=82510f6750ef0fe0…
+❌ FAIL  region-canvas.png  792x856
+   横向最低 MAE=3.1527 @offset=633
+   纵向最低 MAE=0.0047 @offset=495
+   sha256=25f32653a0d7e8c6…
+❌ FAIL  region-inspector.png  340x856
+   横向最低 MAE=7.771 @offset=271
+   纵向最低 MAE=0.0037 @offset=495
+   sha256=d44ed4e8fb08e473…
+❌ FAIL  region-taskbar.png  1440x44
+   横向最低 MAE=0 @offset=792
+   纵向最低 MAE=1.2817 @offset=29
+   sha256=eee6e02d812791ad…
+
+汇总: 0/5 PASS
+
+--- 新 R1-E1 截图 (g2-f0-r1-e1) — 预期 PASS ---
+✅ PASS  full-1280x800.png  1280x800
+   横向最低 MAE=12.3442 @offset=877
+   纵向最低 MAE=12.2856 @offset=511
+   sha256=bf7dd2aeed5495c8…
+✅ PASS  full-1440x900.png  1440x900
+   横向最低 MAE=12.5197 @offset=1037
+   纵向最低 MAE=11.4715 @offset=615
+   sha256=f472d6905b095274…
+✅ PASS  region-canvas.png  792x856
+   横向最低 MAE=3.4168 @offset=633
+   纵向最低 MAE=8.6213 @offset=615
+   sha256=727068e23b6df7a5…
+✅ PASS  region-inspector.png  340x856
+   横向最低 MAE=8.9718 @offset=271
+   纵向最低 MAE=9.3058 @offset=401
+   sha256=9609a36fecaf71c3…
+✅ PASS  region-taskbar.png  1440x44
+   横向最低 MAE=6.8181 @offset=292
+   纵向最低 MAE=1.2537 @offset=29
+   sha256=3955f5e40fc819e7…
+
+汇总: 5/5 PASS

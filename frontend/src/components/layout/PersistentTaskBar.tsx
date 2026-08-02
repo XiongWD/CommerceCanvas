@@ -15,6 +15,7 @@ export function PersistentTaskBar({ task }: { task: TaskSnapshot }) {
 
   return (
     <footer
+      data-testid="persistent-task-bar"
       className="flex shrink-0 items-center gap-4 border-t px-4"
       style={{
         height: 'var(--gc-taskbar-height)',

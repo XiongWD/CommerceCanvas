@@ -1,0 +1,64 @@
+{
+  "commit": "6dc096d8cab20b289333cb06cecefef2cf14ba3e",
+  "browser": "Playwright Chromium (独立，非 ZCode IAB)",
+  "browserVersion": "143.0.7499.4",
+  "captureTool": "Playwright",
+  "deviceScaleFactor": 1,
+  "pageZoom": 1,
+  "url": "http://127.0.0.1:4175/",
+  "screenshots": [
+    {
+      "file": "full-1440x900.png",
+      "kind": "full",
+      "actualPixels": [
+        1440,
+        900
+      ],
+      "sha256": "f472d6905b095274fb26274c9ba1ca324c5a49069b6be01230970ee51ef8dba3",
+      "viewport": [
+        1440,
+        900
+      ]
+    },
+    {
+      "file": "region-canvas.png",
+      "kind": "region",
+      "sha256": "727068e23b6df7a5a7e7d85004085b3f234029a403f1e6f0ca2429f0c3b6a79a",
+      "viewport": [
+        1440,
+        900
+      ]
+    },
+    {
+      "file": "region-inspector.png",
+      "kind": "region",
+      "sha256": "9609a36fecaf71c3aa25125bd70fdc010d323a24b4ac1036a3eaf5f7768bc67a",
+      "viewport": [
+        1440,
+        900
+      ]
+    },
+    {
+      "file": "region-taskbar.png",
+      "kind": "region",
+      "sha256": "3955f5e40fc819e746727cc42af99f6104eab5722df1b6480f0fe10a4e1f20c6",
+      "viewport": [
+        1440,
+        900
+      ]
+    },
+    {
+      "file": "full-1280x800.png",
+      "kind": "full",
+      "actualPixels": [
+        1280,
+        800
+      ],
+      "sha256": "bf7dd2aeed5495c8fb9f76450ad2eb2b31769cc7debf6a76855378d9bf3126f3",
+      "viewport": [
+        1280,
+        800
+      ]
+    }
+  ]
+}

@@ -73,6 +73,7 @@ export function CompetitorAnalysisCanvas({
 
   return (
     <section
+      data-testid="analysis-canvas"
       className="flex min-w-0 flex-1 flex-col"
       style={{ background: 'var(--gc-bg-canvas)' }}
     >
