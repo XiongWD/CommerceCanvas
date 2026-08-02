@@ -3,13 +3,14 @@ import type { CreativeRecipeDraft as Recipe } from '@/types/competitor-analysis'
 import { Section } from './AnalysisSummary';
 
 /**
- * Creative Recipe 草案（任务书 §6.4 / mvp-prd §7.2 同类借用）。
+ * 套图 Creative Recipe 草案（任务书 §6.4 / mvp-prd §7.2 同类借用 / P3 §3）。
+ * 标题明确为「套图级」汇总，避免误认为属于当前单张图片。
  * 展示完成态的结构化创意方案。本任务只展示完成态，不实现渐进生成。
  * 紫色仅用于 AI/智能能力（任务书 §7.1），克制点缀。
  */
 export function CreativeRecipeDraftView({ recipe }: { recipe: Recipe }) {
   return (
-    <Section title="Creative Recipe 草案">
+    <Section title="套图 Creative Recipe 草案">
       {/* 头部：用途 + AI 标识（紫色克制）*/}
       <div
         className="mb-3 flex items-center gap-2 px-2.5 py-2"

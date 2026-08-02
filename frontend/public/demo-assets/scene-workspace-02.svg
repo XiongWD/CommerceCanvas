@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-label="演示素材：开放式耳机置于桌面工作场景">
+  <defs>
+    <linearGradient id="desk2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1c2129"/>
+      <stop offset="100%" stop-color="#0a0d12"/>
+    </linearGradient>
+    <radialGradient id="cup2" cx="40%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#454d5a"/>
+      <stop offset="60%" stop-color="#232933"/>
+      <stop offset="100%" stop-color="#0d1015"/>
+    </radialGradient>
+    <linearGradient id="mesh2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#191e26"/><stop offset="100%" stop-color="#05070a"/>
+    </linearGradient>
+  </defs>
+  <!-- 桌面背景 -->
+  <rect width="1200" height="1200" fill="url(#desk2)"/>
+  <!-- 桌面分界线 + 远处冷光 -->
+  <rect y="760" width="1200" height="2" fill="#2a313c" opacity="0.6"/>
+  <rect y="762" width="1200" height="438" fill="#070a0e"/>
+  <circle cx="980" cy="220" r="320" fill="#4d8dff" opacity="0.04"/>
+  <!-- 桌面道具占位：键盘块、笔记本块（无品牌）-->
+  <rect x="120" y="820" width="360" height="90" rx="6" fill="#1a1f27" opacity="0.7"/>
+  <rect x="140" y="838" width="320" height="10" rx="2" fill="#2a313c"/>
+  <rect x="140" y="858" width="300" height="10" rx="2" fill="#2a313c"/>
+  <rect x="140" y="878" width="280" height="10" rx="2" fill="#2a313c"/>
+  <!-- 商品主体：耳机平放俯视 -->
+  <g transform="translate(720,540)">
+    <ellipse cx="200" cy="240" rx="300" ry="22" fill="#000" opacity="0.4"/>
+    <!-- 头梁俯视弧 -->
+    <path d="M 40 120 Q 200 40 360 120" fill="none" stroke="#2a313c" stroke-width="26" stroke-linecap="round"/>
+    <!-- 左耳罩俯视 -->
+    <ellipse cx="60" cy="160" rx="78" ry="86" fill="url(#cup2)"/>
+    <ellipse cx="60" cy="160" rx="52" ry="62" fill="url(#mesh2)"/>
+    <!-- 右耳罩俯视 -->
+    <ellipse cx="340" cy="160" rx="78" ry="86" fill="url(#cup2)"/>
+    <ellipse cx="340" cy="160" rx="52" ry="62" fill="url(#mesh2)"/>
+  </g>
+</svg>

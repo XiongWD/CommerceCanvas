@@ -4,12 +4,56 @@
  * 来源：plans/frontend-prototype-plan.md §9 固定演示脚本
  *   开放式耳机 Product Master + 12 张同类竞品套图 + Amazon US Recipe
  *
+ * R1 变更：
+ *   - 商品图改用本地无品牌 SVG 演示素材（public/demo-assets/*.svg）
+ *   - 每张图片携带自身分析摘要（P3 同步：用途/构图/占比/角度/背景/视觉语言/风险）
+ *   - 12 张缩略图复用 6 张素材的不同裁切，肉眼可见差异
+ *
  * 状态：分析完成态（F0 静态高保真，不实现 Event Simulator）。
  * 所有数值均为真实演示脚本设定，非随机生成（NG-023 / FD-036）。
- * 明确标记"演示数据"，符合 START_HERE §4 与验收清单 A 项。
+ * 明确标记"演示数据 / 模拟分析结果"，符合 START_HERE §4 与验收清单 A 项。
  */
 
-import type { CompetitorAnalysisState } from '@/types/competitor-analysis';
+import type {
+  CompetitorAnalysisState,
+  CompetitorAsset,
+  EvidenceRegion,
+  AssetVisualLanguage,
+} from '@/types/competitor-analysis';
+
+// —— 演示素材路径（本地 SVG，无品牌）——
+const ASSET = {
+  main: '/demo-assets/scene-main-01.svg',
+  workspace: '/demo-assets/scene-workspace-02.svg',
+  feature: '/demo-assets/scene-feature-03.svg',
+  detail: '/demo-assets/scene-detail-04.svg',
+  param: '/demo-assets/scene-param-05.svg',
+  lifestyle: '/demo-assets/scene-lifestyle-06.svg',
+} as const;
+
+// —— 通用证据工厂：归一化坐标，真实可定位（NG-022 / FD-036）——
+let evCounter = 0;
+function ev(
+  kind: EvidenceRegion['kind'],
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  labelZh: string,
+  confidence?: number,
+): EvidenceRegion {
+  evCounter += 1;
+  return { id: `ev-${evCounter}`, kind, x, y, w, h, labelZh, confidence };
+}
+
+function stdVisual(opts: Partial<AssetVisualLanguage> = {}): AssetVisualLanguage {
+  return {
+    keyLightZh: opts.keyLightZh ?? '左上柔光',
+    rimLightZh: opts.rimLightZh ?? '冷色边缘光',
+    toneZh: opts.toneZh ?? '深灰、冷蓝、低饱和',
+    depthZh: opts.depthZh ?? '轻度背景虚化',
+  };
+}
 
 export const competitorAnalysisMock: CompetitorAnalysisState = {
   projectNameZh: 'OpenWave 耳机视觉升级',
@@ -19,109 +63,276 @@ export const competitorAnalysisMock: CompetitorAnalysisState = {
   assetCount: 12,
   goalZh: '提取可复用视觉结构，重建为自有产品 Creative Recipe',
 
-  // —— 12 张竞品图：用途分布与计划 §9 一致 ——
-  // 主图 1 / 场景 4 / 卖点 5 / 细节 1 / 参数 1（共 12）
+  // —— 12 张竞品图（计划 §9：主图1 / 场景4 / 卖点5 / 细节1 / 参数1）——
   assets: [
     {
       id: 'img-01',
-      filename: 'comp_main_01.jpg',
+      filename: 'comp_main_01.svg',
       role: '主图',
       status: '已完成',
       riskCount: 1,
+      src: ASSET.main,
       thumbPalette: { from: '#1b2330', to: '#0d1117' },
+      thumbFocus: { x: 50, y: 50, scale: 1 },
+      purposeZh: '场景卖点图',
+      compositionZh: '右侧主体 / 左侧文案',
+      productRatioPct: 63,
+      cameraAngleZh: '前侧 3/4',
+      backgroundZh: '深灰工作场景',
+      visualLanguage: stdVisual(),
+      risksZh: ['左上角疑似竞品 Logo 框'],
       evidences: [
-        {
-          id: 'ev-01-subj',
-          kind: 'subject',
-          x: 0.34,
-          y: 0.22,
-          w: 0.36,
-          h: 0.6,
-          labelZh: '商品主体',
-          confidence: 0.94,
-        },
-        {
-          id: 'ev-01-logo',
-          kind: 'logo',
-          x: 0.06,
-          y: 0.07,
-          w: 0.16,
-          h: 0.06,
-          labelZh: '竞品 Logo',
-          confidence: 0.91,
-        },
-        {
-          id: 'ev-01-safe',
-          kind: 'safe',
-          x: 0.3,
-          y: 0.18,
-          w: 0.44,
-          h: 0.68,
-          labelZh: '主体安全区',
-        },
-        {
-          id: 'ev-01-guide',
-          kind: 'guide',
-          x: 0.33,
-          y: 0,
-          w: 0.01,
-          h: 1,
-          labelZh: '三分线',
-        },
+        ev('subject', 0.5, 0.22, 0.34, 0.6, '商品主体', 0.94),
+        ev('logo', 0.05, 0.05, 0.14, 0.05, '竞品 Logo', 0.91),
+        ev('safe', 0.48, 0.18, 0.4, 0.68, '主体安全区'),
+        ev('guide', 0.5, 0, 0.008, 1, '三分线'),
       ],
     },
-    makeScene('img-02', 'comp_scene_02.jpg', '场景图', 0, 2),
-    makeScene('img-03', 'comp_scene_03.jpg', '场景图', 1, 2),
-    makeScene('img-04', 'comp_scene_04.jpg', '场景图', 0, 2),
-    makeScene('img-05', 'comp_scene_05.jpg', '场景图', 0, 2),
-    makeSellingPoint('img-06', 'comp_selling_06.jpg', '卖点图', 0, 3),
-    makeSellingPoint('img-07', 'comp_selling_07.jpg', '卖点图', 0, 3),
-    makeSellingPoint('img-08', 'comp_selling_08.jpg', '卖点图', 1, 3),
-    makeSellingPoint('img-09', 'comp_selling_09.jpg', '卖点图', 0, 3),
-    makeSellingPoint('img-10', 'comp_selling_10.jpg', '卖点图', 0, 3),
-    makeDetail('img-11', 'comp_detail_11.jpg', '细节图', 1),
+    {
+      id: 'img-02',
+      filename: 'comp_scene_02.svg',
+      role: '场景图',
+      status: '已完成',
+      riskCount: 0,
+      src: ASSET.workspace,
+      thumbPalette: { from: '#161c25', to: '#0a0e14' },
+      thumbFocus: { x: 50, y: 60, scale: 1.05 },
+      purposeZh: '场景图',
+      compositionZh: '居中俯视',
+      productRatioPct: 48,
+      cameraAngleZh: '俯视',
+      backgroundZh: '深灰桌面工作空间',
+      visualLanguage: stdVisual({ keyLightZh: '顶部柔光' }),
+      risksZh: [],
+      evidences: [
+        ev('subject', 0.45, 0.36, 0.4, 0.34, '商品主体', 0.9),
+        ev('safe', 0.4, 0.32, 0.5, 0.42, '主体安全区'),
+      ],
+    },
+    {
+      id: 'img-03',
+      filename: 'comp_scene_03.svg',
+      role: '场景图',
+      status: '待人工确认',
+      riskCount: 1,
+      src: ASSET.workspace,
+      thumbPalette: { from: '#10151c', to: '#080b10' },
+      thumbFocus: { x: 40, y: 45, scale: 1.15 },
+      purposeZh: '场景图',
+      compositionZh: '左侧主体 / 右侧道具',
+      productRatioPct: 52,
+      cameraAngleZh: '俯视偏左',
+      backgroundZh: '深灰桌面 + 键盘道具',
+      visualLanguage: stdVisual({ keyLightZh: '左上柔光' }),
+      risksZh: ['右上道具含疑似型号文字'],
+      evidences: [
+        ev('subject', 0.32, 0.34, 0.34, 0.38, '商品主体', 0.83),
+        ev('logo', 0.66, 0.62, 0.18, 0.06, '疑似型号文字', 0.71),
+        ev('safe', 0.28, 0.3, 0.42, 0.44, '主体安全区'),
+      ],
+    },
+    {
+      id: 'img-04',
+      filename: 'comp_scene_04.svg',
+      role: '场景图',
+      status: '已完成',
+      riskCount: 0,
+      src: ASSET.lifestyle,
+      thumbPalette: { from: '#1a2028', to: '#0a0e14' },
+      thumbFocus: { x: 55, y: 50, scale: 1 },
+      purposeZh: '生活方式场景图',
+      compositionZh: '人物侧面佩戴',
+      productRatioPct: 58,
+      cameraAngleZh: '侧面',
+      backgroundZh: '深灰渐变',
+      visualLanguage: stdVisual({ rimLightZh: '冷色轮廓光' }),
+      risksZh: [],
+      evidences: [
+        ev('subject', 0.42, 0.3, 0.3, 0.5, '商品主体', 0.88),
+        ev('safe', 0.38, 0.26, 0.38, 0.56, '主体安全区'),
+      ],
+    },
+    {
+      id: 'img-05',
+      filename: 'comp_scene_05.svg',
+      role: '场景图',
+      status: '已完成',
+      riskCount: 0,
+      src: ASSET.lifestyle,
+      thumbPalette: { from: '#141a22', to: '#080b10' },
+      thumbFocus: { x: 38, y: 52, scale: 1.1 },
+      purposeZh: '生活方式场景图',
+      compositionZh: '左偏裁切佩戴',
+      productRatioPct: 55,
+      cameraAngleZh: '侧面偏左',
+      backgroundZh: '深灰渐变',
+      visualLanguage: stdVisual({ rimLightZh: '冷色轮廓光' }),
+      risksZh: [],
+      evidences: [
+        ev('subject', 0.36, 0.3, 0.3, 0.5, '商品主体', 0.86),
+        ev('safe', 0.32, 0.26, 0.38, 0.56, '主体安全区'),
+      ],
+    },
+    {
+      id: 'img-06',
+      filename: 'comp_selling_06.svg',
+      role: '卖点图',
+      status: '已完成',
+      riskCount: 0,
+      src: ASSET.feature,
+      thumbPalette: { from: '#191f2a', to: '#0a0e14' },
+      thumbFocus: { x: 55, y: 50, scale: 1 },
+      purposeZh: '卖点图',
+      compositionZh: '左侧信息 / 右侧特写',
+      productRatioPct: 60,
+      cameraAngleZh: '正面',
+      backgroundZh: '深灰渐变',
+      visualLanguage: stdVisual({ keyLightZh: '右上柔光' }),
+      risksZh: [],
+      evidences: [
+        ev('subject', 0.45, 0.28, 0.32, 0.5, '商品主体', 0.91),
+        ev('safe', 0.42, 0.24, 0.38, 0.56, '主体安全区'),
+      ],
+    },
+    {
+      id: 'img-07',
+      filename: 'comp_selling_07.svg',
+      role: '卖点图',
+      status: '已完成',
+      riskCount: 0,
+      src: ASSET.feature,
+      thumbPalette: { from: '#151b24', to: '#080b10' },
+      thumbFocus: { x: 62, y: 48, scale: 1.12 },
+      purposeZh: '卖点图',
+      compositionZh: '右偏裁切特写',
+      productRatioPct: 64,
+      cameraAngleZh: '正面偏右',
+      backgroundZh: '深灰渐变',
+      visualLanguage: stdVisual({ keyLightZh: '右上柔光' }),
+      risksZh: [],
+      evidences: [
+        ev('subject', 0.5, 0.26, 0.32, 0.52, '商品主体', 0.89),
+        ev('safe', 0.46, 0.22, 0.4, 0.58, '主体安全区'),
+      ],
+    },
+    {
+      id: 'img-08',
+      filename: 'comp_selling_08.svg',
+      role: '卖点图',
+      status: '待人工确认',
+      riskCount: 1,
+      src: ASSET.main,
+      thumbPalette: { from: '#1c2430', to: '#0c1118' },
+      thumbFocus: { x: 70, y: 45, scale: 1.3 },
+      purposeZh: '卖点图（局部裁切）',
+      compositionZh: '耳罩局部放大',
+      productRatioPct: 72,
+      cameraAngleZh: '前侧 3/4',
+      backgroundZh: '深灰工作场景',
+      visualLanguage: stdVisual(),
+      risksZh: ['局部裁切丢失头梁结构信息'],
+      evidences: [
+        ev('subject', 0.4, 0.3, 0.4, 0.5, '商品主体（局部）', 0.79),
+        ev('safe', 0.36, 0.26, 0.48, 0.56, '主体安全区'),
+      ],
+    },
+    {
+      id: 'img-09',
+      filename: 'comp_selling_09.svg',
+      role: '卖点图',
+      status: '已完成',
+      riskCount: 0,
+      src: ASSET.detail,
+      thumbPalette: { from: '#171d26', to: '#090c11' },
+      thumbFocus: { x: 50, y: 50, scale: 1 },
+      purposeZh: '卖点图（材质卖点）',
+      compositionZh: '居中微距',
+      productRatioPct: 68,
+      cameraAngleZh: '正视微距',
+      backgroundZh: '深灰径向渐变',
+      visualLanguage: stdVisual({ depthZh: '极浅景深' }),
+      risksZh: [],
+      evidences: [
+        ev('subject', 0.3, 0.28, 0.4, 0.44, '商品主体', 0.87),
+        ev('safe', 0.26, 0.24, 0.48, 0.52, '主体安全区'),
+      ],
+    },
+    {
+      id: 'img-10',
+      filename: 'comp_selling_10.svg',
+      role: '卖点图',
+      status: '已完成',
+      riskCount: 0,
+      src: ASSET.param,
+      thumbPalette: { from: '#14181f', to: '#080b10' },
+      thumbFocus: { x: 60, y: 50, scale: 1 },
+      purposeZh: '卖点图（参数卖点）',
+      compositionZh: '右侧主体 / 左侧参数块',
+      productRatioPct: 56,
+      cameraAngleZh: '等比正视',
+      backgroundZh: '深灰网格',
+      visualLanguage: stdVisual(),
+      risksZh: [],
+      evidences: [
+        ev('subject', 0.5, 0.3, 0.34, 0.46, '商品主体', 0.85),
+        ev('safe', 0.46, 0.26, 0.42, 0.52, '主体安全区'),
+      ],
+    },
+    {
+      id: 'img-11',
+      filename: 'comp_detail_11.svg',
+      role: '细节图',
+      status: '待人工确认',
+      riskCount: 1,
+      src: ASSET.detail,
+      thumbPalette: { from: '#161c26', to: '#080b10' },
+      thumbFocus: { x: 50, y: 48, scale: 1.08 },
+      purposeZh: '细节图',
+      compositionZh: '居中超近微距',
+      productRatioPct: 80,
+      cameraAngleZh: '正视微距',
+      backgroundZh: '深灰径向渐变',
+      visualLanguage: stdVisual({ depthZh: '极浅景深' }),
+      risksZh: ['网孔材质置信度较低，需人工复核'],
+      evidences: [
+        ev('subject', 0.28, 0.26, 0.44, 0.48, '商品主体', 0.76),
+        ev('safe', 0.24, 0.22, 0.52, 0.56, '主体安全区'),
+      ],
+    },
     {
       id: 'img-12',
-      filename: 'comp_param_12.jpg',
+      filename: 'comp_param_12.svg',
       role: '参数图',
       status: '待人工确认',
       riskCount: 1,
+      src: ASSET.param,
       thumbPalette: { from: '#10151c', to: '#0a0d12' },
+      thumbFocus: { x: 50, y: 50, scale: 1 },
+      purposeZh: '参数图',
+      compositionZh: '右侧主体 / 左侧参数',
+      productRatioPct: 54,
+      cameraAngleZh: '等比正视',
+      backgroundZh: '深灰网格',
+      visualLanguage: stdVisual(),
+      risksZh: ['参数区存在疑似型号文字，结构判断置信度低'],
       evidences: [
-        {
-          id: 'ev-12-subj',
-          kind: 'subject',
-          x: 0.4,
-          y: 0.34,
-          w: 0.24,
-          h: 0.42,
-          labelZh: '商品主体',
-          confidence: 0.78,
-        },
-        {
-          id: 'ev-12-logo',
-          kind: 'logo',
-          x: 0.55,
-          y: 0.46,
-          w: 0.14,
-          h: 0.07,
-          labelZh: '型号文字',
-          confidence: 0.7,
-        },
+        ev('subject', 0.5, 0.32, 0.32, 0.42, '商品主体', 0.78),
+        ev('logo', 0.12, 0.34, 0.18, 0.06, '型号文字', 0.7),
+        ev('safe', 0.46, 0.28, 0.4, 0.48, '主体安全区'),
       ],
     },
   ],
 
-  // —— 右侧分析摘要（任务书 §6.4 示例）——
+  // —— 套图级分析摘要（右侧「套图整体策略」消费）——
   summary: [
-    { labelZh: '图片用途', valueZh: '场景卖点图' },
-    { labelZh: '构图模式', valueZh: '右侧主体 / 左侧文案' },
-    { labelZh: '商品占比', valueZh: '63%' },
-    { labelZh: '镜头角度', valueZh: '前侧 3/4' },
-    { labelZh: '背景类型', valueZh: '深灰工作场景' },
+    { labelZh: '套图用途', valueZh: 'Amazon 主图 + 场景 + 卖点 + 细节 + 参数' },
+    { labelZh: '主构图模式', valueZh: '右侧主体 / 左侧文案' },
+    { labelZh: '平均商品占比', valueZh: '58%–66%' },
+    { labelZh: '主镜头角度', valueZh: '前侧 3/4' },
+    { labelZh: '主背景类型', valueZh: '深灰工作场景' },
   ],
 
-  // —— 视觉语言（任务书 §6.4 示例）——
+  // —— 套图级视觉语言（「套图整体策略」消费）——
   visualLanguage: [
     { labelZh: '主光', valueZh: '左上柔光' },
     { labelZh: '轮廓光', valueZh: '冷色边缘光' },
@@ -129,10 +340,7 @@ export const competitorAnalysisMock: CompetitorAnalysisState = {
     { labelZh: '景深', valueZh: '轻度背景虚化' },
   ],
 
-  // —— 可继承内容（mvp-prd §7.2 同类借用）——
   inheritableZh: ['构图方向', '光线结构', '背景气氛', '卖点信息顺序', '页面节奏'],
-
-  // —— 禁止继承内容（mvp-prd §7.2 / 计划 §9：排除竞品商品结构与包装文字）——
   prohibitedZh: [
     '竞品 Logo',
     '竞品型号',
@@ -141,7 +349,6 @@ export const competitorAnalysisMock: CompetitorAnalysisState = {
     '竞品独有功能描述',
   ],
 
-  // —— Creative Recipe 草案（任务书 §6.4 示例，完成态）——
   recipe: {
     purposeZh: 'Amazon 场景卖点图',
     canvas: { width: 1600, height: 1600 },
@@ -152,7 +359,6 @@ export const competitorAnalysisMock: CompetitorAnalysisState = {
     textSafetyZonePct: 34,
   },
 
-  // —— 持续任务面板静态完成态（任务书 §6.5 示例）——
   task: {
     nameZh: '竞品套图分析',
     stages: { done: 7, total: 7 },
@@ -161,103 +367,21 @@ export const competitorAnalysisMock: CompetitorAnalysisState = {
     artifacts: 1,
     elapsedZh: '00:38',
     phaseZh: '已完成 7/7 个分析阶段',
-    connectionZh: '实时连接正常',
-    workerZh: '视觉分析节点 3 个',
+    // P5：演示语义，中性灰，不伪装真实在线
+    connectionZh: '实时事件 · 演示',
+    workerZh: '分析节点 · 模拟 3 个',
   },
 
   stats: {
     inheritableCount: 5,
     prohibitedCount: 5,
-    pendingHumanReview: 1,
+    pendingHumanReview: 3,
   },
 };
 
-// —— 工厂函数：构造不同用途的演示图片，保持证据真实可定位 ——
-
-function makeSubjectAndSafe() {
-  return [
-    {
-      id: `ev-subj-${Math.random().toString(36).slice(2, 8)}`,
-      kind: 'subject' as const,
-      x: 0.38,
-      y: 0.26,
-      w: 0.3,
-      h: 0.56,
-      labelZh: '商品主体',
-      confidence: 0.9,
-    },
-    {
-      id: `ev-safe-${Math.random().toString(36).slice(2, 8)}`,
-      kind: 'safe' as const,
-      x: 0.34,
-      y: 0.22,
-      w: 0.38,
-      h: 0.64,
-      labelZh: '主体安全区',
-    },
-  ];
-}
-
-function makeScene(
-  id: string,
-  filename: string,
-  role: '场景图',
-  riskCount: 0 | 1,
-  seed: number,
-) {
-  return {
-    id,
-    filename,
-    role,
-    status: (riskCount > 0 ? '待人工确认' : '已完成') as '已完成' | '待人工确认',
-    riskCount,
-    thumbPalette: { from: pick('#1a2230', seed), to: '#0c1118' },
-    evidences: makeSubjectAndSafe(),
-  };
-}
-
-function makeSellingPoint(
-  id: string,
-  filename: string,
-  role: '卖点图',
-  riskCount: 0 | 1,
-  seed: number,
-) {
-  return {
-    id,
-    filename,
-    role,
-    status: (riskCount > 0 ? '待人工确认' : '已完成') as '已完成' | '待人工确认',
-    riskCount,
-    thumbPalette: { from: pick('#191f2a', seed), to: '#0a0e14' },
-    evidences: makeSubjectAndSafe(),
-  };
-}
-
-function makeDetail(id: string, filename: string, role: '细节图', riskCount: 0 | 1) {
-  return {
-    id,
-    filename,
-    role,
-    status: (riskCount > 0 ? '待人工确认' : '已完成') as '已完成' | '待人工确认',
-    riskCount,
-    thumbPalette: { from: '#161c26', to: '#080b10' },
-    evidences: [
-      {
-        id: `ev-subj-d-${id}`,
-        kind: 'subject' as const,
-        x: 0.44,
-        y: 0.36,
-        w: 0.22,
-        h: 0.34,
-        labelZh: '商品主体',
-        confidence: 0.86,
-      },
-    ],
-  };
-}
-
-function pick<T>(base: T, _seed: number): T {
-  // 演示配色保持稳定，不依赖 seed 做随机（NG-023）。
-  return base;
+// 派生导出：便于按 id 取资产（同步验证用）
+export function findAsset(assets: CompetitorAsset[], id: string): CompetitorAsset {
+  const a = assets.find((x) => x.id === id);
+  if (!a) throw new Error(`资产未找到: ${id}`);
+  return a;
 }

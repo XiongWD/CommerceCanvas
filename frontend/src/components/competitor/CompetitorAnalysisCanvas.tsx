@@ -140,7 +140,8 @@ export function CompetitorAnalysisCanvas({
       {/* 主图区：占最大视觉面积 */}
       <div className="relative flex min-h-0 flex-1 items-center justify-center p-6">
         <div className="relative" style={{ width: '100%', maxWidth: 720 }}>
-          {/* 主图（CSS 占位，不依赖远程图片，任务书 §6.2/§6.3）*/}
+          {/* 主图：本地无品牌 SVG 演示素材（P2，不依赖远程链接）。
+              证据叠加层覆盖在真实素材之上（任务书 §6.3 / 演示素材标注）。*/}
           <div
             className="relative mx-auto overflow-hidden"
             style={{
@@ -151,9 +152,15 @@ export function CompetitorAnalysisCanvas({
               boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
             }}
           >
-            <PlaceholderComposition palette={asset.thumbPalette} />
+            <img
+              src={asset.src}
+              alt={`演示素材：${asset.role} ${asset.filename}`}
+              draggable={false}
+              className="absolute inset-0 h-full w-full select-none"
+              style={{ objectFit: 'cover' }}
+            />
             <EvidenceOverlay evidences={asset.evidences} layerVisibility={layers} />
-            {/* 演示数据角标：诚实标注（START_HERE §4 / 验收清单 A）*/}
+            {/* 演示数据角标：诚实标注（START_HERE §4 / 验收清单 A / 任务书 §6.3）*/}
             <span
               className="absolute right-2 top-2 text-2xs"
               style={{
@@ -164,7 +171,7 @@ export function CompetitorAnalysisCanvas({
                 borderRadius: 2,
               }}
             >
-              演示数据
+              演示素材 · 模拟分析结果
             </span>
           </div>
 
@@ -221,6 +228,7 @@ export function CompetitorAnalysisCanvas({
       >
         {assets.map((a, i) => {
           const selected = a.id === selectedAssetId;
+          const focus = a.thumbFocus ?? { x: 50, y: 50, scale: 1 };
           return (
             <button
               key={a.id}
@@ -237,9 +245,21 @@ export function CompetitorAnalysisCanvas({
                   : '1px solid var(--gc-line)',
               }}
             >
+              {/* 真实演示素材缩略图，按 thumbFocus 裁切产生可见差异（P2）*/}
+              <img
+                src={a.src}
+                alt=""
+                draggable={false}
+                className="pointer-events-none absolute inset-0 h-full w-full select-none"
+                style={{
+                  objectFit: 'cover',
+                  objectPosition: `${focus.x}% ${focus.y}%`,
+                  transform: `scale(${focus.scale})`,
+                }}
+              />
               <span
                 className="gc-data absolute bottom-0 left-0 px-0.5 text-2xs"
-                style={{ color: 'var(--gc-text-faint)', background: 'rgba(0,0,0,0.4)' }}
+                style={{ color: 'var(--gc-text-faint)', background: 'rgba(0,0,0,0.55)' }}
               >
                 {i + 1}
               </span>
@@ -248,65 +268,6 @@ export function CompetitorAnalysisCanvas({
         })}
       </footer>
     </section>
-  );
-}
-
-/** CSS 占位构图：模拟"右侧主体 / 左侧文案"场景卖点图结构 */
-function PlaceholderComposition({
-  palette,
-}: {
-  palette: { from: string; to: string };
-}) {
-  return (
-    <>
-      {/* 左侧文案区占位 */}
-      <span
-        className="absolute"
-        style={{
-          left: '6%',
-          top: '24%',
-          width: '26%',
-          height: '4%',
-          background: 'rgba(180,185,193,0.18)',
-          borderRadius: 1,
-        }}
-      />
-      <span
-        className="absolute"
-        style={{
-          left: '6%',
-          top: '32%',
-          width: '20%',
-          height: '4%',
-          background: 'rgba(180,185,193,0.12)',
-          borderRadius: 1,
-        }}
-      />
-      {/* 右侧商品主体形状（耳机类椭圆）*/}
-      <span
-        className="absolute"
-        style={{
-          left: '40%',
-          top: '30%',
-          width: '30%',
-          height: '40%',
-          borderRadius: '50% 50% 45% 45%',
-          background: `radial-gradient(circle at 40% 35%, rgba(200,210,225,0.28), rgba(40,46,56,0.4))`,
-          boxShadow:
-            'inset 0 0 0 1px rgba(180,185,193,0.22), 0 12px 30px rgba(0,0,0,0.45)',
-        }}
-      />
-      {/* 背景颗粒（克制）*/}
-      <span
-        className="absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(circle at 70% 20%, rgba(77,141,255,0.06), transparent 50%)',
-          opacity: 0.6,
-        }}
-      />
-      <span className="sr-only">演示占位图：{palette.from}</span>
-    </>
   );
 }
 

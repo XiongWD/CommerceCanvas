@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-label="演示素材：佩戴生活方式图，人物轮廓佩戴耳机（无面部/无品牌）">
+  <defs>
+    <linearGradient id="bg6" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a2028"/><stop offset="100%" stop-color="#080b10"/>
+    </linearGradient>
+    <radialGradient id="cup6" cx="40%" cy="34%" r="72%">
+      <stop offset="0%" stop-color="#48515f"/><stop offset="60%" stop-color="#242a34"/><stop offset="100%" stop-color="#0d1015"/>
+    </radialGradient>
+    <linearGradient id="skin6" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a313c"/><stop offset="100%" stop-color="#14181f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#bg6)"/>
+  <circle cx="600" cy="380" r="360" fill="#4d8dff" opacity="0.05"/>
+
+  <!-- 人物头部侧面剪影（无五官、无品牌）-->
+  <g transform="translate(380,260)">
+    <!-- 颈/肩 -->
+    <path d="M 60 540 Q 120 460 280 460 L 360 460 Q 440 470 460 560 L 460 620 L 60 620 Z" fill="url(#skin6)"/>
+    <!-- 头部侧面 -->
+    <path d="M 180 120 Q 320 80 360 220 Q 372 320 340 380 Q 300 460 220 460 Q 150 460 130 380 Q 110 300 130 220 Q 140 150 180 120 Z" fill="url(#skin6)"/>
+    <!-- 头梁 -->
+    <path d="M 150 150 Q 250 60 380 170" fill="none" stroke="#2a313c" stroke-width="24" stroke-linecap="round"/>
+    <!-- 右耳罩（佩戴中）-->
+    <ellipse cx="330" cy="290" rx="62" ry="78" fill="url(#cup6)"/>
+    <ellipse cx="330" cy="290" rx="40" ry="54" fill="#0a0d12"/>
+  </g>
+</svg>

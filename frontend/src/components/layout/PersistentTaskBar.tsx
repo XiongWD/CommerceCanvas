@@ -22,9 +22,9 @@ export function PersistentTaskBar({ task }: { task: TaskSnapshot }) {
         borderColor: 'var(--gc-line)',
       }}
     >
-      {/* 任务名 + 完成状态 */}
+      {/* 任务名 + 完成状态。P4：演示态用中性灰，明确「演示·已完成」语义。 */}
       <div className="flex min-w-0 items-center gap-2">
-        <StatusDot tone="green" />
+        <StatusDot tone="neutral" />
         <span
           className="truncate text-xs font-medium"
           style={{ color: 'var(--gc-text-hi)' }}
@@ -35,7 +35,7 @@ export function PersistentTaskBar({ task }: { task: TaskSnapshot }) {
           className="gc-data shrink-0 text-2xs"
           style={{ color: 'var(--gc-text-faint)' }}
         >
-          {task.phaseZh}
+          演示 · {task.phaseZh}
         </span>
       </div>
 
@@ -85,7 +85,8 @@ export function PersistentTaskBar({ task }: { task: TaskSnapshot }) {
         <span className="gc-data">{task.elapsedZh}</span>
       </Metric>
 
-      {/* 右侧：连接 / Worker 占位 + 展开入口 */}
+      {/* 右侧：连接 / Worker 占位 + 展开入口。
+          P4：演示语义用中性灰/紫色，不使用绿色「真实在线」语义。*/}
       <div className="ml-auto flex items-center gap-3">
         <span
           className="flex items-center gap-1.5 text-2xs"
@@ -96,7 +97,7 @@ export function PersistentTaskBar({ task }: { task: TaskSnapshot }) {
               width: 5,
               height: 5,
               borderRadius: 9999,
-              background: 'var(--gc-accent-green)',
+              background: 'var(--gc-accent-purple)',
             }}
           />
           {task.connectionZh}

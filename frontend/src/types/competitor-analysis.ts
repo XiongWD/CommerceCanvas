@@ -44,7 +44,25 @@ export interface EvidenceRegion {
   confidence?: number;
 }
 
-/** 竞品单张图片 */
+/** 单张图片的视觉语言摘要（右侧检查器「当前图片分析」） */
+export interface AssetVisualLanguage {
+  /** 主光 */
+  keyLightZh: string;
+  /** 轮廓光 */
+  rimLightZh: string;
+  /** 色调 */
+  toneZh: string;
+  /** 景深 */
+  depthZh: string;
+}
+
+/**
+ * 竞品单张图片。
+ *
+ * 每张图片携带自身分析摘要（P3 同步要求）：
+ *   图片用途 / 构图模式 / 商品占比 / 镜头角度 / 背景类型 / 视觉语言 / 风险项 / 证据区域。
+ * 选中任意缩略图后，右侧检查器消费当前资产的这些字段同步更新。
+ */
 export interface CompetitorAsset {
   id: string;
   /** 文件名（允许英文技术标识，FD-034） */
@@ -55,8 +73,23 @@ export interface CompetitorAsset {
   riskCount: number;
   /** 证据区域集合 */
   evidences: EvidenceRegion[];
-  /** 缩略图配色（CSS 占位，不依赖远程链接，任务书 §6.2） */
+
+  /** 演示素材路径（本地 SVG，不依赖远程链接，任务书 §6.2）*/
+  src: string;
+  /** 缩略图配色（派生差异，肉眼可辨）*/
   thumbPalette: { from: string; to: string };
+  /** 缩略图裁切偏移（对象位置，用于复用素材产生可见差异）*/
+  thumbFocus?: { x: number; y: number; scale: number };
+
+  /** —— 单图分析摘要（右侧「当前图片分析」消费）—— */
+  purposeZh: string; // 图片用途
+  compositionZh: string; // 构图模式
+  productRatioPct: number; // 商品占比（百分比，真实分母）
+  cameraAngleZh: string; // 镜头角度
+  backgroundZh: string; // 背景类型
+  visualLanguage: AssetVisualLanguage; // 视觉语言摘要
+  /** 风险项中文描述列表（与 riskCount 对应）*/
+  risksZh: string[];
 }
 
 /** 分析摘要项（右侧检查器） */

@@ -65,17 +65,16 @@ export function AssetThumbnailList({
                     : '1px solid var(--gc-line)',
                 }}
               >
-                {/* 模拟商品主体形状（CSS 占位）*/}
-                <span
-                  className="absolute"
+                {/* 真实演示素材缩略图，按 thumbFocus 裁切产生可见差异（P2）*/}
+                <img
+                  src={asset.src}
+                  alt=""
+                  draggable={false}
+                  className="pointer-events-none absolute inset-0 h-full w-full select-none"
                   style={{
-                    left: '28%',
-                    top: '24%',
-                    width: '40%',
-                    height: '52%',
-                    borderRadius: 8,
-                    background: 'rgba(180,185,193,0.10)',
-                    boxShadow: 'inset 0 0 0 1px rgba(180,185,193,0.18)',
+                    objectFit: 'cover',
+                    objectPosition: `${asset.thumbFocus?.x ?? 50}% ${asset.thumbFocus?.y ?? 50}%`,
+                    transform: `scale(${asset.thumbFocus?.scale ?? 1})`,
                   }}
                 />
                 {hasRisk && (

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-label="演示素材：耳罩细节微距，突出材质与网孔">
+  <defs>
+    <radialGradient id="bg4" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#1e242d"/><stop offset="100%" stop-color="#070a0e"/>
+    </radialGradient>
+    <radialGradient id="cup4" cx="42%" cy="36%" r="75%">
+      <stop offset="0%" stop-color="#525a68"/><stop offset="55%" stop-color="#2a313c"/><stop offset="100%" stop-color="#0c0f14"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#bg4)"/>
+  <!-- 主体：耳罩超近特写 -->
+  <g transform="translate(180,180)">
+    <ellipse cx="420" cy="440" rx="380" ry="28" fill="#000" opacity="0.45"/>
+    <circle cx="420" cy="400" r="360" fill="url(#cup4)"/>
+    <circle cx="420" cy="400" r="250" fill="#0a0d12"/>
+    <!-- 网孔阵列（细节卖点，无品牌）-->
+    <g fill="#2a313c">
+      <!-- 同心环点阵 -->
+    </g>
+    <!-- 程序化点阵：6 环 -->
+  </g>
+  <!-- 网孔点阵（直接绘制，确保可见）-->
+  <g fill="#313843" opacity="0.9">
+    <!-- 用一组圆模拟网孔材质 -->
+    <g transform="translate(600,580)">
+      <circle r="6"/><circle cx="40" r="6"/><circle cx="-40" r="6"/><circle cy="40" r="6"/><circle cy="-40" r="6"/>
+      <circle cx="40" cy="40" r="6"/><circle cx="-40" cy="40" r="6"/><circle cx="40" cy="-40" r="6"/><circle cx="-40" cy="-40" r="6"/>
+      <circle cx="80" r="6"/><circle cx="-80" r="6"/><circle cy="80" r="6"/><circle cy="-80" r="6"/>
+      <circle cx="80" cy="40" r="6"/><circle cx="-80" cy="40" r="6"/><circle cx="80" cy="-40" r="6"/><circle cx="-80" cy="-40" r="6"/>
+      <circle cx="40" cy="80" r="6"/><circle cx="-40" cy="80" r="6"/><circle cx="40" cy="-80" r="6"/><circle cx="-40" cy="-80" r="6"/>
+      <circle cx="80" cy="80" r="6"/><circle cx="-80" cy="80" r="6"/><circle cx="80" cy="-80" r="6"/><circle cx="-80" cy="-80" r="6"/>
+    </g>
+  </g>
+</svg>

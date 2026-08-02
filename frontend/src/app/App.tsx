@@ -34,7 +34,7 @@ export function App() {
           selectedAssetId={selectedAssetId}
           onSelectAsset={setSelectedAssetId}
         />
-        <InspectorPanel state={state} />
+        <InspectorPanel state={state} selectedAssetId={selectedAssetId} />
       </div>
       <PersistentTaskBar task={state.task} />
     </div>
