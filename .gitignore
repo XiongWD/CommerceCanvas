@@ -1,0 +1,41 @@
+# —— 依赖与构建产物 ——
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+
+# —— TypeScript 增量构建缓存 ——
+*.tsbuildinfo
+
+# —— Vite / 缓存 ——
+*.local
+.vite/
+**/.vite/
+.cache/
+
+# —— Python（项目根位于 python/ 下，预留）——
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+
+# —— 编辑器 / IDE ——
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# —— 操作系统 ——
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# —— 日志 / 临时 ——
+*.log
+logs/
+tmp/

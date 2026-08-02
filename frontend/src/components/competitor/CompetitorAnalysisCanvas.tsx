@@ -1,0 +1,361 @@
+import { useMemo, useState } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
+import type { CompetitorAsset, EvidenceKind } from '@/types/competitor-analysis';
+import { EvidenceOverlay } from './EvidenceOverlay';
+
+/**
+ * 中央媒体画布（任务书 §6.3 / FD-027 / PRD-P-007）。
+ * 页面核心区域，必须占最大视觉面积。
+ *
+ * 展示当前选中主图 + 证据叠加 + 可开关分析图层 + 缩放 + 上一/下一切换。
+ * 分析标记为真实视觉分析结果（演示数据），明确标注，不伪装真实模型输出。
+ */
+
+const LAYER_ORDER: { kind: EvidenceKind; labelZh: string }[] = [
+  { kind: 'subject', labelZh: '商品主体' },
+  { kind: 'safe', labelZh: '主体安全区' },
+  { kind: 'logo', labelZh: 'Logo / 文字风险' },
+  { kind: 'guide', labelZh: '构图辅助线' },
+];
+
+interface CompetitorAnalysisCanvasProps {
+  assets: CompetitorAsset[];
+  selectedAssetId: string;
+  onSelectAsset: (id: string) => void;
+}
+
+export function CompetitorAnalysisCanvas({
+  assets,
+  selectedAssetId,
+  onSelectAsset,
+}: CompetitorAnalysisCanvasProps) {
+  const selectedIndex = Math.max(
+    0,
+    assets.findIndex((a) => a.id === selectedAssetId),
+  );
+  const asset = assets[selectedIndex];
+
+  const [zoom, setZoom] = useState(68); // 演示静态缩放比例（%）
+  const [layers, setLayers] = useState<Record<EvidenceKind, boolean>>({
+    subject: true,
+    safe: true,
+    logo: true,
+    guide: true,
+  });
+
+  const toggleLayer = (kind: EvidenceKind) =>
+    setLayers((prev) => ({ ...prev, [kind]: !prev[kind] }));
+
+  const goPrev = () => {
+    if (selectedIndex > 0) onSelectAsset(assets[selectedIndex - 1].id);
+  };
+  const goNext = () => {
+    if (selectedIndex < assets.length - 1)
+      onSelectAsset(assets[selectedIndex + 1].id);
+  };
+
+  // 当前图片证据统计（真实分母，演示完成态）
+  const evidenceCounts = useMemo(() => {
+    const c: Record<EvidenceKind, number> = { subject: 0, safe: 0, logo: 0, guide: 0 };
+    asset.evidences.forEach((e) => {
+      c[e.kind] += 1;
+    });
+    return c;
+  }, [asset]);
+
+  return (
+    <section
+      className="flex min-w-0 flex-1 flex-col"
+      style={{ background: 'var(--gc-bg-canvas)' }}
+    >
+      {/* 画布工具栏 */}
+      <header
+        className="flex shrink-0 items-center justify-between border-b px-4 py-2"
+        style={{ borderColor: 'var(--gc-line)', background: 'var(--gc-bg-app)' }}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <span
+            className="text-xs font-medium"
+            style={{ color: 'var(--gc-text-hi)' }}
+          >
+            {asset.role}
+          </span>
+          <span
+            className="gc-data text-2xs"
+            style={{ color: 'var(--gc-text-faint)' }}
+          >
+            {asset.filename}
+          </span>
+          {asset.status === '待人工确认' && (
+            <span
+              className="text-2xs"
+              style={{
+                color: 'var(--gc-accent-amber)',
+                background: 'var(--gc-accent-amber-soft)',
+                padding: '1px 6px',
+                borderRadius: 2,
+              }}
+            >
+              待人工确认
+            </span>
+          )}
+        </div>
+
+        {/* 图层开关（任务书 §6.3：可开关的分析图层）*/}
+        <div className="flex items-center gap-1">
+          {LAYER_ORDER.map(({ kind, labelZh }) => (
+            <button
+              key={kind}
+              onClick={() => toggleLayer(kind)}
+              className="flex items-center gap-1 rounded-sm px-2 py-1 text-2xs transition-colors duration-snap"
+              style={{
+                color: layers[kind] ? 'var(--gc-text-mid)' : 'var(--gc-text-faint)',
+                background: layers[kind] ? 'var(--gc-bg-elev-1)' : 'transparent',
+                border: '1px solid var(--gc-line)',
+              }}
+              aria-pressed={layers[kind]}
+              title={`${layers[kind] ? '隐藏' : '显示'}${labelZh}`}
+            >
+              {layers[kind] ? <Eye size={11} /> : <EyeOff size={11} />}
+              <span>{labelZh}</span>
+              <span
+                className="gc-data"
+                style={{ color: 'var(--gc-text-faint)' }}
+              >
+                {evidenceCounts[kind]}
+              </span>
+            </button>
+          ))}
+        </div>
+      </header>
+
+      {/* 主图区：占最大视觉面积 */}
+      <div className="relative flex min-h-0 flex-1 items-center justify-center p-6">
+        <div className="relative" style={{ width: '100%', maxWidth: 720 }}>
+          {/* 主图（CSS 占位，不依赖远程图片，任务书 §6.2/§6.3）*/}
+          <div
+            className="relative mx-auto overflow-hidden"
+            style={{
+              aspectRatio: '1 / 1',
+              width: `${zoom}%`,
+              background: `linear-gradient(135deg, ${asset.thumbPalette.from}, ${asset.thumbPalette.to})`,
+              border: '1px solid var(--gc-line-strong)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            }}
+          >
+            <PlaceholderComposition palette={asset.thumbPalette} />
+            <EvidenceOverlay evidences={asset.evidences} layerVisibility={layers} />
+            {/* 演示数据角标：诚实标注（START_HERE §4 / 验收清单 A）*/}
+            <span
+              className="absolute right-2 top-2 text-2xs"
+              style={{
+                color: 'var(--gc-text-faint)',
+                background: 'rgba(12,14,18,0.6)',
+                padding: '2px 6px',
+                border: '1px solid var(--gc-line)',
+                borderRadius: 2,
+              }}
+            >
+              演示数据
+            </span>
+          </div>
+
+          {/* 上一张 / 下一张（任务书 §6.3）*/}
+          <CanvasNavButton
+            side="left"
+            disabled={selectedIndex === 0}
+            onClick={goPrev}
+            label="上一张"
+          />
+          <CanvasNavButton
+            side="right"
+            disabled={selectedIndex === assets.length - 1}
+            onClick={goNext}
+            label="下一张"
+          />
+        </div>
+
+        {/* 缩放控件（任务书 §6.3：缩放比例显示）*/}
+        <div
+          className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-1"
+          style={{
+            background: 'var(--gc-bg-elev-2)',
+            border: '1px solid var(--gc-line)',
+            borderRadius: 2,
+          }}
+        >
+          <ZoomBtn onClick={() => setZoom((z) => Math.max(40, z - 8))} label="缩小">
+            <ZoomOut size={13} />
+          </ZoomBtn>
+          <span
+            className="gc-data px-2 text-2xs"
+            style={{ color: 'var(--gc-text-mid)', minWidth: 38, textAlign: 'center' }}
+          >
+            {zoom}%
+          </span>
+          <ZoomBtn onClick={() => setZoom((z) => Math.min(100, z + 8))} label="放大">
+            <ZoomIn size={13} />
+          </ZoomBtn>
+          <span
+            className="mx-1"
+            style={{ width: 1, height: 14, background: 'var(--gc-line)' }}
+          />
+          <ZoomBtn onClick={() => setZoom(68)} label="适应窗口">
+            <Maximize2 size={13} />
+          </ZoomBtn>
+        </div>
+      </div>
+
+      {/* 底部缩略图条：快速切换（任务书 §6.3）*/}
+      <footer
+        className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-t px-4 py-2"
+        style={{ borderColor: 'var(--gc-line)', background: 'var(--gc-bg-app)' }}
+      >
+        {assets.map((a, i) => {
+          const selected = a.id === selectedAssetId;
+          return (
+            <button
+              key={a.id}
+              onClick={() => onSelectAsset(a.id)}
+              aria-label={`切换到第 ${i + 1} 张 ${a.role}`}
+              className="relative shrink-0 overflow-hidden transition-all duration-snap"
+              style={{
+                width: selected ? 56 : 44,
+                height: selected ? 56 : 44,
+                borderRadius: 3,
+                background: `linear-gradient(135deg, ${a.thumbPalette.from}, ${a.thumbPalette.to})`,
+                border: selected
+                  ? '1px solid var(--gc-accent-blue)'
+                  : '1px solid var(--gc-line)',
+              }}
+            >
+              <span
+                className="gc-data absolute bottom-0 left-0 px-0.5 text-2xs"
+                style={{ color: 'var(--gc-text-faint)', background: 'rgba(0,0,0,0.4)' }}
+              >
+                {i + 1}
+              </span>
+            </button>
+          );
+        })}
+      </footer>
+    </section>
+  );
+}
+
+/** CSS 占位构图：模拟"右侧主体 / 左侧文案"场景卖点图结构 */
+function PlaceholderComposition({
+  palette,
+}: {
+  palette: { from: string; to: string };
+}) {
+  return (
+    <>
+      {/* 左侧文案区占位 */}
+      <span
+        className="absolute"
+        style={{
+          left: '6%',
+          top: '24%',
+          width: '26%',
+          height: '4%',
+          background: 'rgba(180,185,193,0.18)',
+          borderRadius: 1,
+        }}
+      />
+      <span
+        className="absolute"
+        style={{
+          left: '6%',
+          top: '32%',
+          width: '20%',
+          height: '4%',
+          background: 'rgba(180,185,193,0.12)',
+          borderRadius: 1,
+        }}
+      />
+      {/* 右侧商品主体形状（耳机类椭圆）*/}
+      <span
+        className="absolute"
+        style={{
+          left: '40%',
+          top: '30%',
+          width: '30%',
+          height: '40%',
+          borderRadius: '50% 50% 45% 45%',
+          background: `radial-gradient(circle at 40% 35%, rgba(200,210,225,0.28), rgba(40,46,56,0.4))`,
+          boxShadow:
+            'inset 0 0 0 1px rgba(180,185,193,0.22), 0 12px 30px rgba(0,0,0,0.45)',
+        }}
+      />
+      {/* 背景颗粒（克制）*/}
+      <span
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(circle at 70% 20%, rgba(77,141,255,0.06), transparent 50%)',
+          opacity: 0.6,
+        }}
+      />
+      <span className="sr-only">演示占位图：{palette.from}</span>
+    </>
+  );
+}
+
+function CanvasNavButton({
+  side,
+  disabled,
+  onClick,
+  label,
+}: {
+  side: 'left' | 'right';
+  disabled: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className="absolute top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-sm transition-colors duration-snap disabled:opacity-30"
+      style={{
+        [side === 'left' ? 'left' : 'right']: -16,
+        background: 'var(--gc-bg-elev-2)',
+        border: '1px solid var(--gc-line-strong)',
+        color: 'var(--gc-text-mid)',
+      } as React.CSSProperties}
+    >
+      {side === 'left' ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+    </button>
+  );
+}
+
+function ZoomBtn({
+  onClick,
+  label,
+  children,
+}: {
+  onClick: () => void;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      className="flex h-8 w-8 items-center justify-center transition-colors duration-snap hover:bg-[var(--gc-bg-elev-1)]"
+      style={{ color: 'var(--gc-text-lo)' }}
+    >
+      {children}
+    </button>
+  );
+}

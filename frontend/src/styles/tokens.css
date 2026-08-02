@@ -1,0 +1,63 @@
+/*
+ * Graphite Canvas 设计 Token — 单一真实来源。
+ * 符合 FD-027：媒体优先、深灰中性、低对比、克制圆角，
+ * 不使用大面积紫色渐变 / 玻璃拟态 / 霓虹发光。
+ *
+ * 状态色语义（任务书 §7.1 / FD-027）：
+ *   blue   选中状态和主操作
+ *   purple 仅用于 AI 分析或智能能力（克制）
+ *   green  QC 通过或完成
+ *   amber  待检查和风险
+ *   red    失败和阻断
+ */
+:root {
+  /* —— 字体栈 —— */
+  --gc-font-sans:
+    'PingFang SC', 'Microsoft YaHei', 'Source Han Sans SC', 'Noto Sans CJK SC',
+    system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --gc-font-mono:
+    'JetBrains Mono', 'SFMono-Regular', 'Cascadia Code', Consolas, 'Liberation Mono',
+    Menlo, monospace;
+
+  /* —— 背景层级（由深到浅）—— 石墨黑 → 工作区 → 面板 → 悬浮面板 */
+  --gc-bg-base: #0c0e12; /* 页面主背景：石墨黑，非纯黑 */
+  --gc-bg-app: #12151a; /* 工作区：略浅于主背景 */
+  --gc-bg-elev-1: #171a20; /* 面板 / 工具栏 */
+  --gc-bg-elev-2: #1c2027; /* 悬浮面板 / 卡片底 */
+  --gc-bg-canvas: #0a0b0e; /* 中央媒体画布：最暗，突出图像 */
+
+  /* —— 分割线 / 冷灰（低对比）—— */
+  --gc-line: #262b33;
+  --gc-line-strong: #313843;
+
+  /* —— 文字层级 —— */
+  --gc-text-hi: #e8eaed; /* 接近白，避免纯白 */
+  --gc-text-mid: #b4b9c1; /* 主文字（中性灰）*/
+  --gc-text-lo: #7a818d; /* 次要文字 */
+  --gc-text-faint: #565d68; /* 极弱说明 */
+
+  /* —— 状态色 —— */
+  --gc-accent-blue: #4d8dff;
+  --gc-accent-blue-soft: rgba(77, 141, 255, 0.16);
+  --gc-accent-blue-line: rgba(77, 141, 255, 0.55);
+  --gc-accent-purple: #9d7bff; /* AI / 演算能力，仅克制点缀 */
+  --gc-accent-purple-soft: rgba(157, 123, 255, 0.16);
+  --gc-accent-green: #3fb98f;
+  --gc-accent-green-soft: rgba(63, 185, 143, 0.16);
+  --gc-accent-amber: #e0a93a;
+  --gc-accent-amber-soft: rgba(224, 169, 58, 0.16);
+  --gc-accent-red: #e0594f;
+  --gc-accent-red-soft: rgba(224, 89, 79, 0.16);
+
+  /* —— 证据框语义色（中央画布叠加层）—— */
+  --gc-evidence-subject: var(--gc-accent-blue); /* 商品主体识别区 */
+  --gc-evidence-logo: var(--gc-accent-red); /* Logo / 文字风险（禁止继承）*/
+  --gc-evidence-safe: var(--gc-accent-green); /* 安全区 */
+  --gc-evidence-guide: rgba(184, 193, 207, 0.45); /* 构图辅助线 */
+
+  /* —— 工作台柱宽（任务书 §三：64 / 220–260 / 320–360）—— */
+  --gc-rail-width: 64px; /* 全局图标栏 */
+  --gc-ctx-width: 244px; /* 项目上下文栏（220–260 中值）*/
+  --gc-inspector-width: 340px; /* 属性检查器（320–360 中值）*/
+  --gc-taskbar-height: 44px; /* 底部持续任务栏 */
+}
