@@ -13,6 +13,10 @@ interface EvidenceOverlayProps {
   evidences: EvidenceRegion[];
   /** 各类图层开关（任务书 §6.3：可开关的分析图层）*/
   layerVisibility: Record<EvidenceKind, boolean>;
+  /** F1：当前高亮的区域 ID（来自 trace/canvas focus） */
+  highlightRegionId?: string;
+  /** F1：点击区域 → 反向定位到轨迹 */
+  onRegionClick?: (region: EvidenceRegion) => void;
 }
 
 const kindColorVar: Record<EvidenceKind, string> = {
@@ -32,16 +36,22 @@ const kindLabelZh: Record<EvidenceKind, string> = {
 export function EvidenceOverlay({
   evidences,
   layerVisibility,
+  highlightRegionId,
+  onRegionClick,
 }: EvidenceOverlayProps) {
+  const hasHighlight = Boolean(highlightRegionId);
   return (
     <div className="pointer-events-none absolute inset-0">
       {evidences.map((ev) => {
         if (!layerVisibility[ev.kind]) return null;
         const isGuide = ev.kind === 'guide';
         const color = kindColorVar[ev.kind];
+        const highlighted = hasHighlight && ev.id === highlightRegionId;
+        const dimmed = hasHighlight && !highlighted;
         return (
           <div
             key={ev.id}
+            onClick={onRegionClick ? () => onRegionClick(ev) : undefined}
             className="absolute"
             style={{
               left: `${ev.x * 100}%`,
@@ -50,11 +60,19 @@ export function EvidenceOverlay({
               height: `${ev.h * 100}%`,
               border: isGuide
                 ? `1px dashed ${color}`
-                : `1px solid ${color}`,
+                : highlighted
+                  ? `2px solid ${color}`
+                  : `1px solid ${color}`,
               background: isGuide
                 ? 'transparent'
-                : `${color}1a`,
-              boxShadow: isGuide ? 'none' : `inset 0 0 0 1px ${color}0d`,
+                : highlighted
+                  ? `${color}33`
+                  : `${color}1a`,
+              boxShadow: highlighted ? `0 0 0 2px ${color}55, inset 0 0 0 1px ${color}` : isGuide ? 'none' : `inset 0 0 0 1px ${color}0d`,
+              opacity: dimmed ? 0.25 : 1,
+              cursor: onRegionClick ? 'pointer' : 'default',
+              pointerEvents: onRegionClick ? 'auto' : 'none',
+              transition: 'opacity 200ms, box-shadow 200ms',
             }}
           >
             {/* 角标标签：极小，置于左上，避免遮挡商品（任务书 §6.3）*/}

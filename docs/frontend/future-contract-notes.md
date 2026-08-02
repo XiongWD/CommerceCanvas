@@ -68,3 +68,35 @@ F0 单页。未来需要前端路由：
 ```
 
 路由仅为体验原型结构，不代表后端 API 已冻结。
+
+## 10. F1 Live Intelligence 实现发现的契约（待 G2 收口）
+
+F1 用确定性 Event Simulator 实现了前端体验原型，替代真实 SSE 运输。以下为未来真实后端需补齐的契约：
+
+### 10.1 SSE Envelope 与重放（OD-103）
+- 当前 Envelope：`eventId / sequence / occurredAt / jobId / taskId? / stageId? / kind / severity / titleZh / summaryZh? / traceCategory? / progress? / metrics? / evidenceRefs? / artifactRefs? / requiresAction? / replayed?`
+- 重放契约：浏览器用 `Last-Event-ID`/sequence 游标重连，服务端按序重放 + 当前权威快照；
+  客户端按 eventId/sequence 双重去重；乱序不覆盖更高序号状态（reducer 已实现）。
+- 重放事件标记 `replayed=true`，里程碑/Artifact 不重复（reducer 已实现）。
+- 待定：heartbeat 与业务事件区分、coalescing 阈值、retention（OD-103）。
+
+### 10.2 Worker 事件 → 中文展示映射（OD-208）
+- 当前：模拟器构造事件时直接带中文 titleZh/summaryZh，经 event-presentation-map 解析 traceCategory。
+- 未来：Worker 发英文稳定 kind/stageId，Control Plane 经版本化中文展示定义映射；
+  浏览器永不直接显示 kind/stageId（NG-022）。
+
+### 10.3 Evidence 双向定位契约
+- 当前：事件携带 evidenceRefs（assetId/layer/regionId），点击轨迹定位画布、点击画布反查轨迹 sequence。
+- 未来：Evidence 链接需 scoped authorization + expiry（deployment-boundaries §9.5），无证据时回退 UI。
+
+### 10.4 进度真实性（PRD-F-046 / FD-036）
+- 当前：determinate 进度（阶段/图片）显示真实百分比；indeterminate（模型执行）只显示阶段+已用时。
+- 未来：服务端必须提供真实 current/total；禁止客户端用时间估算伪造百分比。
+
+### 10.5 持续任务面板三态（OD-211）
+- 当前：紧凑 + 展开（同页抽屉）已实现；任务详情用抽屉占位。
+- 未来：跨页面持续任务、并发任务、full-detail 路由页（OD-211）。
+
+### 10.6 真实 Worker 节点状态（FD-038 / capability-map §8）
+- 当前：activeNodes 由事件 metrics 推导（演示值）。
+- 未来：消费真实 Worker 心跳/租约状态，客户界面仅显示经中文映射的活动节点数。

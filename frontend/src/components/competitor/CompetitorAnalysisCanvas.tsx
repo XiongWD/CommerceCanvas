@@ -10,13 +10,16 @@ import {
 } from 'lucide-react';
 import type { CompetitorAsset, EvidenceKind } from '@/types/competitor-analysis';
 import { EvidenceOverlay } from './EvidenceOverlay';
+import type { LiveIntelligenceState } from '@/features/live-intelligence/state/live-intelligence-state';
+import type { EvidenceFocus } from '@/features/live-intelligence/useLiveIntelligence';
 
 /**
- * 中央媒体画布（任务书 §6.3 / FD-027 / PRD-P-007）。
+ * 中央媒体画布（任务书 §6.3 / FD-027 / PRD-P-007 / F1 §8.3 Evidence 联动）。
  * 页面核心区域，必须占最大视觉面积。
  *
- * 展示当前选中主图 + 证据叠加 + 可开关分析图层 + 缩放 + 上一/下一切换。
- * 分析标记为真实视觉分析结果（演示数据），明确标注，不伪装真实模型输出。
+ * F1：Evidence 双向定位——
+ *   - 接收 live focus：自动切换图层、高亮对应区域、其他降权。
+ *   - 点击画布 Evidence → 反向定位到分析轨迹对应事件。
  */
 
 const LAYER_ORDER: { kind: EvidenceKind; labelZh: string }[] = [
@@ -30,12 +33,20 @@ interface CompetitorAnalysisCanvasProps {
   assets: CompetitorAsset[];
   selectedAssetId: string;
   onSelectAsset: (id: string) => void;
+  /** F1：live 状态（用于反向定位 evidence → trace） */
+  liveState?: LiveIntelligenceState;
+  focus?: EvidenceFocus;
+  onFocusEvidence: (f: EvidenceFocus) => void;
+  onClearFocus: () => void;
 }
 
 export function CompetitorAnalysisCanvas({
   assets,
   selectedAssetId,
   onSelectAsset,
+  liveState,
+  focus,
+  onFocusEvidence,
 }: CompetitorAnalysisCanvasProps) {
   const selectedIndex = Math.max(
     0,
@@ -53,6 +64,15 @@ export function CompetitorAnalysisCanvas({
 
   const toggleLayer = (kind: EvidenceKind) =>
     setLayers((prev) => ({ ...prev, [kind]: !prev[kind] }));
+
+  /** F1：通过 regionId 在轨迹中反查 sequence（点击画布 Evidence → 定位轨迹） */
+  const findSequenceForRegion = (regionId: string): number | undefined => {
+    if (!liveState) return undefined;
+    const item = liveState.trace.find((t) =>
+      t.evidenceRefs?.some((r) => r.regionId === regionId),
+    );
+    return item?.sequence;
+  };
 
   const goPrev = () => {
     if (selectedIndex > 0) onSelectAsset(assets[selectedIndex - 1].id);
@@ -160,7 +180,22 @@ export function CompetitorAnalysisCanvas({
               className="absolute inset-0 h-full w-full select-none"
               style={{ objectFit: 'cover' }}
             />
-            <EvidenceOverlay evidences={asset.evidences} layerVisibility={layers} />
+            <EvidenceOverlay
+              evidences={asset.evidences}
+              layerVisibility={layers}
+              highlightRegionId={
+                focus && focus.assetId === asset.id ? focus.regionId : undefined
+              }
+              onRegionClick={(region) => {
+                onFocusEvidence({
+                  assetId: asset.id,
+                  layer: region.kind,
+                  regionId: region.id,
+                  source: 'canvas',
+                  fromSequence: findSequenceForRegion(region.id),
+                });
+              }}
+            />
             {/* 演示数据角标：诚实标注（START_HERE §4 / 验收清单 A / 任务书 §6.3）*/}
             <span
               className="absolute right-2 top-2 text-2xs"

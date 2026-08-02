@@ -1,0 +1,15 @@
+export { useLiveIntelligence } from './useLiveIntelligence';
+export type { LiveIntelligenceApi, EvidenceFocus } from './useLiveIntelligence';
+export { AnalysisTrace } from './components/AnalysisTrace';
+export { AmbientStatus } from './components/AmbientStatus';
+export { MilestoneReveal } from './components/MilestoneReveal';
+export { ExpandedTaskPanel } from './components/ExpandedTaskPanel';
+export { StageRail } from './components/StageRail';
+export { DemoControls } from './components/DemoControls';
+export { liveReducer, applyEvents } from './state/live-intelligence-reducer';
+export { createInitialState } from './state/live-intelligence-state';
+export * from './state/live-intelligence-selectors';
+export { EventSimulator, replaySync } from './simulator/runtime';
+export { buildNormalScenario } from './simulator/scenario-normal';
+export { buildRiskScenario } from './simulator/scenario-risk';
+export { buildReconnectScenario } from './simulator/scenario-reconnect';
