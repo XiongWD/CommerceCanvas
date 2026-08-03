@@ -38,6 +38,7 @@ export function DemoControls({
 }: DemoControlsProps) {
   const isRunning = status === 'running';
   const isPaused = status === 'paused';
+  const isFinished = status === 'finished';
   return (
     <div
       className="flex shrink-0 flex-wrap items-center gap-2 border-b px-4 py-2"
@@ -71,8 +72,8 @@ export function DemoControls({
 
       <span style={{ width: 1, height: 16, background: 'var(--gc-line)' }} />
 
-      {/* 运行控制 */}
-      {!isRunning && !isPaused && (
+      {/* 运行控制（R1.1：finished 只显示「重新运行」，避免 start 被 ledger 去重静默失效） */}
+      {!isRunning && !isPaused && !isFinished && (
         <CtrlBtn onClick={onStart} tone="blue" icon={<Play size={12} />} label="开始演示分析" />
       )}
       {isRunning && (
@@ -81,7 +82,12 @@ export function DemoControls({
       {isPaused && (
         <CtrlBtn onClick={onResume} tone="blue" icon={<Play size={12} />} label="继续" />
       )}
-      <CtrlBtn onClick={onRestart} icon={<RotateCcw size={12} />} label="重新运行" />
+      <CtrlBtn
+        onClick={onRestart}
+        tone={isFinished ? 'blue' : 'neutral'}
+        icon={<RotateCcw size={12} />}
+        label="重新运行"
+      />
 
       <span style={{ width: 1, height: 16, background: 'var(--gc-line)' }} />
 

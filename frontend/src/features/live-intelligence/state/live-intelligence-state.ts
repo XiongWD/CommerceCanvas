@@ -77,11 +77,12 @@ export interface RecipeProgress {
   textSafetyZone: boolean;
 }
 
-/** 权威业务统计（任务书 §八：不从轨迹条数反推） */
+/** 权威业务统计（任务书 §八：不从轨迹条数反推；R1.1 增 blockingConflicts） */
 export interface SummaryMetrics {
   findings: number;
   risks: number;
   artifacts: number;
+  blockingConflicts: number;
 }
 
 /**
@@ -102,6 +103,8 @@ export interface LiveIntelligenceState {
   scenario: string;
   /** jobId（重置组件展示记录用） */
   jobId: string;
+  /** 运行实例标识（R1.1：restart/switchScenario 递增；里程碑展示会话键的一部分） */
+  runId: number;
   jobStatus: JobStatus;
   connection: ConnectionState;
 
@@ -204,6 +207,7 @@ export function createInitialState(scenario = 'normal'): LiveIntelligenceState {
   return {
     scenario,
     jobId: '',
+    runId: 1,
     jobStatus: 'idle',
     connection: 'connected',
     receivedCount: 0,
@@ -220,7 +224,7 @@ export function createInitialState(scenario = 'normal'): LiveIntelligenceState {
     shownMilestoneIds: {},
     artifacts: [],
     risks: [],
-    summaryMetrics: { findings: 0, risks: 0, artifacts: 0 },
+    summaryMetrics: { findings: 0, risks: 0, artifacts: 0, blockingConflicts: 0 },
     activeNodes: 0,
     processedImages: 0,
     totalImages: 12,

@@ -65,13 +65,36 @@ export function CompetitorAnalysisCanvas({
   const toggleLayer = (kind: EvidenceKind) =>
     setLayers((prev) => ({ ...prev, [kind]: !prev[kind] }));
 
-  /** F1：通过 regionId 在轨迹中反查 sequence（点击画布 Evidence → 定位轨迹） */
-  const findSequenceForRegion = (regionId: string): number | undefined => {
+  /** F1 R1.1：统一 Evidence → 轨迹定位，支持三级回退（regionId → assetId+layer → assetId） */
+  const findSequenceForEvidence = (params: {
+    regionId?: string;
+    assetId?: string;
+    layer?: 'subject' | 'logo' | 'safe' | 'guide' | 'text';
+  }): number | undefined => {
     if (!liveState) return undefined;
-    const item = liveState.trace.find((t) =>
-      t.evidenceRefs?.some((r) => r.regionId === regionId),
-    );
-    return item?.sequence;
+    const { regionId, assetId, layer } = params;
+    // 1. regionId 精确匹配
+    if (regionId) {
+      const exact = liveState.trace.find((t) =>
+        t.evidenceRefs?.some((r) => r.regionId === regionId),
+      );
+      if (exact) return exact.sequence;
+    }
+    // 2. assetId + layer 匹配
+    if (assetId && layer) {
+      const byAssetLayer = liveState.trace.find((t) =>
+        t.evidenceRefs?.some((r) => r.assetId === assetId && r.layer === layer),
+      );
+      if (byAssetLayer) return byAssetLayer.sequence;
+    }
+    // 3. assetId 匹配（最宽回退）
+    if (assetId) {
+      const byAsset = liveState.trace.find((t) =>
+        t.evidenceRefs?.some((r) => r.assetId === assetId),
+      );
+      if (byAsset) return byAsset.sequence;
+    }
+    return undefined;
   };
 
   const goPrev = () => {
@@ -192,7 +215,11 @@ export function CompetitorAnalysisCanvas({
                   layer: region.kind,
                   regionId: region.id,
                   source: 'canvas',
-                  fromSequence: findSequenceForRegion(region.id),
+                  fromSequence: findSequenceForEvidence({
+                    regionId: region.id,
+                    assetId: asset.id,
+                    layer: region.kind,
+                  }),
                 });
               }}
             />

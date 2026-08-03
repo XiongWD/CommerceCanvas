@@ -237,7 +237,7 @@ export function buildNormalScenario(): ScenarioScript {
       kind: 'observation.created',
       titleZh: '分析汇总：共 24 项发现、3 项普通风险、1 份产物',
       summaryZh: '3 项风险均为非阻断，0 项结构冲突，可在生成阶段处理',
-      metrics: { findings: 24, risks: 3, artifacts: 1 },
+      metrics: { findings: 24, risks: 3, artifacts: 1, blockingConflicts: 0 },
     }),
   );
   advance(ctx, 1);

@@ -73,6 +73,7 @@ describe('event-audit 生成', () => {
         findings: normalState.summaryMetrics.findings,
         risks: normalState.summaryMetrics.risks,
         artifacts: normalState.summaryMetrics.artifacts,
+        blockingConflicts: normalState.summaryMetrics.blockingConflicts,
         recipeFields: recipeDoneCount(normalState),
         jobStatus: normalState.jobStatus,
       },
@@ -83,7 +84,7 @@ describe('event-audit 生成', () => {
         customerTraceItems: riskState.trace.length,
         findings: riskState.summaryMetrics.findings,
         risks: riskState.summaryMetrics.risks,
-        blockingConflicts: 1,
+        blockingConflicts: riskState.summaryMetrics.blockingConflicts,
         recipeFields: recipeDoneCount(riskState),
         buildRecipeStatus: riskState.stages.build_recipe.status,
         jobStatus: riskState.jobStatus,
@@ -107,8 +108,10 @@ describe('event-audit 生成', () => {
     expect(audit.normal.findings).toBe(24);
     expect(audit.normal.risks).toBe(3);
     expect(audit.normal.artifacts).toBe(1);
+    expect(audit.normal.blockingConflicts).toBe(0);
     expect(audit.normal.recipeFields).toBe(7);
     expect(audit.risk.buildRecipeStatus).toBe('awaiting_review');
+    expect(audit.risk.blockingConflicts).toBe(1);
     expect(audit.reconnect.replayedSequences).toEqual([19, 20, 21, 22]);
     expect(audit.reconnect.recoveredCount).toBe(4);
     expect(audit.reconnect.duplicateArtifacts).toBe(0);

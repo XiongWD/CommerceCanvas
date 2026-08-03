@@ -20,6 +20,17 @@ import {
   type RecipeProgress,
 } from './live-intelligence-state';
 
+/** 传输事件（R1.1 P0-1）：独立于业务 sequence，但仍进入客户分析轨迹） */
+export interface TransportEvent {
+  eventId: string;
+  occurredAt: string;
+  kind: 'connection.disconnected' | 'connection.reconnecting' | 'connection.recovered';
+  titleZh: string;
+  summaryZh?: string;
+  fromSequence?: number;
+  recoveredCount?: number;
+}
+
 /** Reducer 动作：业务事件 + 独立传输信号 + 重置 */
 export type LiveAction =
   | { type: 'apply_event'; event: LiveEventEnvelope }
@@ -30,6 +41,7 @@ export type LiveAction =
       fromSequence: number;
       recoveredCount: number;
     }
+  | { type: 'apply_transport_event'; event: TransportEvent }
   | { type: 'reset'; scenario: string; jobId: string };
 
 /**
@@ -39,23 +51,82 @@ export type LiveAction =
 export function liveReducer(state: LiveIntelligenceState, action: LiveAction): LiveIntelligenceState {
   switch (action.type) {
     case 'reset':
-      return { ...createInitialState(action.scenario), jobId: action.jobId };
+      // R1.1：runId 递增（restart 语义），里程碑展示会话键 = jobId + runId
+      return { ...createInitialState(action.scenario), jobId: action.jobId, runId: state.runId + 1 };
     case 'transport_disconnected':
-      return { ...state, connection: 'disconnected' };
+      return applyTransport(state, {
+        eventId: `transport-disconnect-${state.runId}`,
+        occurredAt: new Date().toISOString(),
+        kind: 'connection.disconnected',
+        titleZh: '实时事件连接中断，已保留当前结果',
+      });
     case 'transport_reconnecting':
-      return { ...state, connection: 'reconnecting' };
+      return applyTransport(state, {
+        eventId: `transport-reconnecting-${state.runId}`,
+        occurredAt: new Date().toISOString(),
+        kind: 'connection.reconnecting',
+        titleZh: '正在重连事件流',
+      });
     case 'transport_recovered':
-      return {
-        ...state,
-        connection: 'recovered',
-        recoveryInfo: {
-          fromSequence: action.fromSequence,
-          recoveredCount: action.recoveredCount,
-        },
-      };
+      return applyTransport(state, {
+        eventId: `transport-recovered-${state.runId}`,
+        occurredAt: new Date().toISOString(),
+        kind: 'connection.recovered',
+        titleZh: `已从第 ${action.fromSequence} 个事件后恢复 · 补齐 ${action.recoveredCount} 个事件`,
+        summaryZh: '任务继续执行，事件不重复',
+        fromSequence: action.fromSequence,
+        recoveredCount: action.recoveredCount,
+      });
+    case 'apply_transport_event':
+      return applyTransport(state, action.event);
     case 'apply_event':
       return ingestEvent(state, action.event);
   }
+}
+
+/**
+ * 应用传输事件（R1.1 P0-1）：
+ *   - 更新 connection / recoveryInfo
+ *   - 向 trace 追加一条「系统」记录（客户可见）
+ *   - 按 eventId 去重（ledger.seenEventIds）
+ *   - 不修改业务 ledger.lastContiguousSequence / pendingBySequence
+ */
+function applyTransport(state: LiveIntelligenceState, ev: TransportEvent): LiveIntelligenceState {
+  // 按 eventId 去重
+  if (state.ledger.seenEventIds[ev.eventId]) return state;
+  const seen = { ...state.ledger.seenEventIds, [ev.eventId]: true };
+
+  let connection = state.connection;
+  let recoveryInfo = state.recoveryInfo;
+  if (ev.kind === 'connection.disconnected') connection = 'disconnected';
+  else if (ev.kind === 'connection.reconnecting') connection = 'reconnecting';
+  else if (ev.kind === 'connection.recovered') {
+    connection = 'recovered';
+    recoveryInfo = {
+      fromSequence: ev.fromSequence ?? 0,
+      recoveredCount: ev.recoveredCount ?? 0,
+    };
+  }
+
+  const item: TraceItem = {
+    eventId: ev.eventId,
+    sequence: 0, // 传输事件不占业务 sequence；用 occurredAt 排序在业务事件之后
+    occurredAt: ev.occurredAt,
+    category: '系统',
+    titleZh: ev.titleZh,
+    summaryZh: ev.summaryZh,
+    severity: ev.kind === 'connection.recovered' ? 'success' : 'warning',
+    replayed: false,
+  };
+  const trace = state.trace.concat(item);
+
+  return {
+    ...state,
+    connection,
+    recoveryInfo,
+    trace,
+    ledger: { ...state.ledger, seenEventIds: seen },
+  };
 }
 
 /**
@@ -236,14 +307,14 @@ function applyOneImmutable(state: LiveIntelligenceState, event: LiveEventEnvelop
         sequence: event.sequence,
       });
     }
-    // shownMilestoneIds 按 jobId 分组：仅非重放事件且该 jobId 下未弹过时追加
+    // shownMilestoneIds 按 jobId#runId 分组（R1.1：runId 递增后可重显相同里程碑）
     if (event.replayed !== true) {
-      const jobKey = state.jobId || 'default';
-      const shown = state.shownMilestoneIds[jobKey] ?? [];
+      const sessionKey = `${state.jobId || 'default'}#${state.runId}`;
+      const shown = state.shownMilestoneIds[sessionKey] ?? [];
       if (!shown.includes(mid)) {
         next.shownMilestoneIds = {
           ...state.shownMilestoneIds,
-          [jobKey]: shown.concat(mid),
+          [sessionKey]: shown.concat(mid),
         };
       }
     }
@@ -275,6 +346,9 @@ function applyOneImmutable(state: LiveIntelligenceState, event: LiveEventEnvelop
   }
   if (event.metrics?.artifacts !== undefined) {
     next.summaryMetrics = { ...next.summaryMetrics, artifacts: Number(event.metrics.artifacts) };
+  }
+  if (event.metrics?.blockingConflicts !== undefined) {
+    next.summaryMetrics = { ...next.summaryMetrics, blockingConflicts: Number(event.metrics.blockingConflicts) };
   }
   // artifacts.length 与 summaryMetrics.artifacts 对账：始终以 max 同步
   next.summaryMetrics = {

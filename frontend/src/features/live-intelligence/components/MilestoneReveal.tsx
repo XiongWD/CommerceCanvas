@@ -18,10 +18,11 @@ export function MilestoneReveal({ state }: MilestoneRevealProps) {
   const [active, setActive] = useState<{ id: string; titleZh: string; summaryZh?: string } | null>(null);
 
   useEffect(() => {
-    const jobKey = state.jobId || 'default';
-    const shownForJob = state.shownMilestoneIds[jobKey] ?? [];
+    // R1.1：展示会话键 = jobId + runId；restart/switchScenario 递增 runId 后可重显相同里程碑
+    const sessionKey = `${state.jobId || 'default'}#${state.runId}`;
+    const shownForSession = state.shownMilestoneIds[sessionKey] ?? [];
     const newest = state.milestones.find(
-      (m) => !shownIds.includes(m.id) && shownForJob.includes(m.id),
+      (m) => !shownIds.includes(m.id) && shownForSession.includes(m.id),
     );
     if (newest && !active) {
       setActive({ id: newest.id, titleZh: newest.titleZh, summaryZh: newest.summaryZh });
@@ -30,7 +31,7 @@ export function MilestoneReveal({ state }: MilestoneRevealProps) {
       const t = setTimeout(() => setActive(null), ms);
       return () => clearTimeout(t);
     }
-  }, [state.milestones, state.shownMilestoneIds, state.jobId, shownIds, active]);
+  }, [state.milestones, state.shownMilestoneIds, state.jobId, state.runId, shownIds, active]);
 
   // 重置时清空已显示记录
   useEffect(() => {

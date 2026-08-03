@@ -7,6 +7,7 @@ import {
   PanelTopOpen,
   Pause,
   Play,
+  RotateCcw,
 } from 'lucide-react';
 import type { LiveIntelligenceApi } from '@/features/live-intelligence/useLiveIntelligence';
 import {
@@ -121,7 +122,7 @@ export function PersistentTaskBar({ live }: { live: LiveIntelligenceApi }) {
           <span className="gc-data">{formatElapsed(state.elapsedSeconds)}</span>
         </Metric>
 
-        {/* 右侧：演示运行控制 + 连接 + 展开 */}
+        {/* 右侧：演示运行控制（R1.1：finished 显示「重新运行」，避免 start 静默失效） + 连接 + 展开 */}
         <div className="ml-auto flex items-center gap-2">
           {isRunning ? (
             <button
@@ -130,6 +131,14 @@ export function PersistentTaskBar({ live }: { live: LiveIntelligenceApi }) {
               style={{ color: 'var(--gc-text-mid)', border: '1px solid var(--gc-line)' }}
             >
               <Pause size={11} /> 暂停
+            </button>
+          ) : live.simulatorStatus === 'finished' ? (
+            <button
+              onClick={live.restart}
+              className="flex items-center gap-1 rounded-sm px-2 py-1 text-2xs"
+              style={{ color: 'var(--gc-accent-blue)', border: '1px solid var(--gc-accent-blue-line)', background: 'var(--gc-accent-blue-soft)' }}
+            >
+              <RotateCcw size={11} /> 重新运行
             </button>
           ) : (
             <button

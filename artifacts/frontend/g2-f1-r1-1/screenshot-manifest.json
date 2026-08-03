@@ -1,0 +1,37 @@
+{
+  "commit": "481a0e5b20418b5af190093b76a4894c05d5031c",
+  "sourceTreeHash": "a3bdab8f39787c2604ce7192cca00c96409eb398",
+  "browser": "Playwright Chromium (独立，非 ZCode IAB)",
+  "browserVersion": "143.0.7499.4",
+  "captureTool": "Playwright",
+  "deviceScaleFactor": 1,
+  "pageZoom": 1,
+  "url": "http://127.0.0.1:4175/",
+  "screenshots": [
+    {
+      "file": "disconnected-trace.png",
+      "kind": "disconnected-trace",
+      "sha256": "3037451d70979e4cd6758096e5a1c7cdf69df2d653df4a5b43ed5038e540a4ab"
+    },
+    {
+      "file": "recovered-trace.png",
+      "kind": "recovered-trace",
+      "sha256": "805ee17258c4887938730a04ec701a7cca81323a7df0682f9f0737056cb090f3"
+    },
+    {
+      "file": "evidence-fallback-focus.png",
+      "kind": "evidence-focus",
+      "sha256": "5dc3987a25f4d63b85a991b96c43fac7b4af35d887f03293de8a6e7e3a89c260"
+    },
+    {
+      "file": "restarted-milestone.png",
+      "kind": "restarted",
+      "sha256": "4214c0d057d1fc5d7198120bce0737678ff372e5e16ce722e5b504afed35df78"
+    },
+    {
+      "file": "completed-controls.png",
+      "kind": "completed-controls",
+      "sha256": "67fed60002f2d1b36a90e2d3ba075b6a41533b5ed1ab5d408aadabc8b367bf75"
+    }
+  ]
+}

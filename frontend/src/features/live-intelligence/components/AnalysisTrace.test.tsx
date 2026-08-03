@@ -69,9 +69,9 @@ describe('Evidence 画布→轨迹定位（findSequenceForRegion 逻辑）', () 
 });
 
 describe('切换场景后里程碑可重新展示', () => {
-  it('reset 后 shownMilestoneIds 按 jobId 分组，新 jobId 不继承旧记录', () => {
+  it('reset 后 shownMilestoneIds 按 jobId#runId 分组，新 run 不继承旧记录', () => {
     let s = createInitialState('normal');
-    s = { ...s, jobId: 'job-normal-001' };
+    s = { ...s, jobId: 'job-normal-001', runId: 1 };
     // 应用一个里程碑
     s = liveReducer(s, {
       type: 'apply_event',
@@ -81,9 +81,9 @@ describe('切换场景后里程碑可重新展示', () => {
         traceCategory: '成果', metrics: { milestoneId: 'purpose_classified' },
       } as never,
     });
-    expect((s.shownMilestoneIds['job-normal-001'] ?? []).includes('purpose_classified')).toBe(true);
-    // reset 到 risk jobId
+    expect((s.shownMilestoneIds['job-normal-001#1'] ?? []).includes('purpose_classified')).toBe(true);
+    // reset 到 risk jobId（runId 递增）
     s = liveReducer(s, { type: 'reset', scenario: 'risk', jobId: 'job-risk-002' });
-    expect((s.shownMilestoneIds['job-risk-002'] ?? []).length).toBe(0);
+    expect((s.shownMilestoneIds['job-risk-002#2'] ?? []).length).toBe(0);
   });
 });
