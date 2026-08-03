@@ -1,22 +1,22 @@
 {
-  "commit": "481a0e5b20418b5af190093b76a4894c05d5031c",
-  "sourceTreeHash": "a3bdab8f39787c2604ce7192cca00c96409eb398",
+  "commit": "839217b6c1f7db14803c7168329381a0198adc40",
+  "sourceTreeHash": "c5a9f5af7f0ce320de5f2afba9a8273ce83fae17",
   "browser": "Playwright Chromium (独立，非 ZCode IAB)",
   "browserVersion": "143.0.7499.4",
   "captureTool": "Playwright",
   "deviceScaleFactor": 1,
   "pageZoom": 1,
-  "url": "http://127.0.0.1:4175/",
+  "url": "http://127.0.0.1:4176/",
   "screenshots": [
     {
       "file": "disconnected-trace.png",
       "kind": "disconnected-trace",
-      "sha256": "3037451d70979e4cd6758096e5a1c7cdf69df2d653df4a5b43ed5038e540a4ab"
+      "sha256": "fed1b09f91e6d18130f0d7d907855d3d19bf5412a450dae69b039d3e5fd75990"
     },
     {
       "file": "recovered-trace.png",
       "kind": "recovered-trace",
-      "sha256": "805ee17258c4887938730a04ec701a7cca81323a7df0682f9f0737056cb090f3"
+      "sha256": "d00071596267c534f3fbcdc49ad069645809308f861433887b9ac5f12e16bddc"
     },
     {
       "file": "evidence-fallback-focus.png",
