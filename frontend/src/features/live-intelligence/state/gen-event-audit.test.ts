@@ -5,13 +5,19 @@
 import { describe, it, expect } from 'vitest';
 import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { liveReducer } from './live-intelligence-reducer';
 import { createInitialState } from './live-intelligence-state';
 import { buildNormalScenario } from '../simulator/scenario-normal';
 import { buildRiskScenario } from '../simulator/scenario-risk';
 import { buildReconnectScenario } from '../simulator/scenario-reconnect';
 
-const AUDIT_OUT = process.env.AUDIT_OUT || 'artifacts/frontend/g2-f1-r1';
+// 始终写到仓库根的 artifacts/frontend/g2-f1-r1/，避免受 vitest cwd 影响产生嵌套路径。
+const REPO_ROOT = path.resolve(
+  fileURLToPath(import.meta.url),
+  '../../../../../../../..',
+);
+const AUDIT_OUT = process.env.AUDIT_OUT || path.join(REPO_ROOT, 'artifacts/frontend/g2-f1-r1');
 
 function dispatchAll(events, scenario, jobId) {
   let s = createInitialState(scenario);
