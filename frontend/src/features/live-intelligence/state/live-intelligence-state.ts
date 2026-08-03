@@ -3,6 +3,10 @@
  *
  * 所有展示（画布阶段、底部进度、检查器结论）必须从本状态推导，
  * 禁止各组件各自维护阶段/进度/任务状态（NG-024）。
+ *
+ * R1 关键修复：
+ *   - 去重索引（EventLedger）属于归并状态本身，而非 reducer 默认参数或闭包
+ *   - 因此 React useReducer 与测试 applyEvents 走完全相同的纯函数路径
  */
 
 import type {
@@ -22,7 +26,7 @@ export interface StageState {
   progress?: { current: number; total: number; unitZh?: string };
 }
 
-/** 分析轨迹条目（保留事件序，供 AnalysisTrace 渲染） */
+/** 分析轨迹条目（仅客户可见事件，按 sequence 升序） */
 export interface TraceItem {
   eventId: string;
   sequence: number;
@@ -73,35 +77,60 @@ export interface RecipeProgress {
   textSafetyZone: boolean;
 }
 
+/** 权威业务统计（任务书 §八：不从轨迹条数反推） */
+export interface SummaryMetrics {
+  findings: number;
+  risks: number;
+  artifacts: number;
+}
+
+/**
+ * 事件账本：去重 + 有序缓冲，属于归并状态（R1 P0-1/P0-2）。
+ *   seenEventIds           已应用过的 eventId（去重主键）
+ *   pendingBySequence      乱序到达但尚未能连续应用的事件（缺口后的）
+ *   lastContiguousSequence 已连续应用到的最高 sequence（1..N 无缺口）
+ */
+export interface EventLedger {
+  seenEventIds: Record<string, boolean>;
+  pendingBySequence: Record<number, LiveEventEnvelope>;
+  lastContiguousSequence: number;
+}
+
 /** 归并后的完整状态 */
 export interface LiveIntelligenceState {
   /** 当前运行场景 */
   scenario: string;
+  /** jobId（重置组件展示记录用） */
+  jobId: string;
   jobStatus: JobStatus;
   connection: ConnectionState;
 
-  /** 已接收事件总数（去重后） */
+  /** 已接收事件总数（去重后，含 pending） */
   receivedCount: number;
-  /** 最后已接收 sequence（重放游标） */
-  lastSequence: number;
   /** 已用时间（秒，由事件流推导，非墙钟） */
   elapsedSeconds: number;
+
+  /** 事件账本（去重 + 有序缓冲，属于状态） */
+  ledger: EventLedger;
 
   /** 7 阶段归并态 */
   stages: Record<StageId, StageState>;
   /** 阶段顺序（展示用） */
   stageOrder: StageId[];
 
-  /** 分析轨迹（按 sequence 升序） */
+  /** 分析轨迹（仅客户可见事件，按 sequence 升序） */
   trace: TraceItem[];
   /** 里程碑（已达成，按 sequence 升序） */
   milestones: MilestoneItem[];
-  /** 已显示过的里程碑 ID（去重：重放不重复弹出） */
-  shownMilestoneIds: MilestoneId[];
+  /** 已显示过的里程碑 ID（按 jobId 分组：重放不重复弹，切场景可重显） */
+  shownMilestoneIds: Record<string, MilestoneId[]>;
   /** Artifact（去重） */
   artifacts: ArtifactItem[];
   /** 风险项 */
   risks: RiskItem[];
+
+  /** 权威业务统计（任务书 §八） */
+  summaryMetrics: SummaryMetrics;
 
   /** 当前活跃分析节点数（由事件推导，演示语义） */
   activeNodes: number;
@@ -115,14 +144,12 @@ export interface LiveIntelligenceState {
   /** 人工介入提示中文 */
   actionPromptZh?: string;
 
-  /** 当前选中的证据焦点（双向定位） */
+  /** 当前选中的证据焦点（双向定位，本地 UI 状态，由 hook 合并） */
   focusedEvidence?: {
     assetId: string;
     layer: 'subject' | 'logo' | 'safe' | 'guide' | 'text';
     regionId?: string;
-    /** 触发来源：trace 或 canvas */
     source: 'trace' | 'canvas';
-    /** 关联事件 sequence（点击画布 Evidence 时回定位到轨迹） */
     fromSequence?: number;
   };
 
@@ -157,6 +184,17 @@ export const STAGE_ORDER: StageId[] = [
   'build_recipe',
 ];
 
+/** Recipe 字段名顺序（用于 recipeFields 数组标记） */
+export const RECIPE_FIELDS: (keyof RecipeProgress)[] = [
+  'purpose',
+  'canvas',
+  'position',
+  'ratio',
+  'background',
+  'lighting',
+  'textSafetyZone',
+];
+
 /** 初始空状态（idle） */
 export function createInitialState(scenario = 'normal'): LiveIntelligenceState {
   const stages = {} as Record<StageId, StageState>;
@@ -165,18 +203,24 @@ export function createInitialState(scenario = 'normal'): LiveIntelligenceState {
   }
   return {
     scenario,
+    jobId: '',
     jobStatus: 'idle',
     connection: 'connected',
     receivedCount: 0,
-    lastSequence: 0,
     elapsedSeconds: 0,
+    ledger: {
+      seenEventIds: {},
+      pendingBySequence: {},
+      lastContiguousSequence: 0,
+    },
     stages,
     stageOrder: STAGE_ORDER,
     trace: [],
     milestones: [],
-    shownMilestoneIds: [],
+    shownMilestoneIds: {},
     artifacts: [],
     risks: [],
+    summaryMetrics: { findings: 0, risks: 0, artifacts: 0 },
     activeNodes: 0,
     processedImages: 0,
     totalImages: 12,
@@ -192,3 +236,4 @@ export function createInitialState(scenario = 'normal'): LiveIntelligenceState {
     },
   };
 }
+

@@ -1,0 +1,54 @@
+{
+  "commit": "72981a4cff077d696432db98eb1513a94c6bb61a",
+  "browser": "Playwright Chromium (独立，非 ZCode IAB)",
+  "browserVersion": "143.0.7499.4",
+  "captureTool": "Playwright",
+  "deviceScaleFactor": 1,
+  "pageZoom": 1,
+  "url": "http://127.0.0.1:4175/",
+  "screenshots": [
+    {
+      "file": "idle.png",
+      "kind": "idle",
+      "sha256": "5debc1b26caa942f0967edc99963948adfe00b01a716922b29593f5e004fc714"
+    },
+    {
+      "file": "running.png",
+      "kind": "running",
+      "sha256": "2b55719e04de96d03c08fecd5c5f4543c0bccbdce637d622b47b1fe86509845d"
+    },
+    {
+      "file": "evidence-focus.png",
+      "kind": "evidence-focus",
+      "sha256": "ec429f1ec75db0ac2efc43b4a1475a78b5676bcadff2e08d4f795e44fc3438ff"
+    },
+    {
+      "file": "task-panel-expanded.png",
+      "kind": "task-panel",
+      "sha256": "3b4aa6515761cbc081df619532b1462147cd7a740ed4d70fb304beb5d7596fdc"
+    },
+    {
+      "file": "completed.png",
+      "kind": "completed",
+      "sha256": "728ee4f1ba7ff98ebfa28e00189b0fbb4763cfe8f5a9931f70bbd989feae1868"
+    },
+    {
+      "file": "risk-review.png",
+      "kind": "risk",
+      "sha256": "2eb8c589fc13cec83bd120270721c321fa2618cd97e91c8594077cade05cbf28"
+    },
+    {
+      "file": "disconnected.png",
+      "kind": "disconnected",
+      "sha256": "77bffac04e9cdd40748c019392abd3312160f94c6a640da2fad92b90e1d04078"
+    },
+    {
+      "file": "recovered-4-events.png",
+      "kind": "recovered",
+      "sha256": "27d9b9aa2a9da95d0255783e64d4c4c2dd0b682f81105df494acce6215cd136e"
+    }
+  ],
+  "video": {
+    "file": "live-intelligence-demo.webm"
+  }
+}

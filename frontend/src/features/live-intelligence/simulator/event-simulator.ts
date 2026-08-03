@@ -30,25 +30,46 @@ interface BuildCtx {
   t: number;
 }
 
-/** 构造单个事件的输入：可选 severity/traceCategory，由 withPresentation 补全 */
-type EventInput = Omit<LiveEventEnvelope, 'eventId' | 'sequence' | 'occurredAt' | 'jobId' | 'severity' | 'traceCategory'> & {
+/** 构造单个事件的输入：ev 自动补全 eventId/sequence/occurredAt/jobId。
+ *  必填 kind/titleZh；其余可选；severity/traceCategory 由 withPresentation 默认补全。 */
+export interface EventInput {
+  kind: LiveEventEnvelope['kind'];
+  titleZh: string;
+  summaryZh?: string;
+  stageId?: LiveEventEnvelope['stageId'];
+  progress?: LiveEventEnvelope['progress'];
+  metrics?: LiveEventEnvelope['metrics'];
+  evidenceRefs?: LiveEventEnvelope['evidenceRefs'];
+  artifactRefs?: LiveEventEnvelope['artifactRefs'];
+  requiresAction?: boolean;
+  replayed?: boolean;
   severity?: LiveEventEnvelope['severity'];
   traceCategory?: LiveEventEnvelope['traceCategory'];
-};
+  jobId?: string;
+}
 
 function ev(ctx: BuildCtx, partial: EventInput): LiveEventEnvelope {
   ctx.seq += 1;
-  // 模拟时间戳：确定性 ISO（基于累加秒数）。用固定基准日避免墙钟。
   const base = new Date('2026-08-02T13:32:00Z').getTime();
   const occurredAt = new Date(base + ctx.t * 1000).toISOString();
-  const e = withPresentation({
+  return withPresentation({
     eventId: `evt-${String(ctx.seq).padStart(3, '0')}`,
     sequence: ctx.seq,
     occurredAt,
-    jobId: ctx.jobId,
-    ...partial,
+    jobId: partial.jobId ?? ctx.jobId,
+    kind: partial.kind,
+    titleZh: partial.titleZh,
+    summaryZh: partial.summaryZh,
+    stageId: partial.stageId,
+    progress: partial.progress,
+    metrics: partial.metrics,
+    evidenceRefs: partial.evidenceRefs,
+    artifactRefs: partial.artifactRefs,
+    requiresAction: partial.requiresAction,
+    replayed: partial.replayed,
+    severity: partial.severity,
+    traceCategory: partial.traceCategory,
   });
-  return e;
 }
 
 /** 推进模拟时间（秒） */

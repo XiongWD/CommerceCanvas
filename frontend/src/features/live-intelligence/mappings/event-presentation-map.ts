@@ -43,6 +43,7 @@ const KIND_TO_SEVERITY: Record<LiveEventKind, EventSeverity> = {
   'stage.progress': 'info',
   'stage.completed': 'success',
   'stage.failed': 'error',
+  'stage.awaiting_review': 'warning',
   'observation.created': 'info',
   'decision.created': 'info',
   'evidence.created': 'info',
@@ -56,6 +57,43 @@ const KIND_TO_SEVERITY: Record<LiveEventKind, EventSeverity> = {
   'job.completed': 'success',
   'job.failed': 'error',
 };
+
+/**
+ * 事件展示层（R1 §十：收敛客户轨迹）。
+ *   ambient  只更新顶部状态栏 / 阶段轨道，不进入客户分析轨迹
+ *   trace    进入客户分析轨迹
+ *   both     既进轨迹又更新状态
+ * 低价值系统事件（stage.queued / 普通 stage.progress / stage.started / stage.completed）
+ * 默认只 ambient；高价值业务事件进 trace。
+ */
+export type EventSurface = 'ambient' | 'trace' | 'both';
+
+const KIND_TO_SURFACE: Record<LiveEventKind, EventSurface> = {
+  'session.started': 'both',
+  'stage.queued': 'ambient',
+  'stage.started': 'ambient',
+  'stage.progress': 'ambient',
+  'stage.completed': 'ambient',
+  'stage.failed': 'trace',
+  'stage.awaiting_review': 'trace',
+  'observation.created': 'trace',
+  'decision.created': 'trace',
+  'evidence.created': 'trace',
+  'warning.created': 'trace',
+  'action.created': 'trace',
+  'artifact.created': 'trace',
+  'milestone.reached': 'trace',
+  'connection.disconnected': 'trace',
+  'connection.reconnecting': 'trace',
+  'connection.recovered': 'trace',
+  'job.completed': 'trace',
+  'job.failed': 'trace',
+};
+
+/** 该事件是否应进入客户分析轨迹 */
+export function shouldShowInTrace(kind: LiveEventKind): boolean {
+  return KIND_TO_SURFACE[kind] !== 'ambient';
+}
 
 /** 给一个原始事件骨架补全中文展示字段（模拟器构造事件时调用） */
 export function withPresentation(

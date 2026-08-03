@@ -18,7 +18,11 @@ export function MilestoneReveal({ state }: MilestoneRevealProps) {
   const [active, setActive] = useState<{ id: string; titleZh: string; summaryZh?: string } | null>(null);
 
   useEffect(() => {
-    const newest = state.milestones.find((m) => !shownIds.includes(m.id) && state.shownMilestoneIds.includes(m.id));
+    const jobKey = state.jobId || 'default';
+    const shownForJob = state.shownMilestoneIds[jobKey] ?? [];
+    const newest = state.milestones.find(
+      (m) => !shownIds.includes(m.id) && shownForJob.includes(m.id),
+    );
     if (newest && !active) {
       setActive({ id: newest.id, titleZh: newest.titleZh, summaryZh: newest.summaryZh });
       setShownIds((prev) => [...prev, newest.id]);
@@ -26,7 +30,7 @@ export function MilestoneReveal({ state }: MilestoneRevealProps) {
       const t = setTimeout(() => setActive(null), ms);
       return () => clearTimeout(t);
     }
-  }, [state.milestones, state.shownMilestoneIds, shownIds, active]);
+  }, [state.milestones, state.shownMilestoneIds, state.jobId, shownIds, active]);
 
   // 重置时清空已显示记录
   useEffect(() => {

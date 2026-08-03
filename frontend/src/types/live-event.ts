@@ -20,6 +20,7 @@ export type LiveEventKind =
   | 'stage.progress'
   | 'stage.completed'
   | 'stage.failed'
+  | 'stage.awaiting_review'
   | 'observation.created'
   | 'decision.created'
   | 'evidence.created'
@@ -97,8 +98,8 @@ export interface LiveEventEnvelope {
 
   progress?: ProgressInfo;
 
-  /** 业务指标（发现数/风险数等，等宽字体展示） */
-  metrics?: Record<string, number | string>;
+  /** 业务指标（发现数/风险数等，等宽字体展示；recipeFields 为字段名数组） */
+  metrics?: Record<string, number | string | string[]>;
   /** 证据引用（点击轨迹定位画布） */
   evidenceRefs?: EvidenceRef[];
   /** 产物引用（artifactId 列表） */

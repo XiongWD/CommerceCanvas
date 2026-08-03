@@ -1,12 +1,14 @@
 /**
- * 场景 A：正常完成（任务书 §六）。
+ * 场景 A：正常完成（R1 修复业务事实）。
  *
- * 7 个阶段全部完成，业务计数符合计划 §9 演示脚本：
- *   12 张图片校验 / 4 类用途 / 4 类构图 / 5 种光线 / 7 处竞品标识 /
- *   24 项发现 / 3 项普通风险 / 1 份 Artifact。
- * 最终状态：分析完成。
+ * R1 修复：
+ *   - 3 条可区分的普通风险（不是只 1 条 warning.created）
+ *   - 0 项结构冲突（里程碑文案不再写"2 项结构冲突"）
+ *   - Recipe 7/7 字段全部标记（recipeFields 数组，逐字段）
+ *   - 24 项发现通过权威 summaryMetrics 更新（不从轨迹反推）
  *
- * 确定性：每次 build 产生完全相同的事件序列。
+ * 业务计数：12 图 / 4 用途 / 4 构图 / 5 光线 / 7 Logo / 24 发现 / 3 风险 / 1 Artifact。
+ * 终态：completed。
  */
 
 import type { LiveEventEnvelope } from '@/types/live-event';
@@ -17,10 +19,10 @@ export function buildNormalScenario(): ScenarioScript {
   const ctx = { jobId: 'job-normal-001', seq: 0, t: 0 };
   const out: LiveEventEnvelope[] = [];
 
-  // session.started
   out.push(
     ev(ctx, {
       kind: 'session.started',
+      jobId: ctx.jobId,
       titleZh: '已创建竞品分析任务，正在校验 12 张图片',
       summaryZh: '演示运行 · 模拟事件流',
       metrics: { activeNodes: 3, totalImages: 12 },
@@ -38,7 +40,6 @@ export function buildNormalScenario(): ScenarioScript {
         stageId: 'validate_images',
         titleZh: '12 张图片已完成格式与尺寸校验',
         summaryZh: '均为 1600×1600，无损坏文件',
-        evidenceRefs: undefined,
       });
     },
   });
@@ -90,11 +91,12 @@ export function buildNormalScenario(): ScenarioScript {
     },
   });
 
-  // 阶段 4：检测文字、Logo 和型号
+  // 阶段 4：检测文字、Logo 和型号 —— R1：3 条可区分普通风险
   emitStage(ctx, out, 'detect_text_logo', {
     durationSec: 6,
     progress: { current: 12, total: 12, unitZh: '张' },
     inline: (emit) => {
+      // 风险 1：竞品 Logo / 型号区域
       emit({
         kind: 'warning.created',
         stageId: 'detect_text_logo',
@@ -107,6 +109,24 @@ export function buildNormalScenario(): ScenarioScript {
           { assetId: 'img-12', layer: 'logo', regionId: 'ev-12-logo' },
         ],
       });
+      // 风险 2：高密度文案布局需要重新排版
+      emit({
+        kind: 'warning.created',
+        stageId: 'detect_text_logo',
+        titleZh: '卖点图存在高密度文案布局，生成时需要重新排版',
+        summaryZh: '非阻断：可在生成阶段处理',
+        severity: 'warning',
+        evidenceRefs: [{ assetId: 'img-08', layer: 'subject' }],
+      });
+      // 风险 3：参数或功能声明必须以 Product Master 为准
+      emit({
+        kind: 'warning.created',
+        stageId: 'detect_text_logo',
+        titleZh: '部分参数图包含功能声明，必须以 Product Master 为准',
+        summaryZh: '非阻断：生成时锁定自有产品参数',
+        severity: 'warning',
+        evidenceRefs: [{ assetId: 'img-12', layer: 'logo' }],
+      });
       emit({
         kind: 'action.created',
         stageId: 'detect_text_logo',
@@ -115,10 +135,11 @@ export function buildNormalScenario(): ScenarioScript {
       });
     },
     onComplete: (emit) => {
+      // R1 修复：正常场景 0 项结构冲突
       emit({
         kind: 'milestone.reached',
         titleZh: '风险排除清单建立',
-        summaryZh: '7 处品牌资产 · 2 项结构冲突',
+        summaryZh: '7 处品牌资产 · 3 项普通风险 · 0 项结构冲突',
         severity: 'success',
         metrics: { milestoneId: 'risk_list_built' },
       });
@@ -173,22 +194,22 @@ export function buildNormalScenario(): ScenarioScript {
     },
   });
 
-  // 阶段 7：形成套图 Creative Recipe
+  // 阶段 7：形成套图 Creative Recipe —— R1：7 字段全部标记
   emitStage(ctx, out, 'build_recipe', {
     durationSec: 6,
     inline: (emit) => {
-      // Recipe 字段逐步形成（metrics.recipeField 触发 reducer 标记完成）
+      // R1：逐字段标记，最终 7/7
       emit({
         kind: 'observation.created',
         stageId: 'build_recipe',
-        titleZh: 'Recipe 字段逐步形成：用途、画布、商品位置',
-        metrics: { recipeField: 'purpose' },
+        titleZh: 'Recipe 字段补全：用途、画布、商品位置',
+        metrics: { recipeFields: ['purpose', 'canvas', 'position'] },
       });
       emit({
         kind: 'observation.created',
         stageId: 'build_recipe',
         titleZh: 'Recipe 字段补全：商品占比、背景、光线',
-        metrics: { recipeField: 'ratio' },
+        metrics: { recipeFields: ['ratio', 'background', 'lighting'] },
       });
       emit({
         kind: 'artifact.created',
@@ -196,7 +217,7 @@ export function buildNormalScenario(): ScenarioScript {
         titleZh: '套图 Creative Recipe 草案已生成，可提前查看',
         summaryZh: '草案 v1',
         artifactRefs: ['recipe-draft-v1'],
-        metrics: { recipeField: 'textSafetyZone' },
+        metrics: { recipeFields: ['textSafetyZone'] },
       });
     },
     onComplete: (emit) => {
@@ -209,13 +230,13 @@ export function buildNormalScenario(): ScenarioScript {
     },
   });
 
-  // 风险汇总 + 完成
+  // 风险汇总 + 完成 —— R1：权威 summaryMetrics
   advance(ctx, 1);
   out.push(
     ev(ctx, {
       kind: 'observation.created',
       titleZh: '分析汇总：共 24 项发现、3 项普通风险、1 份产物',
-      summaryZh: '3 项风险均为非阻断，可在生成阶段处理',
+      summaryZh: '3 项风险均为非阻断，0 项结构冲突，可在生成阶段处理',
       metrics: { findings: 24, risks: 3, artifacts: 1 },
     }),
   );

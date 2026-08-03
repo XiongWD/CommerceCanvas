@@ -42,11 +42,11 @@ export function AmbientStatus({ state }: { state: LiveIntelligenceState }) {
         <span className="gc-data">{formatElapsed(state.elapsedSeconds)}</span>
       </Metric>
       <Metric label="产物">
-        <span className="gc-data">{state.artifacts.length}</span>
+        <span className="gc-data">{state.summaryMetrics.artifacts}</span>
       </Metric>
       <Metric label="风险">
-        <span className="gc-data" style={{ color: state.risks.length ? 'var(--gc-accent-amber)' : undefined }}>
-          {state.risks.length}
+        <span className="gc-data" style={{ color: state.summaryMetrics.risks ? 'var(--gc-accent-amber)' : undefined }}>
+          {state.summaryMetrics.risks}
         </span>
       </Metric>
     </div>

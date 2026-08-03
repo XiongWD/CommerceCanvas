@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-08-03T14:36:12.315Z",
+  "normal": {
+    "scenarioEvents": 60,
+    "dispatchedEvents": 60,
+    "uniqueEventIds": 60,
+    "customerTraceItems": 22,
+    "findings": 24,
+    "risks": 3,
+    "artifacts": 1,
+    "recipeFields": 7,
+    "jobStatus": "completed"
+  },
+  "risk": {
+    "scenarioEvents": 55,
+    "dispatchedEvents": 55,
+    "uniqueEventIds": 55,
+    "customerTraceItems": 17,
+    "findings": 24,
+    "risks": 3,
+    "blockingConflicts": 1,
+    "recipeFields": 4,
+    "buildRecipeStatus": "awaiting_review",
+    "jobStatus": "awaiting_review"
+  },
+  "reconnect": {
+    "scenarioEvents": 63,
+    "lastEventIdBeforeDisconnect": 18,
+    "replayedSequences": [
+      19,
+      20,
+      21,
+      22
+    ],
+    "recoveredCount": 4,
+    "duplicateArtifacts": 0,
+    "duplicateMilestones": 0,
+    "jobIdConsistent": true
+  }
+}

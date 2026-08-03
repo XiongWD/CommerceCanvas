@@ -1,13 +1,13 @@
 /**
- * 场景 B：高风险待人工确认（任务书 §六）。
+ * 场景 B：高风险待人工确认（R1 修复）。
  *
- * 关键差异：检测到竞品为入耳式结构，自有商品为开放式，存在商品结构冲突。
- *   - 检测到竞品 Logo（与 normal 一致）
- *   - 商品结构与 Product Master 不一致（入耳式 vs 开放式）
- *   - 系统保留构图和光线，禁止继承商品结构和功能描述
- *   - build_recipe 阶段进入"待人工确认"
- *   - 生成部分结果，但不宣称全部通过
- * 最终状态：分析完成 · 等待人工确认（非全绿）。
+ * R1 修复：
+ *   - 1 项商品结构阻断（入耳式 vs 开放式）+ 2 项普通风险 = 共 3 风险
+ *   - build_recipe 阶段通过 stage.awaiting_review 事件显式进入 awaiting_review
+ *   - Recipe 部分完成（4/7：purpose/canvas/position/ratio），非 7/7
+ *   - summaryMetrics 与文案一致（findings=24, risks=3, artifacts=1, blockingConflicts=1）
+ *   - 产物标记待确认
+ * 终态：awaiting_review（非全绿）。
  */
 
 import type { LiveEventEnvelope } from '@/types/live-event';
@@ -21,6 +21,7 @@ export function buildRiskScenario(): ScenarioScript {
   out.push(
     ev(ctx, {
       kind: 'session.started',
+      jobId: ctx.jobId,
       titleZh: '已创建竞品分析任务，正在校验 12 张图片',
       summaryZh: '演示运行 · 高风险场景 · 模拟事件流',
       metrics: { activeNodes: 3, totalImages: 12 },
@@ -65,11 +66,11 @@ export function buildRiskScenario(): ScenarioScript {
     durationSec: 5,
     progress: { current: 12, total: 12, unitZh: '张' },
     inline: (emit) => {
-      // 关键风险：商品结构不一致
+      // 风险 1（阻断）：商品结构不一致 —— 1 项 blockingConflicts
       emit({
         kind: 'warning.created',
         stageId: 'segment_subject',
-        titleZh: '商品结构与 Product Master 不一致',
+        titleZh: '商品结构与 Product Master 不一致（阻断）',
         summaryZh: '竞品为入耳式结构，自有商品 OW-A31-BLK 为开放式',
         severity: 'warning',
         requiresAction: true,
@@ -88,6 +89,7 @@ export function buildRiskScenario(): ScenarioScript {
     durationSec: 6,
     progress: { current: 12, total: 12, unitZh: '张' },
     inline: (emit) => {
+      // 风险 2：竞品 Logo
       emit({
         kind: 'warning.created',
         stageId: 'detect_text_logo',
@@ -95,6 +97,14 @@ export function buildRiskScenario(): ScenarioScript {
         summaryZh: '已加入排除清单',
         severity: 'warning',
         evidenceRefs: [{ assetId: 'img-01', layer: 'logo', regionId: 'ev-01-logo' }],
+      });
+      // 风险 3：高密度文案
+      emit({
+        kind: 'warning.created',
+        stageId: 'detect_text_logo',
+        titleZh: '卖点图存在高密度文案布局，生成时需要重新排版',
+        summaryZh: '非阻断',
+        severity: 'warning',
       });
       emit({
         kind: 'action.created',
@@ -106,7 +116,7 @@ export function buildRiskScenario(): ScenarioScript {
       emit({
         kind: 'milestone.reached',
         titleZh: '风险排除清单建立',
-        summaryZh: '7 处品牌资产 · 2 项结构冲突',
+        summaryZh: '7 处品牌资产 · 2 项普通风险 · 1 项结构阻断',
         severity: 'success',
         metrics: { milestoneId: 'risk_list_built' },
       });
@@ -154,13 +164,9 @@ export function buildRiskScenario(): ScenarioScript {
     },
   });
 
-  // build_recipe 阶段进入"待人工确认"——产出草案但不完成
+  // build_recipe：部分完成（4/7）→ 显式 awaiting_review
   out.push(
-    ev(ctx, {
-      kind: 'stage.queued',
-      stageId: 'build_recipe',
-      titleZh: '阶段排队',
-    }),
+    ev(ctx, { kind: 'stage.queued', stageId: 'build_recipe', titleZh: '阶段排队' }),
   );
   advance(ctx, 0.5);
   out.push(
@@ -182,24 +188,25 @@ export function buildRiskScenario(): ScenarioScript {
     }),
   );
   advance(ctx, 1);
+  // Recipe 部分完成：4/7（purpose/canvas/position/ratio）
   out.push(
     ev(ctx, {
       kind: 'artifact.created',
       stageId: 'build_recipe',
       titleZh: '套图 Creative Recipe 草案已部分生成，等待人工确认',
-      summaryZh: '草案 v1 · 待确认',
+      summaryZh: '草案 v1 · 待确认 · 4/7 字段',
       artifactRefs: ['recipe-draft-v1-risk'],
       requiresAction: true,
-      metrics: { recipeField: 'purpose' },
+      metrics: { recipeFields: ['purpose', 'canvas', 'position', 'ratio'] },
     }),
   );
   advance(ctx, 1);
-  // 阶段标记 awaiting_review（非 completed，非全绿）
+  // R1：显式 stage.awaiting_review 事件
   out.push(
     ev(ctx, {
-      kind: 'warning.created',
+      kind: 'stage.awaiting_review',
       stageId: 'build_recipe',
-      titleZh: '检测到商品结构冲突，本阶段进入待人工确认',
+      titleZh: '检测到商品结构阻断，build_recipe 阶段进入待人工确认',
       summaryZh: '请在生成工作室启用商品保真策略前完成复核',
       severity: 'warning',
       requiresAction: true,
@@ -210,19 +217,19 @@ export function buildRiskScenario(): ScenarioScript {
   out.push(
     ev(ctx, {
       kind: 'observation.created',
-      titleZh: '分析汇总：24 项发现、3 项风险（含 1 项结构冲突）、1 份待确认产物',
-      summaryZh: '结构冲突为阻断项，需人工复核后才能进入生成',
-      metrics: { findings: 24, risks: 3, artifacts: 1 },
+      titleZh: '分析汇总：24 项发现、3 项风险（含 1 项结构阻断）、1 份待确认产物',
+      summaryZh: '结构阻断为阻断项，需人工复核后才能进入生成',
+      metrics: { findings: 24, risks: 3, artifacts: 1, blockingConflicts: 1 },
     }),
   );
   advance(ctx, 1);
   out.push(
     ev(ctx, {
       kind: 'job.completed',
-      titleZh: '任务已完成部分分析：等待人工确认商品结构冲突',
+      titleZh: '任务已完成部分分析：等待人工确认商品结构阻断',
       summaryZh: '分析完成 · 等待人工确认',
       requiresAction: true,
-      metrics: { elapsedSeconds: Math.round(ctx.t) },
+      metrics: { elapsedSeconds: Math.round(ctx.t), findings: 24, risks: 3, artifacts: 1 },
     }),
   );
 

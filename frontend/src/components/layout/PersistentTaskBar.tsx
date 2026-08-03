@@ -112,10 +112,10 @@ export function PersistentTaskBar({ live }: { live: LiveIntelligenceApi }) {
         <Sep />
 
         <Metric icon={<FileText size={12} />} tone="blue">
-          发现 <span className="gc-data">{state.trace.filter((t) => t.category === '发现').length}</span>
+          发现 <span className="gc-data">{state.summaryMetrics.findings}</span>
         </Metric>
         <Metric icon={<AlertTriangle size={12} />} tone="amber">
-          风险 <span className="gc-data">{state.risks.length}</span>
+          风险 <span className="gc-data">{state.summaryMetrics.risks}</span>
         </Metric>
         <Metric icon={<Clock size={12} />} tone="neutral">
           <span className="gc-data">{formatElapsed(state.elapsedSeconds)}</span>

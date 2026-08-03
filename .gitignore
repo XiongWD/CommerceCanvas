@@ -9,6 +9,10 @@ build/
 # —— TypeScript 增量构建缓存 ——
 *.tsbuildinfo
 
+# —— 测试覆盖率 ——
+coverage/
+**/coverage/
+
 # —— Vite / 缓存 ——
 *.local
 .vite/
