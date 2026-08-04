@@ -19,9 +19,9 @@ describe('R1.1 P0-1 transport 进入客户分析轨迹', () => {
   it('disconnected/reconnecting/recovered 共 3 条系统轨迹，顺序正确', () => {
     let s = createInitialState('reconnect');
     s = { ...s, jobId: 'job-reconnect-003', runId: 1 };
-    s = liveReducer(s, { type: 'transport_disconnected' });
-    s = liveReducer(s, { type: 'transport_reconnecting' });
-    s = liveReducer(s, { type: 'transport_recovered', fromSequence: 18, recoveredCount: 4 });
+    s = liveReducer(s, { type: 'transport_disconnected', eventId: 'td-1', occurredAt: '2026-08-02T13:32:20Z' });
+    s = liveReducer(s, { type: 'transport_reconnecting', eventId: 'tr-1', occurredAt: '2026-08-02T13:32:21Z' });
+    s = liveReducer(s, { type: 'transport_recovered', eventId: 'trec-1', occurredAt: '2026-08-02T13:32:22Z', fromSequence: 18, recoveredCount: 4 });
     const sysTrace = s.trace.filter((t) => t.category === '系统');
     expect(sysTrace.length).toBe(3);
     expect(sysTrace[0].titleZh).toContain('中断');
@@ -31,16 +31,16 @@ describe('R1.1 P0-1 transport 进入客户分析轨迹', () => {
 
   it('recovered 文案包含「补齐 4 个事件」', () => {
     let s = createInitialState('reconnect');
-    s = liveReducer(s, { type: 'transport_recovered', fromSequence: 18, recoveredCount: 4 });
+    s = liveReducer(s, { type: 'transport_recovered', eventId: 'trec-2', occurredAt: '2026-08-02T13:32:22Z', fromSequence: 18, recoveredCount: 4 });
     const recovered = s.trace.find((t) => t.titleZh.includes('恢复'));
     expect(recovered?.titleZh).toContain('补齐 4 个事件');
   });
 
   it('重复 transport event 不重复（eventId 去重）', () => {
     let s = createInitialState('reconnect');
-    s = liveReducer(s, { type: 'transport_disconnected' });
+    s = liveReducer(s, { type: 'transport_disconnected', eventId: 'td-dup', occurredAt: '2026-08-02T13:32:20Z' });
     const after1 = s.trace.length;
-    s = liveReducer(s, { type: 'transport_disconnected' });
+    s = liveReducer(s, { type: 'transport_disconnected', eventId: 'td-dup', occurredAt: '2026-08-02T13:32:20Z' });
     expect(s.trace.length).toBe(after1);
   });
 
@@ -54,8 +54,8 @@ describe('R1.1 P0-1 transport 进入客户分析轨迹', () => {
       } as LiveEventEnvelope,
     });
     const beforeTransport = s.ledger.lastContiguousSequence;
-    s = liveReducer(s, { type: 'transport_disconnected' });
-    s = liveReducer(s, { type: 'transport_recovered', fromSequence: 1, recoveredCount: 0 });
+    s = liveReducer(s, { type: 'transport_disconnected', eventId: 'td-seq', occurredAt: '2026-08-02T13:32:20Z' });
+    s = liveReducer(s, { type: 'transport_recovered', eventId: 'trec-seq', occurredAt: '2026-08-02T13:32:22Z', fromSequence: 1, recoveredCount: 0 });
     expect(s.ledger.lastContiguousSequence).toBe(beforeTransport);
   });
 });

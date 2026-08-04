@@ -150,7 +150,7 @@ export interface LiveIntelligenceState {
   /** 当前选中的证据焦点（双向定位，本地 UI 状态，由 hook 合并） */
   focusedEvidence?: {
     assetId: string;
-    layer: 'subject' | 'logo' | 'safe' | 'guide' | 'text';
+    layer: 'subject' | 'logo' | 'safe' | 'guide' | 'text' | 'risk';
     regionId?: string;
     source: 'trace' | 'canvas';
     fromSequence?: number;

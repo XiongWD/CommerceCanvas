@@ -31,13 +31,23 @@ export interface TransportEvent {
   recoveredCount?: number;
 }
 
-/** Reducer 动作：业务事件 + 独立传输信号 + 重置 */
+/** Reducer 动作：业务事件 + 独立传输信号（F2 §3.1：保留原 eventId/occurredAt） + 重置 */
 export type LiveAction =
   | { type: 'apply_event'; event: LiveEventEnvelope }
-  | { type: 'transport_disconnected' }
-  | { type: 'transport_reconnecting' }
+  | {
+      type: 'transport_disconnected';
+      eventId: string;
+      occurredAt: string;
+    }
+  | {
+      type: 'transport_reconnecting';
+      eventId: string;
+      occurredAt: string;
+    }
   | {
       type: 'transport_recovered';
+      eventId: string;
+      occurredAt: string;
       fromSequence: number;
       recoveredCount: number;
     }
@@ -55,22 +65,22 @@ export function liveReducer(state: LiveIntelligenceState, action: LiveAction): L
       return { ...createInitialState(action.scenario), jobId: action.jobId, runId: state.runId + 1 };
     case 'transport_disconnected':
       return applyTransport(state, {
-        eventId: `transport-disconnect-${state.runId}`,
-        occurredAt: new Date().toISOString(),
+        eventId: action.eventId,
+        occurredAt: action.occurredAt,
         kind: 'connection.disconnected',
         titleZh: '实时事件连接中断，已保留当前结果',
       });
     case 'transport_reconnecting':
       return applyTransport(state, {
-        eventId: `transport-reconnecting-${state.runId}`,
-        occurredAt: new Date().toISOString(),
+        eventId: action.eventId,
+        occurredAt: action.occurredAt,
         kind: 'connection.reconnecting',
         titleZh: '正在重连事件流',
       });
     case 'transport_recovered':
       return applyTransport(state, {
-        eventId: `transport-recovered-${state.runId}`,
-        occurredAt: new Date().toISOString(),
+        eventId: action.eventId,
+        occurredAt: action.occurredAt,
         kind: 'connection.recovered',
         titleZh: `已从第 ${action.fromSequence} 个事件后恢复 · 补齐 ${action.recoveredCount} 个事件`,
         summaryZh: '任务继续执行，事件不重复',

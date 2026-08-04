@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-label="演示素材：耳机卖点图，左右分屏，右侧降噪波形与对勾图标，绿色点缀">
+  <defs>
+    <!-- 分屏背景：左冷右略亮，强调右侧卖点 -->
+    <linearGradient id="bg9" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0b0f15"/>
+      <stop offset="48%" stop-color="#10151c"/>
+      <stop offset="52%" stop-color="#12181f"/>
+      <stop offset="100%" stop-color="#0a0e13"/>
+    </linearGradient>
+    <!-- 分屏竖向辉光（绿色基调）-->
+    <radialGradient id="glow9" cx="78%" cy="46%" r="42%">
+      <stop offset="0%" stop-color="#3fb98f" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#3fb98f" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 左侧耳罩 -->
+    <radialGradient id="cup9" cx="40%" cy="34%" r="74%">
+      <stop offset="0%" stop-color="#4a5260"/>
+      <stop offset="60%" stop-color="#242a34"/>
+      <stop offset="100%" stop-color="#0c0f14"/>
+    </radialGradient>
+    <linearGradient id="mesh9" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1d232c"/><stop offset="100%" stop-color="#05070a"/>
+    </linearGradient>
+    <linearGradient id="band9" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a4250"/><stop offset="100%" stop-color="#14181f"/>
+    </linearGradient>
+    <!-- 对勾 / 图标圆盘背景 -->
+    <radialGradient id="badge9" cx="42%" cy="34%" r="72%">
+      <stop offset="0%" stop-color="#1c2a24"/>
+      <stop offset="100%" stop-color="#0a0f0d"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="1200" fill="url(#bg9)"/>
+  <!-- 右侧绿色辉光 -->
+  <rect width="1200" height="1200" fill="url(#glow9)"/>
+  <!-- 分屏中线 -->
+  <rect x="598" y="120" width="2" height="960" fill="#1c222b" opacity="0.8"/>
+
+  <!-- 左侧：单耳罩侧视（带部分头梁）-->
+  <g transform="translate(300,360)">
+    <!-- 头梁弧 -->
+    <path d="M -20 60 Q 150 -110 320 60" fill="none" stroke="url(#band9)" stroke-width="30" stroke-linecap="round"/>
+    <path d="M -12 56 Q 150 -96 312 56" fill="none" stroke="#4a5260" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+    <!-- 铰链 -->
+    <rect x="-2" y="40" width="36" height="60" rx="6" fill="url(#band9)"/>
+    <!-- 耳罩 -->
+    <ellipse cx="160" cy="300" rx="180" ry="16" fill="#000" opacity="0.42"/>
+    <ellipse cx="160" cy="220" rx="150" ry="170" fill="url(#cup9)"/>
+    <ellipse cx="160" cy="220" rx="150" ry="170" fill="none" stroke="#3fb98f" stroke-width="2.5" opacity="0.32"/>
+    <ellipse cx="160" cy="220" rx="104" ry="124" fill="url(#mesh9)"/>
+    <circle cx="160" cy="220" r="20" fill="#2a313c"/>
+    <!-- 左下文字块（构图）-->
+    <rect x="20" y="460" width="40" height="40" rx="8" fill="#3fb98f" opacity="0.55"/>
+    <rect x="76" y="468" width="220" height="26" rx="3" fill="#b4b9c1" opacity="0.22"/>
+    <rect x="76" y="506" width="270" height="18" rx="3" fill="#b4b9c1" opacity="0.12"/>
+  </g>
+
+  <!-- 右侧：降噪波形 + 对勾图标 -->
+  <g transform="translate(900,440)">
+    <!-- 声波：左侧大波（外部噪音）渐变减弱至被屏蔽 -->
+    <path d="M -150 0 Q -120 -70 -90 0 T -30 0 T 30 0" fill="none" stroke="#4d5663" stroke-width="7" stroke-linecap="round"/>
+    <!-- 屏障竖线 -->
+    <line x1="60" y1="-110" x2="60" y2="110" stroke="#3fb98f" stroke-width="5" opacity="0.55"/>
+    <line x1="78" y1="-90" x2="78" y2="90" stroke="#3fb98f" stroke-width="3" opacity="0.3"/>
+    <!-- 右侧被消除的平坦/极小波纹 -->
+    <path d="M 110 0 Q 120 -8 130 0 T 150 0 T 170 0" fill="none" stroke="#3fb98f" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- 大圆徽章 + 对勾 -->
+    <circle cx="0" cy="220" r="160" fill="url(#badge9)"/>
+    <circle cx="0" cy="220" r="160" fill="none" stroke="#3fb98f" stroke-width="3" opacity="0.6"/>
+    <circle cx="0" cy="220" r="120" fill="none" stroke="#3fb98f" stroke-width="1.5" opacity="0.35"/>
+    <!-- 对勾 -->
+    <path d="M -64 220 L -16 276 L 76 168" fill="none" stroke="#3fb98f" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- 右下小规格条（构图块）-->
+    <rect x="-150" y="430" width="300" height="10" rx="3" fill="#3fb98f" opacity="0.4"/>
+    <rect x="-150" y="450" width="220" height="8" rx="2" fill="#b4b9c1" opacity="0.12"/>
+  </g>
+</svg>

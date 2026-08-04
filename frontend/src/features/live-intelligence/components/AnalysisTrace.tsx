@@ -5,10 +5,11 @@
  * 新事件从底部进入；当前事件突出，历史降权；不强制拉回最新；提供「回到最新」。
  * 点击携带 evidenceRefs 的轨迹条目 → 触发 Evidence 双向定位。
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LiveIntelligenceState, TraceItem } from '../state/live-intelligence-state';
 import { categoryTone } from '../mappings/event-presentation-map';
 import type { EvidenceFocus } from '../useLiveIntelligence';
+import { AnalysisTraceFilter, type TraceFilter } from './AnalysisTraceFilter';
 
 interface AnalysisTraceProps {
   state: LiveIntelligenceState;
@@ -17,7 +18,21 @@ interface AnalysisTraceProps {
 }
 
 export function AnalysisTrace({ state, highlightedSequence, onFocusEvidence }: AnalysisTraceProps) {
-  const trace = state.trace;
+  const [filter, setFilter] = useState<TraceFilter>('全部');
+  const allTrace = state.trace;
+
+  // 筛选：仅影响展示，不修改事件权威状态（F2 §十）
+  const trace = useMemo(() => {
+    if (filter === '全部') return allTrace;
+    return allTrace.filter((t) => t.category === filter);
+  }, [allTrace, filter]);
+
+  // 各类计数（供筛选栏显示）
+  const counts = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const t of allTrace) c[t.category] = (c[t.category] ?? 0) + 1;
+    return c as Record<TraceItem['category'], number>;
+  }, [allTrace]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
 
@@ -45,9 +60,10 @@ export function AnalysisTrace({ state, highlightedSequence, onFocusEvidence }: A
       <div className="flex items-center justify-between px-3 pb-1 pt-2">
         <span className="gc-section-label">分析轨迹</span>
         <span className="gc-data text-2xs" style={{ color: 'var(--gc-text-faint)' }}>
-          {trace.length} 条
+          {trace.length} / {allTrace.length} 条
         </span>
       </div>
+      <AnalysisTraceFilter active={filter} counts={counts} onChange={setFilter} />
       <div
         ref={scrollRef}
         onScroll={onScroll}

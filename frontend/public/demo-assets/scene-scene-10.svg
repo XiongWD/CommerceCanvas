@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-label="演示素材：生活方式场景，极简桌面上耳机旁植物与咖啡剪影，冷暖光交织">
+  <defs>
+    <!-- 冷暖混合天空式背景 -->
+    <linearGradient id="bgL10" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1b2030"/>
+      <stop offset="55%" stop-color="#10141b"/>
+      <stop offset="100%" stop-color="#0a0d12"/>
+    </linearGradient>
+    <!-- 暖色阳光晕（右上）-->
+    <radialGradient id="warm10" cx="82%" cy="20%" r="45%">
+      <stop offset="0%" stop-color="#e0a93a" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#e0a93a" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 冷色窗光晕（左上）-->
+    <radialGradient id="cool10" cx="14%" cy="16%" r="38%">
+      <stop offset="0%" stop-color="#4d8dff" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#4d8dff" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 桌面 -->
+    <linearGradient id="table10" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1f242d"/>
+      <stop offset="100%" stop-color="#0c0f14"/>
+    </linearGradient>
+    <!-- 耳机俯视/侧躺 -->
+    <radialGradient id="cup10" cx="40%" cy="34%" r="72%">
+      <stop offset="0%" stop-color="#4a5260"/>
+      <stop offset="60%" stop-color="#242a34"/>
+      <stop offset="100%" stop-color="#0c0f14"/>
+    </radialGradient>
+    <linearGradient id="mesh10" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1d232c"/><stop offset="100%" stop-color="#05070a"/>
+    </linearGradient>
+    <linearGradient id="band10" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a4250"/><stop offset="100%" stop-color="#14181f"/>
+    </linearGradient>
+    <!-- 植物叶 -->
+    <linearGradient id="leaf10" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2f4a3a"/><stop offset="100%" stop-color="#16241c"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="1200" fill="url(#bgL10)"/>
+  <rect width="1200" height="1200" fill="url(#warm10)"/>
+  <rect width="1200" height="1200" fill="url(#cool10)"/>
+
+  <!-- 桌面分界与表面 -->
+  <rect y="720" width="1200" height="2" fill="#2a313c" opacity="0.5"/>
+  <rect y="722" width="1200" height="478" fill="url(#table10)"/>
+
+  <!-- 桌面环境光斑 -->
+  <ellipse cx="980" cy="760" rx="280" ry="60" fill="#e0a93a" opacity="0.05"/>
+  <ellipse cx="260" cy="760" rx="220" ry="50" fill="#4d8dff" opacity="0.05"/>
+
+  <!-- 左侧：植物剪影（花盆 + 几片叶）-->
+  <g transform="translate(180,520)">
+    <!-- 桌面接触阴影 -->
+    <ellipse cx="60" cy="232" rx="90" ry="14" fill="#000" opacity="0.4"/>
+    <!-- 花盆 -->
+    <path d="M 16 150 L 104 150 L 92 224 L 28 224 Z" fill="#2a313c"/>
+    <rect x="8" y="142" width="104" height="16" rx="4" fill="#3a4250"/>
+    <!-- 叶片 -->
+    <path d="M 60 150 Q 6 90 18 20 Q 56 70 60 150 Z" fill="url(#leaf10)"/>
+    <path d="M 60 150 Q 120 92 108 26 Q 70 74 60 150 Z" fill="url(#leaf10)" opacity="0.85"/>
+    <path d="M 60 150 Q 60 70 60 6 Q 78 70 60 150 Z" fill="#3a5a48" opacity="0.7"/>
+  </g>
+
+  <!-- 右侧：咖啡杯剪影 + 升腾热气 -->
+  <g transform="translate(900,560)">
+    <ellipse cx="60" cy="178" rx="80" ry="14" fill="#000" opacity="0.4"/>
+    <!-- 杯身 -->
+    <path d="M 14 70 L 106 70 L 96 168 L 24 168 Z" fill="#262c36"/>
+    <ellipse cx="60" cy="70" rx="46" ry="12" fill="#3a4250"/>
+    <ellipse cx="60" cy="70" rx="36" ry="8" fill="#1a1f27"/>
+    <!-- 杯把 -->
+    <path d="M 106 86 Q 140 88 140 110 Q 140 132 106 134" fill="none" stroke="#3a4250" stroke-width="9" stroke-linecap="round"/>
+    <!-- 热气（暖色）-->
+    <path d="M 40 60 Q 30 30 48 8" fill="none" stroke="#e0a93a" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+    <path d="M 60 60 Q 70 28 56 4" fill="none" stroke="#e0a93a" stroke-width="4" stroke-linecap="round" opacity="0.32"/>
+    <path d="M 80 60 Q 90 32 76 10" fill="none" stroke="#e0a93a" stroke-width="4" stroke-linecap="round" opacity="0.3"/>
+  </g>
+
+  <!-- 中央主体：耳机侧躺于桌面 -->
+  <g transform="translate(600,660)">
+    <!-- 头梁（侧躺弧）-->
+    <path d="M -180 70 Q 0 -120 180 70" fill="none" stroke="url(#band10)" stroke-width="30" stroke-linecap="round"/>
+    <path d="M -172 66 Q 0 -106 172 66" fill="none" stroke="#4a5260" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+    <!-- 左耳罩（侧躺，略椭圆）-->
+    <rect x="-202" y="50" width="44" height="64" rx="8" fill="url(#band10)"/>
+    <ellipse cx="-180" cy="150" rx="110" ry="64" fill="url(#cup10)"/>
+    <ellipse cx="-180" cy="150" rx="78" ry="42" fill="url(#mesh10)"/>
+    <circle cx="-180" cy="150" r="14" fill="#2a313c"/>
+    <!-- 右耳罩 -->
+    <rect x="158" y="50" width="44" height="64" rx="8" fill="url(#band10)"/>
+    <ellipse cx="180" cy="150" rx="110" ry="64" fill="url(#cup10)"/>
+    <ellipse cx="180" cy="150" rx="78" ry="42" fill="url(#mesh10)"/>
+    <circle cx="180" cy="150" r="14" fill="#2a313c"/>
+    <!-- 接触阴影 -->
+    <ellipse cx="0" cy="230" rx="300" ry="22" fill="#000" opacity="0.42"/>
+  </g>
+</svg>

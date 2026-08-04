@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-label="演示素材：参数图，耳机配合圆形仪表盘与蓝牙图标，数据可视化风格">
+  <defs>
+    <!-- 数据可视化背景 -->
+    <linearGradient id="bg12" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#14181f"/>
+      <stop offset="100%" stop-color="#080b10"/>
+    </linearGradient>
+    <radialGradient id="cup12" cx="38%" cy="32%" r="74%">
+      <stop offset="0%" stop-color="#4a5260"/>
+      <stop offset="60%" stop-color="#242a34"/>
+      <stop offset="100%" stop-color="#0c0f14"/>
+    </radialGradient>
+    <linearGradient id="band12" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a4250"/>
+      <stop offset="100%" stop-color="#14181f"/>
+    </linearGradient>
+    <linearGradient id="mesh12" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1d232c"/>
+      <stop offset="100%" stop-color="#05070a"/>
+    </linearGradient>
+    <!-- 仪表盘进度弧（绿色）-->
+    <linearGradient id="arc12" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3fb98f"/>
+      <stop offset="100%" stop-color="#4d8dff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="1200" fill="url(#bg12)"/>
+
+  <!-- 数据网格底纹 -->
+  <g stroke="#1c222b" stroke-width="1" opacity="0.55">
+    <line x1="0" y1="300" x2="1200" y2="300"/>
+    <line x1="0" y1="600" x2="1200" y2="600"/>
+    <line x1="0" y1="900" x2="1200" y2="900"/>
+    <line x1="300" y1="0" x2="300" y2="1200"/>
+    <line x1="600" y1="0" x2="600" y2="1200"/>
+    <line x1="900" y1="0" x2="900" y2="1200"/>
+  </g>
+
+  <!-- 左侧：耳机正视（小尺寸，作为数据主体）-->
+  <g transform="translate(330,360)">
+    <ellipse cx="120" cy="560" rx="220" ry="20" fill="#000" opacity="0.4"/>
+    <!-- 头梁 -->
+    <path d="M -10 240 Q 120 -20 250 240" fill="none" stroke="url(#band12)" stroke-width="26" stroke-linecap="round"/>
+    <path d="M -4 236 Q 120 -8 244 236" fill="none" stroke="#4a5260" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+    <!-- 左耳罩 -->
+    <rect x="-22" y="160" width="40" height="56" rx="6" fill="url(#band12)"/>
+    <ellipse cx="0" cy="260" rx="72" ry="88" fill="url(#cup12)"/>
+    <ellipse cx="0" cy="260" rx="50" ry="64" fill="url(#mesh12)"/>
+    <circle cx="0" cy="260" r="14" fill="#2a313c"/>
+    <!-- 右耳罩 -->
+    <rect x="232" y="160" width="40" height="56" rx="6" fill="url(#band12)"/>
+    <ellipse cx="250" cy="260" rx="72" ry="88" fill="url(#cup12)"/>
+    <ellipse cx="250" cy="260" rx="50" ry="64" fill="url(#mesh12)"/>
+    <circle cx="250" cy="260" r="14" fill="#2a313c"/>
+  </g>
+
+  <!-- 左侧底部参数块（构图，无品牌）-->
+  <g transform="translate(150,940)">
+    <rect width="36" height="36" rx="6" fill="#9d7bff" opacity="0.5"/>
+    <rect x="50" y="6" width="180" height="10" rx="2" fill="#b4b9c1" opacity="0.2"/>
+    <rect x="50" y="22" width="220" height="8" rx="2" fill="#b4b9c1" opacity="0.12"/>
+  </g>
+
+  <!-- 右侧：圆形仪表盘（续航 30h）-->
+  <g transform="translate(870,470)">
+    <!-- 外层刻度环（细密刻度，60 格）-->
+    <g stroke="#2a313c" stroke-width="2">
+      <!-- 每 6 度一个刻度，用 transform 旋转 -->
+    </g>
+    <!-- 刻度（程序化绘制：12 主刻度 + 48 细刻度）-->
+    <g>
+      <!-- 主刻度（蓝色，每 30 度）-->
+      <g stroke="#4d8dff" stroke-width="4" opacity="0.7">
+        <line x1="0" y1="-252" x2="0" y2="-228"/>
+        <line x1="126" y1="-218" x2="114" y2="-197" transform="rotate(0)"/>
+      </g>
+    </g>
+    <!-- 刻度环（用 dashed circle 模拟密集刻度）-->
+    <circle r="240" fill="none" stroke="#2a313c" stroke-width="22" stroke-dasharray="3 9.6"/>
+    <!-- 背景轨道弧 -->
+    <circle r="240" fill="none" stroke="#1c222b" stroke-width="26"/>
+    <!-- 进度弧（约 78%，绿→蓝渐变）-->
+    <circle r="240" fill="none" stroke="url(#arc12)" stroke-width="26" stroke-linecap="round"
+            stroke-dasharray="1175" stroke-dashoffset="260"
+            transform="rotate(-90)"/>
+    <!-- 内圈 -->
+    <circle r="188" fill="#0e1218"/>
+    <circle r="188" fill="none" stroke="#2a313c" stroke-width="2" opacity="0.6"/>
+
+    <!-- 中心：电池图标 + 30h -->
+    <!-- 电池外壳 -->
+    <rect x="-56" y="-58" width="104" height="50" rx="8" fill="none" stroke="#3fb98f" stroke-width="5"/>
+    <rect x="48" y="-44" width="10" height="22" rx="3" fill="#3fb98f"/>
+    <rect x="-48" y="-50" width="80" height="34" rx="4" fill="#3fb98f" opacity="0.75"/>
+    <!-- 续航数值占位（构图条，非真实数字以保证非品牌）-->
+    <rect x="-70" y="14" width="140" height="44" rx="6" fill="#3fb98f" opacity="0.28"/>
+    <rect x="-44" y="28" width="88" height="16" rx="3" fill="#0e1218" opacity="0.6"/>
+
+    <!-- 仪表盘顶部标签块 -->
+    <rect x="-50" y="-120" width="100" height="8" rx="3" fill="#3fb98f" opacity="0.5"/>
+  </g>
+
+  <!-- 右下：蓝牙图标（几何形状，非品牌符号风格化）+ 标签 -->
+  <g transform="translate(870,900)">
+    <!-- 蓝牙形状（由两三角组合，蓝填色）-->
+    <path d="M -34 -60 L 30 -12 L -34 36 L -34 -60 Z" fill="#4d8dff" opacity="0.85"/>
+    <path d="M -34 -8 L 30 40 L -34 88 L -34 -8 Z" fill="#0e1218"/>
+    <path d="M -34 -8 L 30 40 L -34 88 L -34 -8 Z" fill="#4d8dff" opacity="0.85"/>
+    <!-- 连接波纹弧 -->
+    <path d="M 40 -40 Q 70 0 40 40" fill="none" stroke="#4d8dff" stroke-width="5" stroke-linecap="round" opacity="0.5"/>
+    <path d="M 56 -28 Q 80 0 56 28" fill="none" stroke="#4d8dff" stroke-width="4" stroke-linecap="round" opacity="0.35"/>
+    <!-- 版本占位条（非品牌数字）-->
+    <rect x="-50" y="110" width="100" height="10" rx="3" fill="#4d8dff" opacity="0.4"/>
+    <rect x="-34" y="126" width="68" height="8" rx="2" fill="#b4b9c1" opacity="0.14"/>
+  </g>
+
+  <!-- 顶部标题构图条 -->
+  <rect x="500" y="96" width="200" height="10" rx="3" fill="#b4b9c1" opacity="0.2"/>
+  <rect x="540" y="116" width="120" height="7" rx="2" fill="#b4b9c1" opacity="0.12"/>
+</svg>

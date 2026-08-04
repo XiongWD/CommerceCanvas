@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-label="演示素材：开放式耳机置于影棚展台，蓝色冷调轮廓光，四分之三角度">
+  <defs>
+    <!-- 影棚背景：左冷右暗 -->
+    <linearGradient id="bgS8" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f1620"/>
+      <stop offset="55%" stop-color="#0a0e14"/>
+      <stop offset="100%" stop-color="#070a0e"/>
+    </linearGradient>
+    <!-- 蓝色冷调轮廓光晕（从左侧打入）-->
+    <radialGradient id="rim8" cx="18%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#4d8dff" stop-opacity="0.32"/>
+      <stop offset="60%" stop-color="#4d8dff" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#4d8dff" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 展台（圆柱基座顶面）-->
+    <linearGradient id="top8" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#222831"/><stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+    <linearGradient id="side8" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#161b22"/><stop offset="100%" stop-color="#080b10"/>
+    </linearGradient>
+    <!-- 耳机本体（3/4 角度：左侧更亮受光）-->
+    <radialGradient id="cup8" cx="30%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#5a6473"/>
+      <stop offset="50%" stop-color="#2d343f"/>
+      <stop offset="100%" stop-color="#0b0e13"/>
+    </radialGradient>
+    <linearGradient id="band8" x1="0" y1="0" x2="1" y2="0.4">
+      <stop offset="0%" stop-color="#4d8dff" stop-opacity="0.6"/>
+      <stop offset="30%" stop-color="#3a4250"/>
+      <stop offset="100%" stop-color="#14181f"/>
+    </linearGradient>
+    <linearGradient id="mesh8" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1d232c"/><stop offset="100%" stop-color="#05070a"/>
+    </linearGradient>
+    <!-- 聚光灯地面投影 -->
+    <radialGradient id="spot8" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="1200" fill="url(#bgS8)"/>
+  <!-- 左侧蓝色轮廓光 -->
+  <rect width="1200" height="1200" fill="url(#rim8)"/>
+  <!-- 背景冷光圆斑 -->
+  <circle cx="240" cy="300" r="300" fill="#4d8dff" opacity="0.06"/>
+
+  <!-- 圆柱展台 -->
+  <g transform="translate(600,720)">
+    <!-- 侧柱 -->
+    <path d="M -250 0 L -250 240 Q -250 290 0 290 Q 250 290 250 240 L 250 0 Z" fill="url(#side8)"/>
+    <!-- 顶面椭圆 -->
+    <ellipse cx="0" cy="0" rx="250" ry="62" fill="url(#top8)"/>
+    <ellipse cx="0" cy="0" rx="250" ry="62" fill="none" stroke="#2f3640" stroke-width="2" opacity="0.7"/>
+    <!-- 展台边缘蓝色轮廓光反射 -->
+    <path d="M -250 0 Q -250 290 0 290 Q 250 290 250 0" fill="none" stroke="#4d8dff" stroke-width="3" opacity="0.35"/>
+    <!-- 展台下方聚光投影 -->
+    <ellipse cx="0" cy="300" rx="320" ry="34" fill="url(#spot8)"/>
+  </g>
+
+  <!-- 3/4 角度耳机：略向左旋转，左耳罩偏前/偏亮 -->
+  <g transform="translate(600,560)">
+    <!-- 头梁（3/4 透视弧）-->
+    <path d="M -210 170 Q 0 -150 210 170" fill="none" stroke="url(#band8)" stroke-width="38" stroke-linecap="round"/>
+    <path d="M -200 166 Q 0 -128 200 166" fill="none" stroke="#6b7484" stroke-width="4" stroke-linecap="round" opacity="0.45"/>
+
+    <!-- 左耳罩（受冷调轮廓光，偏亮+蓝边）-->
+    <rect x="-232" y="130" width="44" height="74" rx="8" fill="url(#band8)"/>
+    <ellipse cx="-210" cy="238" rx="108" ry="128" fill="url(#cup8)"/>
+    <!-- 左耳罩蓝色轮廓高光 -->
+    <path d="M -312 220 Q -318 130 -250 110" fill="none" stroke="#7aa9ff" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+    <ellipse cx="-210" cy="238" rx="76" ry="94" fill="url(#mesh8)"/>
+    <circle cx="-210" cy="238" r="16" fill="#2a313c"/>
+
+    <!-- 右耳罩（背光，偏暗）-->
+    <rect x="188" y="130" width="44" height="74" rx="8" fill="url(#band8)"/>
+    <ellipse cx="210" cy="238" rx="108" ry="128" fill="url(#cup8)" opacity="0.78"/>
+    <ellipse cx="210" cy="238" rx="76" ry="94" fill="url(#mesh8)"/>
+    <circle cx="210" cy="238" r="16" fill="#1a1f27"/>
+  </g>
+
+  <!-- 底部文字占位（无品牌，仅构图细线）-->
+  <rect x="540" y="1050" width="120" height="6" rx="3" fill="#4d8dff" opacity="0.5"/>
+  <rect x="510" y="1068" width="180" height="5" rx="2" fill="#b4b9c1" opacity="0.14"/>
+</svg>

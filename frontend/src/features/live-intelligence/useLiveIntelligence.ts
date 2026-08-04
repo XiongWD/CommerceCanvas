@@ -24,7 +24,7 @@ const JOB_IDS: Record<ScenarioId, string> = {
 /** Evidence 焦点（本地 UI 状态，非业务事件） */
 export interface EvidenceFocus {
   assetId: string;
-  layer: 'subject' | 'logo' | 'safe' | 'guide' | 'text';
+  layer: 'subject' | 'logo' | 'safe' | 'guide' | 'text' | 'risk';
   regionId?: string;
   source: 'trace' | 'canvas';
   fromSequence?: number;
@@ -66,11 +66,15 @@ export function useLiveIntelligence(initial: ScenarioId = 'normal'): LiveIntelli
       onEvent: (event) => dispatch({ type: 'apply_event', event }),
       onStatusChange: (s) => setSimulatorStatus(s),
       onTransport: (sig) => {
-        if (sig.type === 'disconnected') dispatch({ type: 'transport_disconnected' });
-        else if (sig.type === 'reconnecting') dispatch({ type: 'transport_reconnecting' });
+        if (sig.type === 'disconnected')
+          dispatch({ type: 'transport_disconnected', eventId: sig.eventId, occurredAt: sig.occurredAt });
+        else if (sig.type === 'reconnecting')
+          dispatch({ type: 'transport_reconnecting', eventId: sig.eventId, occurredAt: sig.occurredAt });
         else
           dispatch({
             type: 'transport_recovered',
+            eventId: sig.eventId,
+            occurredAt: sig.occurredAt,
             fromSequence: sig.fromSequence ?? 0,
             recoveredCount: sig.recoveredCount ?? 0,
           });

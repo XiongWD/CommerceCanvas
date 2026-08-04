@@ -1,0 +1,60 @@
+{
+  "sourceCommit": "90ca280cacba937142ebe1f212fdfdc509b6927a",
+  "sourceTreeHash": "a88d0b0ae93e1eb1086e213fdd8e11220785e353",
+  "evidenceCommit": "pending-final-commit",
+  "browser": "Playwright Chromium (独立，非 ZCode IAB)",
+  "browserVersion": "143.0.7499.4",
+  "captureTool": "Playwright",
+  "deviceScaleFactor": 1,
+  "pageZoom": 1,
+  "url": "http://127.0.0.1:4175/",
+  "screenshots": [
+    {
+      "file": "single-image-running.png",
+      "sha256": "17680f87279aa886d2bca09d61bd40e82d8d60d412f6601721b712b29581bac6"
+    },
+    {
+      "file": "contact-sheet.png",
+      "sha256": "a0548068d431416661cdb722d7e4c967264aa99322f785b48b1a2716daececd5"
+    },
+    {
+      "file": "composition-clusters.png",
+      "sha256": "99baac5fd2117c04cd6b93f6eddd1b3882370d446eef3932825bc4f2a946ca3e"
+    },
+    {
+      "file": "selling-point-sequence.png",
+      "sha256": "5e4f42c71aae91fcc7456d0675e71d5e3944fb55b9c2f35b9f96c70599fb799e"
+    },
+    {
+      "file": "recipe-review.png",
+      "sha256": "7037155f107ac2b7743adefcf3a12557b629498e0c83218e16bf88b6b47ec714"
+    },
+    {
+      "file": "risk-exclusion.png",
+      "sha256": "d0e167f90bd20147e0d20c0803f45aff7fc929b236af20faaccbf74977c88f41"
+    },
+    {
+      "file": "low-confidence.png",
+      "sha256": "c3a6314a940830f1b6c0511048f8d5166000856a07b6e3a94109c4bb9b5e210a"
+    },
+    {
+      "file": "completed-1440x900.png",
+      "sha256": "15182637301edf2520fff7e5be4345e1831d97ddc27a6cd3e87ff25eba065540"
+    },
+    {
+      "file": "risk-awaiting-review.png",
+      "sha256": "db92b636cb1c062d85801eb15929f0522fc57fdee0e7757b5ca9a8fde9d3b8c2"
+    },
+    {
+      "file": "completed-1366x768.png",
+      "sha256": "4d37b1bb2d01939f53ce41fc0801c88062505604827f1a50b9da00886f053602"
+    },
+    {
+      "file": "completed-1280x800.png",
+      "sha256": "e6f64bf0ccc319bc2b01015b670e4463ad919f512490d6505c25a176aa9ee2c3"
+    }
+  ],
+  "video": {
+    "file": "competitor-analysis-demo.webm"
+  }
+}

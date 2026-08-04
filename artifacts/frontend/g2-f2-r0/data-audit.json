@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-08-04T15:47:28.975Z",
+  "assets": {
+    "count": 12,
+    "uniqueSrc": 12
+  },
+  "roles": {
+    "主图": 1,
+    "场景图": 4,
+    "卖点图": 5,
+    "细节图": 1,
+    "参数图": 1
+  },
+  "clusters": 4,
+  "brandAssets": 7,
+  "risks": 3,
+  "recipe": {
+    "normal": "7/7",
+    "risk": "4/7"
+  }
+}

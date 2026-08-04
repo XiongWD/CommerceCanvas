@@ -11,6 +11,7 @@ import {
 import type { CompetitorAsset, EvidenceKind } from '@/types/competitor-analysis';
 import { EvidenceOverlay } from './EvidenceOverlay';
 import type { LiveIntelligenceState } from '@/features/live-intelligence/state/live-intelligence-state';
+import { findSequenceForEvidence } from '@/features/live-intelligence/state/evidence-selectors';
 import type { EvidenceFocus } from '@/features/live-intelligence/useLiveIntelligence';
 
 /**
@@ -60,41 +61,21 @@ export function CompetitorAnalysisCanvas({
     safe: true,
     logo: true,
     guide: true,
+    text: true,
+    risk: true,
   });
 
   const toggleLayer = (kind: EvidenceKind) =>
     setLayers((prev) => ({ ...prev, [kind]: !prev[kind] }));
 
-  /** F1 R1.1：统一 Evidence → 轨迹定位，支持三级回退（regionId → assetId+layer → assetId） */
-  const findSequenceForEvidence = (params: {
+  /** F2 §3.2：Evidence → 轨迹定位用共享 Selector（不再复制算法） */
+  const lookupEvidenceSequence = (params: {
     regionId?: string;
     assetId?: string;
-    layer?: 'subject' | 'logo' | 'safe' | 'guide' | 'text';
+    layer?: 'subject' | 'logo' | 'safe' | 'guide' | 'text' | 'risk';
   }): number | undefined => {
     if (!liveState) return undefined;
-    const { regionId, assetId, layer } = params;
-    // 1. regionId 精确匹配
-    if (regionId) {
-      const exact = liveState.trace.find((t) =>
-        t.evidenceRefs?.some((r) => r.regionId === regionId),
-      );
-      if (exact) return exact.sequence;
-    }
-    // 2. assetId + layer 匹配
-    if (assetId && layer) {
-      const byAssetLayer = liveState.trace.find((t) =>
-        t.evidenceRefs?.some((r) => r.assetId === assetId && r.layer === layer),
-      );
-      if (byAssetLayer) return byAssetLayer.sequence;
-    }
-    // 3. assetId 匹配（最宽回退）
-    if (assetId) {
-      const byAsset = liveState.trace.find((t) =>
-        t.evidenceRefs?.some((r) => r.assetId === assetId),
-      );
-      if (byAsset) return byAsset.sequence;
-    }
-    return undefined;
+    return findSequenceForEvidence(liveState, params);
   };
 
   const goPrev = () => {
@@ -107,7 +88,7 @@ export function CompetitorAnalysisCanvas({
 
   // 当前图片证据统计（真实分母，演示完成态）
   const evidenceCounts = useMemo(() => {
-    const c: Record<EvidenceKind, number> = { subject: 0, safe: 0, logo: 0, guide: 0 };
+    const c: Record<EvidenceKind, number> = { subject: 0, safe: 0, logo: 0, guide: 0, text: 0, risk: 0 };
     asset.evidences.forEach((e) => {
       c[e.kind] += 1;
     });
@@ -215,7 +196,7 @@ export function CompetitorAnalysisCanvas({
                   layer: region.kind,
                   regionId: region.id,
                   source: 'canvas',
-                  fromSequence: findSequenceForEvidence({
+                  fromSequence: lookupEvidenceSequence({
                     regionId: region.id,
                     assetId: asset.id,
                     layer: region.kind,

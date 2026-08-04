@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-label="演示素材：开放式耳机主图变体，居中对称正视，顶部柔光">
+  <defs>
+    <!-- 背景居中顶部柔光（区别于 main-01 的右上偏光）-->
+    <radialGradient id="bgM7" cx="50%" cy="14%" r="85%">
+      <stop offset="0%" stop-color="#2c3440"/>
+      <stop offset="45%" stop-color="#161b22"/>
+      <stop offset="100%" stop-color="#080b10"/>
+    </radialGradient>
+    <!-- 头梁金属质感（顶部高光）-->
+    <linearGradient id="bandM7" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5a6473"/>
+      <stop offset="50%" stop-color="#2d343f"/>
+      <stop offset="100%" stop-color="#14181f"/>
+    </linearGradient>
+    <!-- 正视耳罩，光来自正上方 -->
+    <radialGradient id="cupM7" cx="50%" cy="18%" r="80%">
+      <stop offset="0%" stop-color="#525a68"/>
+      <stop offset="55%" stop-color="#262c37"/>
+      <stop offset="100%" stop-color="#0b0e13"/>
+    </radialGradient>
+    <linearGradient id="meshM7" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1d232c"/>
+      <stop offset="100%" stop-color="#05070a"/>
+    </linearGradient>
+    <!-- 顶部柔光晕 -->
+    <radialGradient id="haloM7" cx="50%" cy="0%" r="60%">
+      <stop offset="0%" stop-color="#9fb4d8" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#9fb4d8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="1200" fill="url(#bgM7)"/>
+  <!-- 顶部柔光晕 -->
+  <rect width="1200" height="600" fill="url(#haloM7)"/>
+
+  <!-- 居中对称正视耳机 -->
+  <g transform="translate(600,470)">
+    <!-- 头梁：对称拱形（中心为 0,0）-->
+    <path d="M -230 200 Q 0 -160 230 200" fill="none" stroke="url(#bandM7)" stroke-width="40" stroke-linecap="round"/>
+    <!-- 头梁内侧细高光 -->
+    <path d="M -218 196 Q 0 -138 218 196" fill="none" stroke="#6b7484" stroke-width="5" stroke-linecap="round" opacity="0.55"/>
+    <!-- 头梁顶垫（中央衬垫，正视可见）-->
+    <path d="M -90 30 Q 0 -8 90 30 L 90 56 Q 0 22 -90 56 Z" fill="#1c2129" opacity="0.9"/>
+
+    <!-- 左耳罩 + 铰链 -->
+    <rect x="-252" y="150" width="44" height="78" rx="8" fill="url(#bandM7)"/>
+    <ellipse cx="-230" cy="262" rx="118" ry="138" fill="url(#cupM7)"/>
+    <!-- 耳罩外圈边沿 -->
+    <ellipse cx="-230" cy="262" rx="118" ry="138" fill="none" stroke="#5a6473" stroke-width="3" opacity="0.4"/>
+    <!-- 内耳罩网孔 -->
+    <ellipse cx="-230" cy="262" rx="84" ry="102" fill="url(#meshM7)"/>
+    <ellipse cx="-230" cy="262" rx="40" ry="48" fill="#11151c"/>
+    <!-- 中央装饰圆点（非品牌，几何元素）-->
+    <circle cx="-230" cy="262" r="14" fill="#2a313c"/>
+
+    <!-- 右耳罩 + 铰链 -->
+    <rect x="208" y="150" width="44" height="78" rx="8" fill="url(#bandM7)"/>
+    <ellipse cx="230" cy="262" rx="118" ry="138" fill="url(#cupM7)"/>
+    <ellipse cx="230" cy="262" rx="118" ry="138" fill="none" stroke="#5a6473" stroke-width="3" opacity="0.4"/>
+    <ellipse cx="230" cy="262" rx="84" ry="102" fill="url(#meshM7)"/>
+    <ellipse cx="230" cy="262" rx="40" ry="48" fill="#11151c"/>
+    <circle cx="230" cy="262" r="14" fill="#2a313c"/>
+
+    <!-- 接触阴影 -->
+    <ellipse cx="0" cy="430" rx="360" ry="30" fill="#000" opacity="0.45"/>
+  </g>
+</svg>

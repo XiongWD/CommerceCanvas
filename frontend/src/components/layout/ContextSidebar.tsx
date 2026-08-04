@@ -1,11 +1,11 @@
-import type { CompetitorAnalysisState, Platform } from '@/types/competitor-analysis';
-import { AssetThumbnailList } from '@/components/competitor/AssetThumbnailList';
-
 /**
- * 项目上下文栏（任务书 §6.2）。
- * 220–260px，展示项目 / SKU / 平台 / 分析任务 / 竞品套图缩略图列表与状态。
- * 不依赖远程图片（任务书 §6.2），使用 CSS 占位。
+ * 项目上下文栏（F2 §四）。
+ * 244px，展示 Product Master 摘要 + 素材分组筛选 + 套图统计 + 竞品套图缩略图列表。
  */
+import { useState, useMemo } from 'react';
+import type { CompetitorAnalysisState, Platform, ImageRole } from '@/types/competitor-analysis';
+import { ProductMasterSummary } from '@/components/competitor/ProductMasterSummary';
+import { AssetThumbnailList } from '@/components/competitor/AssetThumbnailList';
 
 const platformZh: Record<Platform, string> = {
   amazon: 'Amazon 美国站',
@@ -13,17 +13,41 @@ const platformZh: Record<Platform, string> = {
   tiktok_shop: 'TikTok Shop',
 };
 
+type AssetFilter = '全部' | ImageRole | '有风险' | '待确认' | '已形成结论';
+
+const FILTERS: AssetFilter[] = ['全部', '主图', '场景图', '卖点图', '细节图', '参数图', '有风险', '待确认'];
+
 interface ContextSidebarProps {
   state: CompetitorAnalysisState;
   selectedAssetId: string;
   onSelectAsset: (id: string) => void;
 }
 
-export function ContextSidebar({
-  state,
-  selectedAssetId,
-  onSelectAsset,
-}: ContextSidebarProps) {
+export function ContextSidebar({ state, selectedAssetId, onSelectAsset }: ContextSidebarProps) {
+  const [filter, setFilter] = useState<AssetFilter>('全部');
+
+  const filteredAssets = useMemo(() => {
+    return state.assets.filter((a) => {
+      if (filter === '全部') return true;
+      if (filter === '有风险') return a.riskCount > 0;
+      if (filter === '待确认') return a.status === '待人工确认';
+      if (filter === '已形成结论') return a.clusterId !== undefined;
+      return a.role === filter;
+    });
+  }, [state.assets, filter]);
+
+  // 套图统计（§4.3，紧凑，不做 KPI 卡片墙）
+  const stats = useMemo(() => {
+    const roles = new Set(state.assets.map((a) => a.role));
+    const risks = state.assets.reduce((sum, a) => sum + a.riskCount, 0);
+    return {
+      total: state.assets.length,
+      roles: roles.size,
+      clusters: state.clusters.length,
+      risks,
+    };
+  }, [state.assets, state.clusters]);
+
   return (
     <aside
       className="flex shrink-0 flex-col border-r"
@@ -33,118 +57,96 @@ export function ContextSidebar({
         borderColor: 'var(--gc-line)',
       }}
     >
-      {/* 项目上下文头部 */}
-      <header className="px-4 pb-3 pt-4">
+      {/* 项目头部 */}
+      <header className="shrink-0 px-3 pb-2 pt-3">
         <div className="gc-section-label">项目</div>
-        <h1
-          className="mt-1.5 text-sm font-semibold"
-          style={{ color: 'var(--gc-text-hi)' }}
-        >
+        <h1 className="mt-1 text-sm font-semibold" style={{ color: 'var(--gc-text-hi)' }}>
           {state.projectNameZh}
         </h1>
-        <div className="mt-2 flex flex-col gap-1.5">
-          <MetaRow label="SKU">
-            <span className="gc-mono-chip">{state.sku}</span>
-          </MetaRow>
-          <MetaRow label="平台">
-            <span style={{ color: 'var(--gc-text-mid)' }}>
-              {platformZh[state.platform]}
-            </span>
-          </MetaRow>
-          <MetaRow label="分析任务">
-            <span style={{ color: 'var(--gc-text-mid)' }}>
-              {state.taskNameZh}
-            </span>
-          </MetaRow>
-          <MetaRow label="图片数量">
-            <span className="gc-data" style={{ color: 'var(--gc-text-mid)' }}>
-              {state.assetCount} 张
-            </span>
-          </MetaRow>
-          <MetaRow label="目标">
-            <span style={{ color: 'var(--gc-text-mid)' }}>{state.goalZh}</span>
-          </MetaRow>
+        <div className="mt-1 flex items-center gap-2">
+          <span className="gc-mono-chip">{state.sku}</span>
+          <span className="text-2xs" style={{ color: 'var(--gc-text-faint)' }}>
+            {platformZh[state.platform]}
+          </span>
         </div>
       </header>
 
-      <div className="gc-divider mx-4" />
+      <div className="gc-divider mx-3" />
 
-      {/* 竞品套图缩略图列表 */}
-      <div className="flex items-center justify-between px-4 pb-2 pt-3">
-        <span className="gc-section-label">竞品套图</span>
-        <span
-          className="gc-data text-2xs"
-          style={{ color: 'var(--gc-text-faint)' }}
-        >
-          风险 {state.task.risks} · 待审 {state.stats.pendingHumanReview}
-        </span>
+      {/* Product Master 摘要（§4.1） */}
+      <div className="shrink-0">
+        <ProductMasterSummary pm={state.productMaster} />
       </div>
 
+      <div className="gc-divider mx-3" />
+
+      {/* 套图统计（§4.3，紧凑） */}
+      <div className="shrink-0 px-3 py-2">
+        <div className="gc-section-label mb-1">套图统计</div>
+        <div className="grid grid-cols-4 gap-1 text-center">
+          <StatCell value={stats.total} label="图片" />
+          <StatCell value={stats.roles} label="用途" />
+          <StatCell value={stats.clusters} label="构图" />
+          <StatCell value={stats.risks} label="风险" tone={stats.risks > 0 ? 'amber' : undefined} />
+        </div>
+      </div>
+
+      <div className="gc-divider mx-3" />
+
+      {/* 素材分组筛选（§4.2） */}
+      <div className="shrink-0 px-3 py-2">
+        <div className="flex flex-wrap gap-0.5">
+          {FILTERS.map((f) => {
+            const isActive = filter === f;
+            return (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className="rounded-sm px-1.5 py-0.5 text-2xs transition-colors duration-snap"
+                style={{
+                  color: isActive ? 'var(--gc-accent-blue)' : 'var(--gc-text-faint)',
+                  background: isActive ? 'var(--gc-accent-blue-soft)' : 'transparent',
+                  border: `1px solid ${isActive ? 'var(--gc-accent-blue-line)' : 'var(--gc-line)'}`,
+                }}
+              >
+                {f}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 竞品套图缩略图列表（筛选后） */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <AssetThumbnailList
-          assets={state.assets}
+          assets={filteredAssets}
           selectedAssetId={selectedAssetId}
           onSelectAsset={onSelectAsset}
         />
       </div>
-
-      <div className="gc-divider mx-4" />
-
-      {/* 简要统计：可继承 / 不可继承（任务书 §6.2）*/}
-      <footer className="grid grid-cols-2 px-4 py-3">
-        <StatCell
-          tone="blue"
-          labelZh="可继承"
-          count={state.stats.inheritableCount}
-        />
-        <StatCell
-          tone="red"
-          labelZh="禁止继承"
-          count={state.stats.prohibitedCount}
-        />
-      </footer>
     </aside>
   );
 }
 
-function MetaRow({
+function StatCell({
+  value,
   label,
-  children,
+  tone,
 }: {
+  value: number;
   label: string;
-  children: React.ReactNode;
+  tone?: 'amber';
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3">
+    <div className="flex flex-col items-center">
+      <span
+        className="gc-data text-sm font-semibold"
+        style={{ color: tone === 'amber' ? 'var(--gc-accent-amber)' : 'var(--gc-text-mid)' }}
+      >
+        {value}
+      </span>
       <span className="text-2xs" style={{ color: 'var(--gc-text-faint)' }}>
         {label}
-      </span>
-      <span className="text-right text-xs">{children}</span>
-    </div>
-  );
-}
-
-function StatCell({
-  tone,
-  labelZh,
-  count,
-}: {
-  tone: 'blue' | 'red';
-  labelZh: string;
-  count: number;
-}) {
-  const color =
-    tone === 'blue' ? 'var(--gc-accent-blue)' : 'var(--gc-accent-red)';
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span
-        className="gc-data text-base font-semibold"
-        style={{ color }}
-      >
-        {count}
-      </span>
-      <span className="text-2xs" style={{ color: 'var(--gc-text-faint)' }}>
-        {labelZh}
       </span>
     </div>
   );

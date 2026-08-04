@@ -20,8 +20,15 @@ export type SimulatorStatus = 'idle' | 'running' | 'paused' | 'finished';
 export interface SimulatorCallbacks {
   onEvent: (event: LiveEventEnvelope) => void;
   onStatusChange: (status: SimulatorStatus) => void;
-  /** R1：连接状态用独立回调（transport action），不混入业务事件 */
-  onTransport?: (signal: { type: 'disconnected' | 'reconnecting' | 'recovered'; fromSequence?: number; recoveredCount?: number }) => void;
+  /** R1：连接状态用独立回调（transport action），不混入业务事件。
+   *  F2 §3.1：保留原事件 eventId/occurredAt，由 reducer 直接使用，不生成墙钟。 */
+  onTransport?: (signal: {
+    type: 'disconnected' | 'reconnecting' | 'recovered';
+    eventId: string;
+    occurredAt: string;
+    fromSequence?: number;
+    recoveredCount?: number;
+  }) => void;
   /** 已分发事件计数（供运行时测试校验双重执行） */
   onDispatchCountChange?: (count: number) => void;
 }
@@ -201,13 +208,17 @@ function isTransportEvent(e: LiveEventEnvelope): boolean {
 
 function toTransportSignal(e: LiveEventEnvelope): {
   type: 'disconnected' | 'reconnecting' | 'recovered';
+  eventId: string;
+  occurredAt: string;
   fromSequence?: number;
   recoveredCount?: number;
 } {
-  if (e.kind === 'connection.disconnected') return { type: 'disconnected' };
-  if (e.kind === 'connection.reconnecting') return { type: 'reconnecting' };
+  const base = { eventId: e.eventId, occurredAt: e.occurredAt };
+  if (e.kind === 'connection.disconnected') return { type: 'disconnected', ...base };
+  if (e.kind === 'connection.reconnecting') return { type: 'reconnecting', ...base };
   return {
     type: 'recovered',
+    ...base,
     fromSequence: e.metrics?.fromSequence !== undefined ? Number(e.metrics.fromSequence) : undefined,
     recoveredCount: e.metrics?.recoveredCount !== undefined ? Number(e.metrics.recoveredCount) : undefined,
   };

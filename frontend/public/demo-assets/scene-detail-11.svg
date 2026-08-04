@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-label="演示素材：耳机头梁铰链微距，展示折叠机构与金属拉丝质感">
+  <defs>
+    <!-- 微距暗背景 + 聚焦光斑 -->
+    <radialGradient id="bg11" cx="48%" cy="44%" r="62%">
+      <stop offset="0%" stop-color="#1c222b"/>
+      <stop offset="60%" stop-color="#0e1218"/>
+      <stop offset="100%" stop-color="#06090d"/>
+    </radialGradient>
+    <!-- 金属拉丝质感（铰链主体）-->
+    <linearGradient id="metal11" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8a93a3"/>
+      <stop offset="30%" stop-color="#4d5663"/>
+      <stop offset="55%" stop-color="#2a313c"/>
+      <stop offset="100%" stop-color="#0e1218"/>
+    </linearGradient>
+    <!-- 金属侧面深色 -->
+    <linearGradient id="metalSide11" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#14181f"/>
+      <stop offset="50%" stop-color="#3a4250"/>
+      <stop offset="100%" stop-color="#14181f"/>
+    </linearGradient>
+    <!-- 头梁段 -->
+    <linearGradient id="band11" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a4250"/>
+      <stop offset="100%" stop-color="#10151c"/>
+    </linearGradient>
+    <!-- 耳罩壳体 -->
+    <radialGradient id="cup11" cx="60%" cy="40%" r="75%">
+      <stop offset="0%" stop-color="#4a5260"/>
+      <stop offset="60%" stop-color="#242a34"/>
+      <stop offset="100%" stop-color="#0a0d12"/>
+    </radialGradient>
+    <!-- 紫色微光强调铰链 -->
+    <radialGradient id="accent11" cx="30%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#9d7bff" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#9d7bff" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 拉丝纹理图案（细密竖线）-->
+    <pattern id="brush11" x="0" y="0" width="3" height="3" patternUnits="userSpaceOnUse">
+      <rect width="3" height="3" fill="transparent"/>
+      <line x1="1.5" y1="0" x2="1.5" y2="3" stroke="#0a0d12" stroke-width="0.6" opacity="0.5"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="1200" fill="url(#bg11)"/>
+  <rect width="1200" height="1200" fill="url(#accent11)"/>
+
+  <!-- 紧凑裁切的铰链微距（左上头梁 / 右下耳罩壳 / 中央折叠铰链）-->
+  <g transform="translate(140,120)">
+    <!-- 接触阴影 -->
+    <ellipse cx="460" cy="940" rx="380" ry="26" fill="#000" opacity="0.45"/>
+
+    <!-- 头梁段（斜向伸入左上）-->
+    <g transform="rotate(-34 460 460)">
+      <rect x="-40" y="120" width="120" height="680" rx="60" fill="url(#band11)"/>
+      <rect x="-40" y="120" width="120" height="680" rx="60" fill="none" stroke="#5a6473" stroke-width="3" opacity="0.4"/>
+      <!-- 头梁内侧滑动臂（金属亮条，插入铰链）-->
+      <rect x="-8" y="120" width="16" height="420" rx="6" fill="url(#metalSide11)"/>
+      <!-- 臂上定位孔 -->
+      <circle cx="0" cy="200" r="7" fill="#06090d"/>
+      <circle cx="0" cy="280" r="7" fill="#06090d"/>
+      <circle cx="0" cy="360" r="7" fill="#06090d"/>
+    </g>
+
+    <!-- 中央折叠铰链（金属块，斜置）-->
+    <g transform="rotate(-34 460 560)">
+      <!-- 铰链主块体 -->
+      <rect x="350" y="500" width="220" height="130" rx="18" fill="url(#metal11)"/>
+      <rect x="350" y="500" width="220" height="130" rx="18" fill="url(#brush11)"/>
+      <rect x="350" y="500" width="220" height="130" rx="18" fill="none" stroke="#7a8494" stroke-width="2.5" opacity="0.6"/>
+      <!-- 铰链上下分割缝（折叠接缝）-->
+      <rect x="356" y="560" width="208" height="6" fill="#05070a"/>
+      <!-- 铰链销轴（铆钉）-->
+      <circle cx="400" cy="565" r="18" fill="url(#metal11)"/>
+      <circle cx="400" cy="565" r="18" fill="none" stroke="#9aa4b4" stroke-width="2" opacity="0.7"/>
+      <circle cx="400" cy="565" r="7" fill="#06090d"/>
+      <circle cx="520" cy="565" r="18" fill="url(#metal11)"/>
+      <circle cx="520" cy="565" r="18" fill="none" stroke="#9aa4b4" stroke-width="2" opacity="0.7"/>
+      <circle cx="520" cy="565" r="7" fill="#06090d"/>
+      <!-- 折叠角度标记槽（非品牌，几何装饰）-->
+      <rect x="430" y="520" width="60" height="8" rx="3" fill="#06090d"/>
+      <rect x="430" y="606" width="60" height="8" rx="3" fill="#06090d"/>
+      <!-- 顶部金属高光 -->
+      <rect x="356" y="506" width="208" height="10" rx="5" fill="#9aa4b4" opacity="0.4"/>
+    </g>
+
+    <!-- 耳罩壳体（右下，铰链延伸处）-->
+    <g transform="rotate(-34 460 460)">
+      <ellipse cx="640" cy="700" rx="180" ry="150" fill="url(#cup11)"/>
+      <ellipse cx="640" cy="700" rx="180" ry="150" fill="none" stroke="#5a6473" stroke-width="3" opacity="0.35"/>
+      <ellipse cx="640" cy="700" rx="120" ry="100" fill="#0a0d12"/>
+      <circle cx="640" cy="700" r="22" fill="#2a313c"/>
+      <!-- 紫色微光勾边 -->
+      <path d="M 480 640 Q 560 560 760 580" fill="none" stroke="#9d7bff" stroke-width="5" stroke-linecap="round" opacity="0.5"/>
+    </g>
+
+    <!-- 聚焦引导框（非品牌，构图辅助）-->
+    <rect x="360" y="500" width="200" height="130" rx="18" fill="none" stroke="#e0a93a" stroke-width="2.5" opacity="0.55" stroke-dasharray="10 8"/>
+  </g>
+</svg>

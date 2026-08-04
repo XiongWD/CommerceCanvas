@@ -65,7 +65,7 @@ export interface ProgressInfo {
  */
 export interface EvidenceRef {
   assetId: string;
-  layer: 'subject' | 'logo' | 'safe' | 'guide' | 'text';
+  layer: 'subject' | 'logo' | 'safe' | 'guide' | 'text' | 'risk';
   regionId?: string;
 }
 

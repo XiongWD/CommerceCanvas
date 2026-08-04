@@ -24,6 +24,8 @@ const kindColorVar: Record<EvidenceKind, string> = {
   logo: 'var(--gc-evidence-logo)',
   safe: 'var(--gc-evidence-safe)',
   guide: 'var(--gc-evidence-guide)',
+  text: 'var(--gc-accent-amber)',
+  risk: 'var(--gc-accent-red)',
 };
 
 const kindLabelZh: Record<EvidenceKind, string> = {
@@ -31,6 +33,8 @@ const kindLabelZh: Record<EvidenceKind, string> = {
   logo: '风险',
   safe: '安全区',
   guide: '辅助线',
+  text: '文字',
+  risk: '风险区',
 };
 
 export function EvidenceOverlay({

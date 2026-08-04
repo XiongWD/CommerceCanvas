@@ -23,8 +23,10 @@ export type ImageRole = '主图' | '场景图' | '卖点图' | '细节图' | '�
  *   logo     Logo / 文字风险框（禁止继承）
  *   safe     主体安全区
  *   guide    构图辅助线
+ *   text     OCR 文字块（F2 §5.1）
+ *   risk     风险区域（F2 §5.1）
  */
-export type EvidenceKind = 'subject' | 'logo' | 'safe' | 'guide';
+export type EvidenceKind = 'subject' | 'logo' | 'safe' | 'guide' | 'text' | 'risk';
 
 /**
  * 证据区域：归一化坐标（0–1），与画布尺寸解耦。
@@ -90,6 +92,16 @@ export interface CompetitorAsset {
   visualLanguage: AssetVisualLanguage; // 视觉语言摘要
   /** 风险项中文描述列表（与 riskCount 对应）*/
   risksZh: string[];
+
+  /** —— F2 扩展字段（§5.1 / §八）—— */
+  /** 所属构图聚类 ID（关联 CompositionCluster.id） */
+  clusterId: string;
+  /** 该资产分析置信度（有业务语义，非装饰性百分比） */
+  confidence: ConfidenceInfo;
+  /** 关联的卖点节点 ID 列表（关联 SellingPointNode.id） */
+  sellingPointIds: string[];
+  /** 关联的套图洞察 ID 列表（关联 SuiteInsight.id） */
+  insightIds: string[];
 }
 
 /** 分析摘要项（右侧检查器） */
@@ -177,4 +189,138 @@ export interface CompetitorAnalysisState {
     prohibitedCount: number;
     pendingHumanReview: number;
   };
+  // —— F2 扩展 ——
+  /** Product Master 摘要（§4.1） */
+  productMaster: ProductMaster;
+  /** 构图聚类（§5.3） */
+  clusters: CompositionCluster[];
+  /** 卖点顺序（§5.4） */
+  sellingPoints: SellingPointNode[];
+  /** 风险排除清单（§7.4） */
+  riskExclusion: RiskExclusionList;
+  /** 套图洞察（§7.2） */
+  insights: SuiteInsight[];
 }
+
+// ===== F2 新增类型 =====
+
+/** 中央查看模式（§五） */
+export type CanvasViewMode = 'single' | 'contact-sheet' | 'clusters' | 'selling-points';
+
+/** 右侧检查器 Tab（§七） */
+export type InspectorTab = 'current-image' | 'suite-insights' | 'recipe' | 'risk-exclusion';
+
+/** 置信度等级（§八） */
+export type ConfidenceLevel = 'high' | 'medium' | 'low' | 'pending';
+
+/** 置信度信息（§八：有业务语义，非装饰性百分比） */
+export interface ConfidenceInfo {
+  level: ConfidenceLevel;
+  /** 辅助百分比（0–100，仅参考） */
+  percent: number;
+  /** 中文依据（点击置信度展示） */
+  basisZh: string;
+}
+
+/** Product Master 摘要（§4.1） */
+export interface ProductMaster {
+  productNameZh: string;
+  sku: string;
+  categoryZh: string;
+  /** 商品形态，例如「开放式耳机」 */
+  formFactorZh: string;
+  /** 主色 */
+  primaryColorZh: string;
+  /** 材质 */
+  materialZh: string;
+  /** 核心身份特征 */
+  identityFeaturesZh: string[];
+  /** 禁止变化属性 */
+  prohibitedChangesZh: string[];
+}
+
+/** 构图聚类（§5.3） */
+export interface CompositionCluster {
+  id: string;
+  /** 聚类名，例如「A：右侧主体 / 左侧文案」 */
+  nameZh: string;
+  /** 包含的资产 ID */
+  assetIds: string[];
+  /** 构图特征 */
+  compositionFeaturesZh: string[];
+  /** 适合的图片槽位 */
+  suitableSlotsZh: string[];
+  /** 可借鉴程度 */
+  borrowability: ConfidenceInfo;
+  /** 风险提示 */
+  riskNoteZh?: string;
+}
+
+/** 卖点顺序节点（§5.4） */
+export interface SellingPointNode {
+  id: string;
+  /** 卖点名，例如「续航」 */
+  nameZh: string;
+  /** 顺序（从 1 起） */
+  order: number;
+  /** 关联资产 ID */
+  assetIds: string[];
+  /** 使用的构图模式 */
+  compositionZh: string;
+  /** 使用的光线语言 */
+  lightingZh: string;
+  /** 是否可继承 */
+  inheritable: boolean;
+  /** 是否需要 Product Master 事实校验 */
+  needsFactCheck: boolean;
+}
+
+/** 风险排除项（§7.4） */
+export interface RiskExclusionItem {
+  id: string;
+  /** 分类：禁止继承 / 待事实校验 / 可安全借鉴 */
+  category: 'prohibited' | 'fact-check' | 'safe';
+  /** 名称 */
+  nameZh: string;
+  /** 原因 */
+  reasonZh: string;
+  /** 证据数量 */
+  evidenceCount: number;
+  /** 关联资产 ID */
+  assetIds: string[];
+  /** 是否需要人工确认 */
+  needsReview: boolean;
+}
+
+/** 风险排除清单（§7.4） */
+export interface RiskExclusionList {
+  prohibited: RiskExclusionItem[];
+  factCheck: RiskExclusionItem[];
+  safe: RiskExclusionItem[];
+}
+
+/** 套图洞察项（§7.2） */
+export interface SuiteInsight {
+  id: string;
+  /** 洞察类别 */
+  categoryZh: string;
+  /** 结论中文 */
+  conclusionZh: string;
+  /** 关联资产 ID（可定位到图片） */
+  assetIds: string[];
+  /** 置信度 */
+  confidence: ConfidenceInfo;
+}
+
+/** 单个资产扩展字段（F2 §5.1/§八） */
+export interface AssetF2Extension {
+  /** 聚类 ID */
+  clusterId: string;
+  /** 置信度 */
+  confidence: ConfidenceInfo;
+  /** 关联卖点 ID */
+  sellingPointIds: string[];
+  /** 关联套图结论 ID */
+  insightIds: string[];
+}
+
