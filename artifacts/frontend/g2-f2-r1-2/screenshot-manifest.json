@@ -1,7 +1,7 @@
 {
-  "sourceCommit": "18abae2ba2db3ce6c2af53ea13077d53b459f413",
-  "sourceTreeHash": "0c2863d7a30b6fc89a45c554d4ff9ebf0a9ae322",
-  "evidencePayloadCommit": "pending-evidence",
+  "sourceCommit": "de9c1c3f8ab82857ffd1df6aebe892ca4b3dc7b7",
+  "sourceTreeHash": "5dcfd59453aa3197f4fa123d98e10565c674a814",
+  "evidencePayloadCommit": "de9c1c3f8ab82857ffd1df6aebe892ca4b3dc7b7",
   "browser": "Playwright Chromium (独立，非 IAB)",
   "browserVersion": "143.0.7499.4",
   "deviceScaleFactor": 1,
