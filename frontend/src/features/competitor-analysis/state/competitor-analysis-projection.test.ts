@@ -150,16 +150,15 @@ describe('投影层：终态不自动展开静态数组', () => {
     expect(proj.visibleRiskItemIds).toContain('risk-logo');
   });
 
-  it('risk 场景无 resultRefs → 终态资产/聚类/卖点仍为空（事件驱动）', () => {
+  it('risk 场景有 resultRefs → 终态显示全部已形成结果（事件驱动）', () => {
     const events = buildRiskScenario().events;
     const { proj } = projectAt(events, 'risk', 'job-risk-002');
     expect(proj.isTerminal).toBe(true);
-    // risk 场景未声明任何 resultRefs，故不应自动展开静态资产
-    expect(proj.visibleAssetIds).toHaveLength(0);
-    expect(proj.visibleClusterIds).toHaveLength(0);
-    expect(proj.visibleSellingPointIds).toHaveLength(0);
-    expect(proj.visibleRiskItemIds).toHaveLength(0);
-    // Recipe 仍由 metrics.recipeFields 驱动 → 4 字段
+    // risk 场景现已声明 resultRefs，应显示全部已分类资产
+    expect(proj.visibleAssetIds).toHaveLength(12);
+    expect(proj.visibleClusterIds.length).toBe(4);
+    expect(proj.visibleSellingPointIds.length).toBe(6);
+    expect(proj.visibleRiskItemIds.length).toBeGreaterThan(0);
     expect(proj.visibleRecipeFields).toHaveLength(4);
   });
 });

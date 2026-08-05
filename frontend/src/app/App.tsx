@@ -17,14 +17,12 @@ import {
   MilestoneReveal,
 } from '@/features/live-intelligence';
 import { selectRecipeCompleteness } from '@/features/live-intelligence/state/live-intelligence-selectors';
-import { projectCompetitorAnalysis } from '@/features/competitor-analysis/state/competitor-analysis-projection';
+import { projectCompetitorAnalysis, type RecipeFieldKey } from '@/features/competitor-analysis/state/competitor-analysis-projection';
+import { resolveEvidenceFromEntity } from '@/features/competitor-analysis/navigation/analysis-navigation';
 import type { CanvasViewMode, InspectorTab } from '@/types/competitor-analysis';
 
 /**
- * CommerceCanvas F2-R1：竞品套图分析完整展示页（投影驱动渐进页面）。
- *
- * 核心修复：所有结果通过 projectCompetitorAnalysis 投影层推导，
- * 不直接渲染完整 mock。idle 时不显示终态，结果随事件逐步形成。
+ * F2-R1.2：统一导航控制器 + 完整状态重置 + entityEvidence 追溯。
  */
 export function App() {
   const analysisState = competitorAnalysisMock;
@@ -34,25 +32,30 @@ export function App() {
   const [viewMode, setViewMode] = useState<CanvasViewMode>('single');
   const [selectedAssetId, setSelectedAssetId] = useState(analysisState.assets[0].id);
   const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
+  const [selectedSellingPointId, setSelectedSellingPointId] = useState<string | null>(null);
+  const [selectedRiskItemId, setSelectedRiskItemId] = useState<string | null>(null);
+  const [selectedRecipeField, setSelectedRecipeField] = useState<RecipeFieldKey | null>(null);
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>('current-image');
   const [traceCollapsed, setTraceCollapsed] = useState(false);
 
-  // —— 投影层：从 live state 推导可见结果 ——
+  // —— 投影层 ——
   const projection = useMemo(
     () => projectCompetitorAnalysis(live.state, analysisState),
     [live.state, analysisState],
   );
 
-  // —— 页面状态重置：scenarioId 或 runId 变化时 ——
+  // —— 页面状态完整重置（§九）——
   const sessionKey = `${live.state.jobId}#${live.state.runId}`;
   const [lastSessionKey, setLastSessionKey] = useState(sessionKey);
   useEffect(() => {
     if (sessionKey !== lastSessionKey) {
       setLastSessionKey(sessionKey);
       setSelectedClusterId(null);
+      setSelectedSellingPointId(null);
+      setSelectedRiskItemId(null);
+      setSelectedRecipeField(null);
       setInspectorTab('current-image');
       setViewMode('single');
-      // selectedAssetId 回到第一个或第一个已处理
       setSelectedAssetId(projection.visibleAssetIds[0] ?? analysisState.assets[0].id);
     }
   }, [sessionKey, lastSessionKey, projection.visibleAssetIds, analysisState.assets]);
@@ -83,28 +86,101 @@ export function App() {
     return all.filter((r) => projection.visibleRiskItemIds.includes(r.id));
   }, [analysisState.riskExclusion, projection.visibleRiskItemIds]);
 
-  // —— Evidence focus ——
   const focusedAssetId = live.focus?.assetId ?? selectedAssetId;
 
-  const handleSelectAsset = useCallback((id: string) => {
-    setSelectedAssetId(id);
-    setViewMode('single');
-    setSelectedClusterId(null);
-    live.clearFocus();
+  // —— 统一导航函数（§一）——
+  const navigate = useCallback((target: {
+    viewMode?: CanvasViewMode;
+    assetId?: string;
+    clusterId?: string | null;
+    sellingPointId?: string | null;
+    riskItemId?: string | null;
+    recipeField?: RecipeFieldKey | null;
+    inspectorTab?: InspectorTab;
+    evidence?: { assetId?: string; layer?: string; regionId?: string };
+    traceSequence?: number;
+  }) => {
+    if (target.viewMode) setViewMode(target.viewMode);
+    if (target.assetId) setSelectedAssetId(target.assetId);
+    if (target.clusterId !== undefined) setSelectedClusterId(target.clusterId);
+    if (target.sellingPointId !== undefined) setSelectedSellingPointId(target.sellingPointId);
+    if (target.riskItemId !== undefined) setSelectedRiskItemId(target.riskItemId);
+    if (target.recipeField !== undefined) setSelectedRecipeField(target.recipeField);
+    if (target.inspectorTab) setInspectorTab(target.inspectorTab);
+    if (target.evidence) {
+      live.focusEvidence({
+        assetId: target.evidence.assetId ?? target.assetId ?? '',
+        layer: (target.evidence.layer ?? 'subject') as 'subject' | 'logo' | 'safe' | 'guide' | 'text' | 'risk',
+        regionId: target.evidence.regionId,
+        source: 'trace',
+        fromSequence: target.traceSequence,
+      });
+    }
+    if (target.traceSequence !== undefined) live.highlightTraceSequence(target.traceSequence);
   }, [live]);
 
+  const handleSelectAsset = useCallback((id: string) => {
+    navigate({ viewMode: 'single', assetId: id, clusterId: null });
+    live.clearFocus();
+  }, [live, navigate]);
+
+  // —— 风险→Evidence→轨迹（§二）——
+  const handleNavigateRisk = useCallback((riskItemId: string) => {
+    const evidence = projection.entityEvidence?.[riskItemId];
+    const resolved = resolveEvidenceFromEntity(evidence as never);
+    navigate({
+      viewMode: 'single',
+      riskItemId,
+      inspectorTab: 'risk-exclusion',
+      evidence: resolved.evidence,
+      traceSequence: resolved.traceSequence,
+      assetId: resolved.evidence?.assetId,
+    });
+  }, [projection, navigate]);
+
+  // —— Recipe→来源事件（§三）——
+  const handleNavigateRecipe = useCallback((field: RecipeFieldKey) => {
+    const evidence = projection.entityEvidence?.[field];
+    const resolved = resolveEvidenceFromEntity(evidence as never);
+    navigate({
+      recipeField: field,
+      inspectorTab: 'recipe',
+      evidence: resolved.evidence,
+      traceSequence: resolved.traceSequence,
+      assetId: resolved.evidence?.assetId,
+      viewMode: resolved.evidence ? 'single' : undefined,
+    });
+  }, [projection, navigate]);
+
+  // —— 聚类联动（§四）——
   const handleSelectCluster = useCallback((clusterId: string | null) => {
-    setSelectedClusterId(clusterId);
     if (clusterId) {
-      setInspectorTab('suite-insights');
-      // 中央切换到聚类模式
-      setViewMode('clusters');
+      const evidence = projection.entityEvidence?.[clusterId];
+      const resolved = resolveEvidenceFromEntity(evidence as never);
+      navigate({
+        clusterId,
+        viewMode: 'clusters',
+        inspectorTab: 'suite-insights',
+        traceSequence: resolved.traceSequence,
+      });
+    } else {
+      navigate({ clusterId: null });
     }
-  }, []);
+  }, [projection, navigate]);
+
+  // —— 卖点联动（§五）——
+  const handleSelectSellingPoint = useCallback((spId: string) => {
+    const evidence = projection.entityEvidence?.[spId];
+    const resolved = resolveEvidenceFromEntity(evidence as never);
+    navigate({
+      sellingPointId: spId,
+      traceSequence: resolved.traceSequence,
+    });
+  }, [projection, navigate]);
 
   const recipeCompleteness = selectRecipeCompleteness(live.state);
 
-  // —— 响应式：检测窗口宽度，窄屏自动折叠轨迹 ——
+  // —— 响应式 ——
   useEffect(() => {
     const checkWidth = () => {
       if (window.innerWidth <= 1366) setTraceCollapsed(true);
@@ -138,7 +214,6 @@ export function App() {
           projection={projection}
         />
 
-        {/* 中央分析工作区 */}
         <div className="relative flex min-w-0 flex-1 flex-col">
           <div
             className="flex shrink-0 items-center justify-between border-b px-3 py-1.5"
@@ -185,13 +260,14 @@ export function App() {
               sellingPoints={visibleSellingPoints}
               assets={visibleAssets}
               onSelectAsset={handleSelectAsset}
+              onSelectSellingPoint={handleSelectSellingPoint}
+              selectedSellingPointId={selectedSellingPointId}
             />
           )}
 
           <MilestoneReveal key={sessionKey} state={live.state} />
         </div>
 
-        {/* 分析轨迹（可折叠） */}
         {!traceCollapsed && (
           <aside
             className="flex shrink-0 flex-col border-l"
@@ -204,22 +280,14 @@ export function App() {
             />
           </aside>
         )}
-        {/* 折叠后的窄栏：展开按钮 */}
         {traceCollapsed && (
           <button
             onClick={() => setTraceCollapsed(false)}
             className="flex shrink-0 flex-col items-center justify-center border-l py-2"
-            style={{
-              width: 28,
-              background: 'var(--gc-bg-elev-1)',
-              borderColor: 'var(--gc-line)',
-            }}
+            style={{ width: 28, background: 'var(--gc-bg-elev-1)', borderColor: 'var(--gc-line)' }}
             title="展开分析轨迹"
           >
-            <span
-              className="gc-data text-2xs"
-              style={{ color: 'var(--gc-text-faint)', writingMode: 'vertical-rl' }}
-            >
+            <span className="gc-data text-2xs" style={{ color: 'var(--gc-text-faint)', writingMode: 'vertical-rl' }}>
               轨迹 {live.state.trace.length}
             </span>
           </button>
@@ -238,6 +306,10 @@ export function App() {
           visibleInsights={visibleInsights}
           visibleRiskItems={visibleRiskItems}
           onFocusEvidence={live.focusEvidence}
+          onNavigateRisk={handleNavigateRisk}
+          onNavigateRecipe={handleNavigateRecipe}
+          selectedRiskItemId={selectedRiskItemId}
+          selectedRecipeField={selectedRecipeField}
         />
       </div>
 

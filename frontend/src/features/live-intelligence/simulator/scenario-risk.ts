@@ -1,12 +1,7 @@
 /**
- * 场景 B：高风险待人工确认（R1 修复）。
+ * 场景 B：高风险待人工确认（R1.2：补齐 resultRefs）。
  *
- * R1 修复：
- *   - 1 项商品结构阻断（入耳式 vs 开放式）+ 2 项普通风险 = 共 3 风险
- *   - build_recipe 阶段通过 stage.awaiting_review 事件显式进入 awaiting_review
- *   - Recipe 部分完成（4/7：purpose/canvas/position/ratio），非 7/7
- *   - summaryMetrics 与文案一致（findings=24, risks=3, artifacts=1, blockingConflicts=1）
- *   - 产物标记待确认
+ * 所有产生业务结果的事件均携带 resultRefs，ID 与 mock 数据对齐。
  * 终态：awaiting_review（非全绿）。
  */
 
@@ -49,6 +44,7 @@ export function buildRiskScenario(): ScenarioScript {
         kind: 'observation.created',
         stageId: 'classify_purpose',
         titleZh: '已识别图片用途：主图 1 张、场景图 4 张、卖点图 5 张、细节图 1 张、参数图 1 张',
+        resultRefs: { classifiedAssetIds: ['img-01', 'img-02', 'img-03', 'img-04', 'img-05', 'img-06', 'img-07', 'img-08', 'img-09', 'img-10', 'img-11', 'img-12'] },
       });
     },
     onComplete: (emit) => {
@@ -58,6 +54,7 @@ export function buildRiskScenario(): ScenarioScript {
         summaryZh: '12 张图片 · 4 种用途',
         severity: 'success',
         metrics: { milestoneId: 'purpose_classified' },
+        resultRefs: { insightIds: ['ins-usage'] },
       });
     },
   });
@@ -66,7 +63,6 @@ export function buildRiskScenario(): ScenarioScript {
     durationSec: 5,
     progress: { current: 12, total: 12, unitZh: '张' },
     inline: (emit) => {
-      // 风险 1（阻断）：商品结构不一致 —— 1 项 blockingConflicts
       emit({
         kind: 'warning.created',
         stageId: 'segment_subject',
@@ -75,12 +71,14 @@ export function buildRiskScenario(): ScenarioScript {
         severity: 'warning',
         requiresAction: true,
         evidenceRefs: [{ assetId: 'img-06', layer: 'subject' }],
+        resultRefs: { riskItemIds: ['risk-inear'] },
       });
       emit({
         kind: 'decision.created',
         stageId: 'segment_subject',
         titleZh: '系统保留构图与光线，禁止继承商品结构和功能描述',
         summaryZh: '入耳式结构、竞品独有功能描述已加入禁止继承清单',
+        resultRefs: { riskItemIds: ['risk-exclusive-feature'] },
       });
     },
   });
@@ -89,7 +87,6 @@ export function buildRiskScenario(): ScenarioScript {
     durationSec: 6,
     progress: { current: 12, total: 12, unitZh: '张' },
     inline: (emit) => {
-      // 风险 2：竞品 Logo
       emit({
         kind: 'warning.created',
         stageId: 'detect_text_logo',
@@ -97,14 +94,15 @@ export function buildRiskScenario(): ScenarioScript {
         summaryZh: '已加入排除清单',
         severity: 'warning',
         evidenceRefs: [{ assetId: 'img-01', layer: 'logo', regionId: 'ev-01-logo' }],
+        resultRefs: { riskItemIds: ['risk-logo', 'risk-model'] },
       });
-      // 风险 3：高密度文案
       emit({
         kind: 'warning.created',
         stageId: 'detect_text_logo',
         titleZh: '卖点图存在高密度文案布局，生成时需要重新排版',
         summaryZh: '非阻断',
         severity: 'warning',
+        resultRefs: { riskItemIds: ['risk-packaging'] },
       });
       emit({
         kind: 'action.created',
@@ -119,6 +117,7 @@ export function buildRiskScenario(): ScenarioScript {
         summaryZh: '7 处品牌资产 · 2 项普通风险 · 1 项结构阻断',
         severity: 'success',
         metrics: { milestoneId: 'risk_list_built' },
+        resultRefs: { riskItemIds: ['fact-battery', 'fact-waterproof', 'fact-material', 'fact-compat', 'fact-size', 'safe-composition', 'safe-light', 'safe-background', 'safe-rhythm', 'safe-textzone'] },
       });
     },
   });
@@ -130,8 +129,16 @@ export function buildRiskScenario(): ScenarioScript {
       emit({
         kind: 'observation.created',
         stageId: 'extract_composition',
-        titleZh: '聚类出 4 种构图模式、5 种可复用光线模式',
+        titleZh: '聚类出 2 种构图模式：右侧主体、中心对称',
         summaryZh: '构图与光线可继承',
+        resultRefs: { clusterIds: ['cluster-a', 'cluster-b'], insightIds: ['ins-cluster'] },
+      });
+      emit({
+        kind: 'observation.created',
+        stageId: 'extract_composition',
+        titleZh: '聚类出另外 2 种构图模式：局部特写、参数结构',
+        summaryZh: '5 种光线模式',
+        resultRefs: { clusterIds: ['cluster-c', 'cluster-d'], insightIds: ['ins-light', 'ins-color'] },
       });
       emit({
         kind: 'decision.created',
@@ -157,9 +164,17 @@ export function buildRiskScenario(): ScenarioScript {
       emit({
         kind: 'decision.created',
         stageId: 'summarize_selling_points',
-        titleZh: '已归纳卖点顺序，但部分卖点依赖竞品独有功能，需人工确认',
-        summaryZh: '续航、佩戴可继承；降噪参数需复核',
+        titleZh: '已归纳卖点：舒适性、稳定佩戴、声音体验',
+        summaryZh: '续航、佩戴可继承',
+        resultRefs: { sellingPointIds: ['sp-comfort', 'sp-stability', 'sp-sound'] },
+      });
+      emit({
+        kind: 'decision.created',
+        stageId: 'summarize_selling_points',
+        titleZh: '已归纳卖点：续航、防水、参数与兼容性（需人工确认）',
+        summaryZh: '降噪参数需复核',
         requiresAction: true,
+        resultRefs: { sellingPointIds: ['sp-battery', 'sp-waterproof', 'sp-spec'], insightIds: ['ins-rhythm', 'ins-material', 'ins-safe-zone'] },
       });
     },
   });
@@ -198,10 +213,10 @@ export function buildRiskScenario(): ScenarioScript {
       artifactRefs: ['recipe-draft-v1-risk'],
       requiresAction: true,
       metrics: { recipeFields: ['purpose', 'canvas', 'position', 'ratio'] },
+      resultRefs: { recipeFields: ['purpose', 'canvas', 'position', 'ratio'] },
     }),
   );
   advance(ctx, 1);
-  // R1：显式 stage.awaiting_review 事件
   out.push(
     ev(ctx, {
       kind: 'stage.awaiting_review',

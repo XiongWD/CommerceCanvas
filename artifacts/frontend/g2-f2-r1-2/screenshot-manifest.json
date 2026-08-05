@@ -1,0 +1,67 @@
+{
+  "sourceCommit": "18abae2ba2db3ce6c2af53ea13077d53b459f413",
+  "sourceTreeHash": "0c2863d7a30b6fc89a45c554d4ff9ebf0a9ae322",
+  "evidencePayloadCommit": "pending-evidence",
+  "browser": "Playwright Chromium (独立，非 IAB)",
+  "browserVersion": "143.0.7499.4",
+  "deviceScaleFactor": 1,
+  "pageZoom": 1,
+  "url": "http://127.0.0.1:4175/",
+  "screenshots": [
+    {
+      "file": "idle-no-leak.png",
+      "sha256": "4657cbaef71bd967bbf7303c90909c21b04d41d6734d2183aaf996b422ecee4e"
+    },
+    {
+      "file": "running-exactly-4-of-12.png",
+      "sha256": "9a791da2c2962fc79875313a0ece4758630dd1fc680efc42a296c93d5ea0ac7e"
+    },
+    {
+      "file": "clusters-exactly-2-of-4.png",
+      "sha256": "21533c8c0c630f94d5d7bfe9554d039cc56f10be159bc36a1a408083d16e7c3b"
+    },
+    {
+      "file": "selling-points-exactly-3-of-6.png",
+      "sha256": "d9aeb091d60d1569a2366a9519d1361ad699264768403b99a9abfd87e20962e2"
+    },
+    {
+      "file": "risk-evidence-trace-linked.png",
+      "sha256": "77015be9cea9bf0115c076f059c47ccc03c92d6b9ae21e7d3e4d6b47c71a134c"
+    },
+    {
+      "file": "recipe-basis-trace-linked.png",
+      "sha256": "8bbb08991d5931dac9ed3622ea959fa7e81f5d11063736570d31ff9f05001375"
+    },
+    {
+      "file": "cluster-detail-linked.png",
+      "sha256": "75efb98f9f059589976139d41e5b2bd1dc2f073a3f20ea3addfbe632c3e392fd"
+    },
+    {
+      "file": "selling-point-detail-linked.png",
+      "sha256": "aea804bdf242d42e51ba129e7efcbc7ecdfc1cdf3fcf3c457d45fd1752819d90"
+    },
+    {
+      "file": "low-confidence-expanded.png",
+      "sha256": "d318fc2ba77b9ecb1945c7faf6991433dfcf75c344210be06f959c1a7919eec6"
+    },
+    {
+      "file": "risk-scenario-awaiting-review.png",
+      "sha256": "d92598e107fc83ab6e575d018192a94323b410d4513df00547b99d3fad5dc0dd"
+    },
+    {
+      "file": "completed-1440x900.png",
+      "sha256": "cb06f7bb330f89a291c3ad8efe5e4690ca9e73a65a101bae98ee0679f7a48452"
+    },
+    {
+      "file": "completed-1366x768.png",
+      "sha256": "717311968ebe566b84c2dbd31a66051598d2e11765883bd249d0cf01e424aaf4"
+    },
+    {
+      "file": "completed-1280x800.png",
+      "sha256": "10aa30cef6c3165068175e8cbe2bf1cd6dd1d41a3d1756a80b9c093fc6277343"
+    }
+  ],
+  "video": {
+    "file": "competitor-analysis-demo.webm"
+  }
+}

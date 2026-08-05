@@ -15,7 +15,8 @@ import { InheritanceLists, Section } from '@/components/competitor/AnalysisSumma
 import { ConfidenceBadge } from '@/components/competitor/ConfidenceBadge';
 import { SuiteInsightsTab } from '@/components/competitor/SuiteInsightsTab';
 import { RiskExclusionTab } from '@/components/competitor/RiskExclusionTab';
-import type { CompetitorAnalysisProjection, RecipeFieldKey } from '@/features/competitor-analysis/state/competitor-analysis-projection';
+import type { CompetitorAnalysisProjection } from '@/features/competitor-analysis/state/competitor-analysis-projection';
+import type { RecipeFieldKey } from '@/features/competitor-analysis/state/competitor-analysis-projection';
 import type { LiveIntelligenceState } from '@/features/live-intelligence/state/live-intelligence-state';
 import type { EvidenceFocus } from '@/features/live-intelligence/useLiveIntelligence';
 
@@ -32,6 +33,12 @@ interface InspectorPanelProps {
   visibleInsights: SuiteInsight[];
   visibleRiskItems: RiskExclusionItem[];
   onFocusEvidence: (f: EvidenceFocus) => void;
+  /** F2-R1.2：风险→Evidence→轨迹 */
+  onNavigateRisk?: (riskItemId: string) => void;
+  /** F2-R1.2：Recipe→来源事件 */
+  onNavigateRecipe?: (field: RecipeFieldKey) => void;
+  selectedRiskItemId?: string | null;
+  selectedRecipeField?: RecipeFieldKey | null;
 }
 
 const TABS: { tab: InspectorTab; labelZh: string }[] = [
@@ -52,6 +59,10 @@ export function InspectorPanel({
   sessionKey,
   visibleInsights,
   visibleRiskItems,
+  onNavigateRisk,
+  onNavigateRecipe,
+  selectedRiskItemId,
+  selectedRecipeField,
 }: InspectorPanelProps) {
   const [internalTab, setInternalTab] = useState<InspectorTab>('current-image');
   const activeTab = externalTab ?? internalTab;
@@ -109,10 +120,17 @@ export function InspectorPanel({
             completenessPct={recipeCompletenessPct}
             projection={projection}
             sessionKey={sessionKey}
+            onNavigateRecipe={onNavigateRecipe}
+            selectedRecipeField={selectedRecipeField}
           />
         )}
         {activeTab === 'risk-exclusion' && (
-          <RiskExclusionTab riskExclusion={visibleRiskExclusion} onSelectAsset={onSelectAsset} />
+          <RiskExclusionTab
+            riskExclusion={visibleRiskExclusion}
+            onSelectAsset={onSelectAsset}
+            onNavigateRisk={onNavigateRisk}
+            selectedRiskItemId={selectedRiskItemId}
+          />
         )}
       </div>
     </aside>
@@ -193,11 +211,15 @@ function CreativeRecipeTabR1({
   completenessPct,
   projection,
   sessionKey,
+  onNavigateRecipe,
+  selectedRecipeField,
 }: {
   recipe: CompetitorAnalysisState['recipe'];
   completenessPct: number;
   projection: CompetitorAnalysisProjection;
   sessionKey: string;
+  onNavigateRecipe?: (field: RecipeFieldKey) => void;
+  selectedRecipeField?: RecipeFieldKey | null;
 }) {
   // 审核状态按 sessionKey + recipeField 隔离
   const [auditStates, setAuditStates] = useState<Record<string, 'suggested' | 'accepted' | 'adjusting'>>({});
@@ -289,6 +311,18 @@ function CreativeRecipeTabR1({
                         style={{ color: 'var(--gc-text-faint)', border: '1px solid var(--gc-line)' }}
                       >
                         恢复
+                      </button>
+                      <button
+                        onClick={() => onNavigateRecipe?.(row.key)}
+                        data-testid={`recipe-basis-${row.key}`}
+                        className="rounded-sm px-1.5 py-0.5 text-2xs"
+                        style={{
+                          color: selectedRecipeField === row.key ? 'var(--gc-accent-blue)' : 'var(--gc-text-lo)',
+                          border: `1px solid ${selectedRecipeField === row.key ? 'var(--gc-accent-blue-line)' : 'var(--gc-line)'}`,
+                          background: selectedRecipeField === row.key ? 'var(--gc-accent-blue-soft)' : 'transparent',
+                        }}
+                      >
+                        查看依据
                       </button>
                     </div>
                   </div>

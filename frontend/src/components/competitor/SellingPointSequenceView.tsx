@@ -10,12 +10,17 @@ interface SellingPointSequenceViewProps {
   sellingPoints: SellingPointNode[];
   assets: CompetitorAsset[];
   onSelectAsset: (id: string) => void;
+  /** F2-R1.2：点击卖点节点主体 → 导航 */
+  onSelectSellingPoint?: (spId: string) => void;
+  selectedSellingPointId?: string | null;
 }
 
 export function SellingPointSequenceView({
   sellingPoints,
   assets,
   onSelectAsset,
+  onSelectSellingPoint,
+  selectedSellingPointId,
 }: SellingPointSequenceViewProps) {
   const sorted = [...sellingPoints].sort((a, b) => a.order - b.order);
 
@@ -55,12 +60,15 @@ export function SellingPointSequenceView({
                     </span>
                   </div>
                 </div>
-                {/* 卖点内容（F2-R1.1：主体可点击 → 展示关联图片） */}
+                {/* 卖点内容（F2-R1.2：主体可点击 → 导航 + 高亮） */}
                 <div
                   data-testid={`selling-point-${sp.id}`}
-                  onClick={() => sp.assetIds[0] && onSelectAsset(sp.assetIds[0])}
+                  onClick={() => onSelectSellingPoint?.(sp.id)}
                   className="min-w-0 flex-1 cursor-pointer rounded-sm p-2.5 transition-colors duration-snap hover:bg-[var(--gc-bg-elev-1)]"
-                  style={{ background: 'var(--gc-bg-app)', border: '1px solid var(--gc-line)' }}
+                  style={{
+                    background: selectedSellingPointId === sp.id ? 'var(--gc-accent-blue-soft)' : 'var(--gc-bg-app)',
+                    border: `1px solid ${selectedSellingPointId === sp.id ? 'var(--gc-accent-blue-line)' : 'var(--gc-line)'}`,
+                  }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium" style={{ color: 'var(--gc-text-hi)' }}>
