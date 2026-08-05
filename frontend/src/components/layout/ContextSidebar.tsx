@@ -48,9 +48,10 @@ export function ContextSidebar({ state, selectedAssetId, onSelectAsset, projecti
       roles: 5,
       clusters: projection.visibleClusterIds.length,
       // §八：风险类别（权威），不是证据命中数
-      risks: state.riskExclusion ? (projection.visibleRiskItemIds.length > 0 ? 3 : 0) : 0,
+      // §十：风险类别读取 summaryMetrics.risks（权威），不从可见项推断
+      risks: projection.riskCategoryCount ?? 0,
     };
-  }, [projection, state.riskExclusion]);
+  }, [projection]);
 
   return (
     <aside
@@ -120,12 +121,13 @@ export function ContextSidebar({ state, selectedAssetId, onSelectAsset, projecti
         </div>
       </div>
 
-      {/* 竞品套图缩略图列表（筛选后） */}
+      {/* 竞品套图缩略图列表（F2-R1.1：传入分类状态，idle 不泄露） */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <AssetThumbnailList
           assets={filteredAssets}
           selectedAssetId={selectedAssetId}
           onSelectAsset={onSelectAsset}
+          classifiedAssetIds={new Set(projection.classifiedAssetIds)}
         />
       </div>
     </aside>

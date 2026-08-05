@@ -11,7 +11,7 @@
  * EventSimulator（运行时）只负责按节奏分发这些事件，不发明事件。
  */
 
-import type { LiveEventEnvelope, StageId } from '@/types/live-event';
+import type { CompetitorResultRefs, LiveEventEnvelope, StageId } from '@/types/live-event';
 import { withPresentation } from '../mappings/event-presentation-map';
 
 /** 场景输出：完整事件序列 + 总模拟时长 */
@@ -41,6 +41,8 @@ export interface EventInput {
   metrics?: LiveEventEnvelope['metrics'];
   evidenceRefs?: LiveEventEnvelope['evidenceRefs'];
   artifactRefs?: LiveEventEnvelope['artifactRefs'];
+  /** F2-R1.1：事件明确声明它形成了哪些业务结果（驱动投影层可见性） */
+  resultRefs?: CompetitorResultRefs;
   requiresAction?: boolean;
   replayed?: boolean;
   severity?: LiveEventEnvelope['severity'];
@@ -65,6 +67,7 @@ function ev(ctx: BuildCtx, partial: EventInput): LiveEventEnvelope {
     metrics: partial.metrics,
     evidenceRefs: partial.evidenceRefs,
     artifactRefs: partial.artifactRefs,
+    resultRefs: partial.resultRefs,
     requiresAction: partial.requiresAction,
     replayed: partial.replayed,
     severity: partial.severity,

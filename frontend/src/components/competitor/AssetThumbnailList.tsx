@@ -1,28 +1,32 @@
+/**
+ * 竞品套图缩略图列表（F2-R1.1 §三：idle 不泄露用途/状态/风险）。
+ *
+ * 未分类资产只显示：序号、文件名、"等待分析"。
+ * 已分类资产才显示：用途标签、分析状态、风险红点。
+ */
 import type { CompetitorAsset } from '@/types/competitor-analysis';
 import { StatusDot } from '@/components/ui/StatusDot';
-
-/**
- * 竞品套图缩略图列表（任务书 §6.2）。
- * 缩略图使用 CSS 模拟图片，不依赖远程链接（任务书 §6.2）。
- * 每项展示：用途标签、分析状态、风险数量、当前选中。
- */
 
 interface AssetThumbnailListProps {
   assets: CompetitorAsset[];
   selectedAssetId: string;
   onSelectAsset: (id: string) => void;
+  /** F2-R1.1：已分类资产 ID 集合（来自投影层） */
+  classifiedAssetIds?: Set<string>;
 }
 
 export function AssetThumbnailList({
   assets,
   selectedAssetId,
   onSelectAsset,
+  classifiedAssetIds,
 }: AssetThumbnailListProps) {
   return (
     <ul className="flex flex-col gap-px px-2 py-1">
       {assets.map((asset, index) => {
         const selected = asset.id === selectedAssetId;
-        const hasRisk = asset.riskCount > 0;
+        const isClassified = classifiedAssetIds?.has(asset.id) ?? true;
+        const hasRisk = isClassified && asset.riskCount > 0;
         return (
           <li key={asset.id}>
             <button
@@ -43,13 +47,9 @@ export function AssetThumbnailList({
                 if (!selected) e.currentTarget.style.background = 'transparent';
               }}
             >
-              {/* 序号 + CSS 占位缩略图 */}
               <span
                 className="gc-data shrink-0 text-center text-2xs"
-                style={{
-                  width: 18,
-                  color: 'var(--gc-text-faint)',
-                }}
+                style={{ width: 18, color: 'var(--gc-text-faint)' }}
               >
                 {String(index + 1).padStart(2, '0')}
               </span>
@@ -63,20 +63,21 @@ export function AssetThumbnailList({
                   border: selected
                     ? '1px solid var(--gc-accent-blue-line)'
                     : '1px solid var(--gc-line)',
+                  opacity: isClassified ? 1 : 0.5,
                 }}
               >
-                {/* 真实演示素材缩略图，按 thumbFocus 裁切产生可见差异（P2）*/}
                 <img
                   src={asset.src}
                   alt=""
                   draggable={false}
-                  className="pointer-events-none absolute inset-0 h-full w-full select-none"
+                  className="pointer-events-none absolute inset-0 h-full w-full"
                   style={{
                     objectFit: 'cover',
                     objectPosition: `${asset.thumbFocus?.x ?? 50}% ${asset.thumbFocus?.y ?? 50}%`,
                     transform: `scale(${asset.thumbFocus?.scale ?? 1})`,
                   }}
                 />
+                {/* F2-R1.1：只有已分类资产才显示风险红点 */}
                 {hasRisk && (
                   <span
                     className="absolute right-0.5 top-0.5"
@@ -91,23 +92,40 @@ export function AssetThumbnailList({
                 )}
               </span>
 
-              {/* 元信息 */}
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="flex items-center gap-1.5">
-                  <span
-                    className="truncate text-xs"
-                    style={{ color: selected ? 'var(--gc-text-hi)' : 'var(--gc-text-mid)' }}
-                  >
-                    {asset.role}
-                  </span>
-                  <StatusDot tone={asset.status === '已完成' ? 'green' : 'amber'} />
-                </span>
-                <span
-                  className="gc-data truncate text-2xs"
-                  style={{ color: 'var(--gc-text-faint)' }}
-                >
-                  {asset.filename}
-                </span>
+                {isClassified ? (
+                  <>
+                    {/* 已分类：显示用途 + 状态 */}
+                    <span className="flex items-center gap-1.5">
+                      <span
+                        className="truncate text-xs"
+                        style={{ color: selected ? 'var(--gc-text-hi)' : 'var(--gc-text-mid)' }}
+                      >
+                        {asset.role}
+                      </span>
+                      <StatusDot tone={asset.status === '已完成' ? 'green' : 'amber'} />
+                    </span>
+                    <span
+                      className="gc-data truncate text-2xs"
+                      style={{ color: 'var(--gc-text-faint)' }}
+                    >
+                      {asset.filename}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    {/* 未分类：只显示文件名 + "等待分析" */}
+                    <span
+                      className="gc-data truncate text-2xs"
+                      style={{ color: 'var(--gc-text-faint)' }}
+                    >
+                      {asset.filename}
+                    </span>
+                    <span className="text-2xs" style={{ color: 'var(--gc-text-faint)' }}>
+                      等待分析
+                    </span>
+                  </>
+                )}
               </span>
 
               {hasRisk && (

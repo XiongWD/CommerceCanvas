@@ -10,7 +10,7 @@
  *   6. 业务统计（summaryMetrics）由明确事件更新，不从轨迹条数反推。
  */
 
-import type { LiveEventEnvelope, StageId, StageStatus, MilestoneId } from '@/types/live-event';
+import type { CompetitorResultRefs, LiveEventEnvelope, StageId, StageStatus, MilestoneId } from '@/types/live-event';
 import { shouldShowInTrace } from '../mappings/event-presentation-map';
 import {
   createInitialState,
@@ -18,6 +18,7 @@ import {
   type LiveIntelligenceState,
   type TraceItem,
   type RecipeProgress,
+  type EntityEvidenceEntry,
 } from './live-intelligence-state';
 
 /** 传输事件（R1.1 P0-1）：独立于业务 sequence，但仍进入客户分析轨迹） */
@@ -345,6 +346,47 @@ function applyOneImmutable(state: LiveIntelligenceState, event: LiveEventEnvelop
     if ((RECIPE_FIELDS as readonly string[]).includes(f)) {
       next.recipe = { ...state.recipe, [f as keyof RecipeProgress]: true };
     }
+  }
+
+  // —— F2-R1.1：累积事件 resultRefs（按 category 合并去重，供投影层读取）——
+  if (event.resultRefs) {
+    const acc: CompetitorResultRefs = {
+      ...(next.resultRefsAccumulated ??
+        createInitialState('').resultRefsAccumulated),
+    };
+    for (const key of Object.keys(event.resultRefs) as (keyof CompetitorResultRefs)[]) {
+      const incoming = event.resultRefs[key];
+      if (!incoming || !Array.isArray(incoming)) continue;
+      const existing = new Set(acc[key] ?? []);
+      for (const id of incoming) existing.add(id);
+      acc[key] = [...existing];
+    }
+    next.resultRefsAccumulated = acc;
+
+    // 同步维护 entityEvidence：每个结果 ID 记录其所有来源事件
+    const evidence: Record<string, EntityEvidenceEntry[]> = {};
+    for (const [id, entries] of Object.entries(next.entityEvidence)) {
+      evidence[id] = entries.slice();
+    }
+    for (const key of Object.keys(event.resultRefs) as (keyof CompetitorResultRefs)[]) {
+      const incoming = event.resultRefs[key];
+      if (!incoming || !Array.isArray(incoming)) continue;
+      for (const id of incoming) {
+        const entry: EntityEvidenceEntry = {
+          category: key,
+          sourceEventId: event.eventId,
+          sequence: event.sequence,
+          evidenceRefs: event.evidenceRefs,
+        };
+        const existing = evidence[id];
+        // 去重：同一事件对同一实体不重复记录
+        if (existing && existing.some((e) => e.sourceEventId === entry.sourceEventId)) {
+          continue;
+        }
+        evidence[id] = existing ? existing.concat(entry) : [entry];
+      }
+    }
+    next.entityEvidence = evidence;
   }
 
   // —— 权威业务统计（由明确事件更新，不从轨迹反推）——

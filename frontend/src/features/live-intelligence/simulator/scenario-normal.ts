@@ -52,8 +52,16 @@ export function buildNormalScenario(): ScenarioScript {
       emit({
         kind: 'observation.created',
         stageId: 'classify_purpose',
-        titleZh: '已识别图片用途：主图 1 张、场景图 4 张、卖点图 5 张、细节图 1 张、参数图 1 张',
+        titleZh: '已识别图片用途：主图 1 张、场景图 2 张、卖点图 2 张、细节图 1 张',
+        summaryZh: '前 6 张分类完成',
+        resultRefs: { classifiedAssetIds: ['img-01', 'img-02', 'img-03', 'img-04', 'img-05', 'img-06'] },
+      });
+      emit({
+        kind: 'observation.created',
+        stageId: 'classify_purpose',
+        titleZh: '已识别图片用途：场景图 2 张、卖点图 3 张、参数图 1 张',
         summaryZh: '4 类用途分类完成',
+        resultRefs: { classifiedAssetIds: ['img-07', 'img-08', 'img-09', 'img-10', 'img-11', 'img-12'] },
       });
       emit({
         kind: 'evidence.created',
@@ -108,6 +116,7 @@ export function buildNormalScenario(): ScenarioScript {
           { assetId: 'img-03', layer: 'logo' },
           { assetId: 'img-12', layer: 'logo', regionId: 'ev-12-logo' },
         ],
+        resultRefs: { riskItemIds: ['risk-logo', 'risk-model'] },
       });
       // 风险 2：高密度文案布局需要重新排版
       emit({
@@ -117,6 +126,7 @@ export function buildNormalScenario(): ScenarioScript {
         summaryZh: '非阻断：可在生成阶段处理',
         severity: 'warning',
         evidenceRefs: [{ assetId: 'img-08', layer: 'subject' }],
+        resultRefs: { riskItemIds: ['risk-packaging'] },
       });
       // 风险 3：参数或功能声明必须以 Product Master 为准
       emit({
@@ -126,6 +136,7 @@ export function buildNormalScenario(): ScenarioScript {
         summaryZh: '非阻断：生成时锁定自有产品参数',
         severity: 'warning',
         evidenceRefs: [{ assetId: 'img-12', layer: 'logo' }],
+        resultRefs: { riskItemIds: ['risk-inear', 'risk-exclusive-feature'] },
       });
       emit({
         kind: 'action.created',
@@ -142,6 +153,7 @@ export function buildNormalScenario(): ScenarioScript {
         summaryZh: '7 处品牌资产 · 3 项普通风险 · 0 项结构冲突',
         severity: 'success',
         metrics: { milestoneId: 'risk_list_built' },
+        resultRefs: { riskItemIds: ['fact-battery', 'fact-waterproof', 'fact-material', 'fact-compat', 'fact-size', 'safe-composition', 'safe-light', 'safe-background', 'safe-rhythm', 'safe-textzone'] },
       });
     },
   });
@@ -154,8 +166,16 @@ export function buildNormalScenario(): ScenarioScript {
       emit({
         kind: 'observation.created',
         stageId: 'extract_composition',
-        titleZh: '聚类出 4 种构图模式：右侧主体、居中对称、俯视阵列、生活方式',
+        titleZh: '聚类出 2 种构图模式：右侧主体、中心对称',
+        summaryZh: '前 2 类构图',
+        resultRefs: { clusterIds: ['cluster-a', 'cluster-b'], insightIds: ['ins-usage', 'ins-cluster'] },
+      });
+      emit({
+        kind: 'observation.created',
+        stageId: 'extract_composition',
+        titleZh: '聚类出另外 2 种构图模式：局部特写、参数结构',
         summaryZh: '4 类构图',
+        resultRefs: { clusterIds: ['cluster-c', 'cluster-d'], insightIds: ['ins-light', 'ins-color'] },
       });
       emit({
         kind: 'observation.created',
@@ -188,8 +208,16 @@ export function buildNormalScenario(): ScenarioScript {
       emit({
         kind: 'decision.created',
         stageId: 'summarize_selling_points',
-        titleZh: '已归纳卖点信息顺序：续航、佩戴、降噪、连接、外观',
+        titleZh: '已归纳卖点：舒适性、稳定佩戴、声音体验',
+        summaryZh: '前 3 个卖点',
+        resultRefs: { sellingPointIds: ['sp-comfort', 'sp-stability', 'sp-sound'] },
+      });
+      emit({
+        kind: 'decision.created',
+        stageId: 'summarize_selling_points',
+        titleZh: '已归纳卖点：续航、防水、参数与兼容性',
         summaryZh: '可作为页面节奏参考',
+        resultRefs: { sellingPointIds: ['sp-battery', 'sp-waterproof', 'sp-spec'], insightIds: ['ins-rhythm', 'ins-material', 'ins-safe-zone'] },
       });
     },
   });
@@ -204,12 +232,14 @@ export function buildNormalScenario(): ScenarioScript {
         stageId: 'build_recipe',
         titleZh: 'Recipe 字段补全：用途、画布、商品位置',
         metrics: { recipeFields: ['purpose', 'canvas', 'position'] },
+        resultRefs: { recipeFields: ['purpose', 'canvas', 'position'] },
       });
       emit({
         kind: 'observation.created',
         stageId: 'build_recipe',
         titleZh: 'Recipe 字段补全：商品占比、背景、光线',
         metrics: { recipeFields: ['ratio', 'background', 'lighting'] },
+        resultRefs: { recipeFields: ['ratio', 'background', 'lighting'] },
       });
       emit({
         kind: 'artifact.created',
@@ -218,6 +248,7 @@ export function buildNormalScenario(): ScenarioScript {
         summaryZh: '草案 v1',
         artifactRefs: ['recipe-draft-v1'],
         metrics: { recipeFields: ['textSafetyZone'] },
+        resultRefs: { recipeFields: ['textSafetyZone'] },
       });
     },
     onComplete: (emit) => {

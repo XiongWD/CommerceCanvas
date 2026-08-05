@@ -2,10 +2,16 @@
  * F2-R1 页面投影层：从 LiveIntelligenceState + CompetitorAnalysisState 推导
  * "当前应该可见的结果"。
  *
- * 核心原则（FD-036 / 任务书 R1 §二）：
- *   - 所有渐进结果只能由已到达事件、EvidenceRef、Recipe 状态、里程碑推导。
- *   - idle 时 0 可见；running 时只显示已处理；completed 全部。
- *   - 禁止组件自行创建 timer；禁止直接渲染完整 mock。
+ * R1.1 核心变更：可见结果只由已应用事件的 resultRefs 驱动。
+ *   - idle 时 0 可见（resultRefsAccumulated 为空）。
+ *   - running 时只显示已被事件显式产出（classified/cluster/...）的结果。
+ *   - completed/awaiting_review 不再自动展开全部静态数组；只显示事件已产出的。
+ *   - 可见性来源 = live.resultRefsAccumulated（reducer 已按 category 合并去重）。
+ *
+ * 旧规则（按里程碑/阶段存在性反推静态数组）已全部移除：
+ *   - 不再用 milestones.some(...) 决定聚类/卖点可见性。
+ *   - 不再用 stages[...].status 决定卖点可见性。
+ *   - 不再用 risks.length + safe 静态顺序决定风险项可见性。
  */
 
 import type { LiveIntelligenceState } from '@/features/live-intelligence/state/live-intelligence-state';
@@ -13,6 +19,7 @@ import type {
   CompetitorAnalysisState,
   ConfidenceInfo,
 } from '@/types/competitor-analysis';
+import type { EvidenceRef } from '@/types/live-event';
 
 /** Recipe 字段 key（与 RECIPE_FIELDS 对齐） */
 export type RecipeFieldKey =
@@ -24,24 +31,34 @@ export type RecipeFieldKey =
   | 'lighting'
   | 'textSafetyZone';
 
+/** 单个可见实体的证据溯源（投影层对外契约） */
+export interface EntityEvidenceSummary {
+  /** 产生该实体的所有来源事件 ID */
+  sourceEventIds: string[];
+  /** 这些事件的 sequence（trace 序） */
+  traceSequences: number[];
+  /** 这些事件携带的证据引用（可定位画布） */
+  evidenceRefs: EvidenceRef[];
+}
+
 /** 投影结果：页面各区域当前应显示什么 */
 export interface CompetitorAnalysisProjection {
-  /** 已分析（已分类用途）的资产 ID */
+  /** 已分析（已分类用途）的资产 ID（由事件 classifiedAssetIds 产出） */
   classifiedAssetIds: string[];
-  /** 当前应可见的资产 ID（已分类 + idle 为空） */
+  /** 当前应可见的资产 ID（= 已分类；idle 为空） */
   visibleAssetIds: string[];
   /** 总资产数（占位用） */
   totalAssetCount: number;
 
-  /** 已形成的聚类 ID（对应里程碑 composition_extracted 后逐个出现） */
+  /** 已形成的聚类 ID（由事件 clusterIds 产出，非里程碑） */
   visibleClusterIds: string[];
-  /** 已形成的卖点节点 ID（对应阶段 summarize_selling_points + 里程碑后逐项） */
+  /** 已形成的卖点节点 ID（由事件 sellingPointIds 产出） */
   visibleSellingPointIds: string[];
-  /** 已形成的套图洞察 ID（随事件/里程碑逐项） */
+  /** 已形成的套图洞察 ID（由事件 insightIds 产出） */
   visibleInsightIds: string[];
-  /** 已发现的风险排除项 ID（随 warning.created 逐项） */
+  /** 已发现的风险排除项 ID（由事件 riskItemIds 产出） */
   visibleRiskItemIds: string[];
-  /** 已形成的 Recipe 字段 */
+  /** 已形成的 Recipe 字段（来自 live.recipe，与事件 recipeFields 同源） */
   visibleRecipeFields: RecipeFieldKey[];
 
   /** 实体 → 置信度（只含已可见的实体） */
@@ -50,23 +67,24 @@ export interface CompetitorAnalysisProjection {
   /** 已达成的里程碑 ID */
   completedMilestones: string[];
 
+  /** 实体 → 证据溯源（每个可见结果 ID 由哪些事件产生） */
+  entityEvidence: Record<string, EntityEvidenceSummary>;
+
   /** 是否 idle（无任何事件） */
   isIdle: boolean;
   /** 是否 completed / awaiting_review（终态） */
   isTerminal: boolean;
   /** 已处理图片数（来自事件流，真实分母） */
   processedImages: number;
+  /** F2-R1.1 §十：风险类别数（来自 summaryMetrics.risks，权威状态） */
+  riskCategoryCount: number;
 }
 
 /**
  * 推导页面投影。
- * 规则：
- *   - visibleAssetIds：前 processedImages 张（模拟"逐张分析"）；idle=0；终态=全部。
- *   - visibleClusterIds：里程碑 composition_extracted 到达后出现；逐个按事件 metrics.clusterId。
- *   - visibleSellingPointIds：阶段 summarize_selling_points 完成后出现。
- *   - visibleInsightIds：随 observation/decision 事件逐步。
- *   - visibleRiskItemIds：随 warning.created 事件逐步（按 evidenceRefs 匹配 riskExclusion item）。
- *   - visibleRecipeFields：来自 live state.recipe 中已标记为 true 的字段。
+ * R1.1：可见结果只来自 live.resultRefsAccumulated（reducer 从事件 resultRefs 累积）。
+ *   - idle → 全部为空。
+ *   - 终态不自动展开静态数组；只显示事件已产出的结果。
  */
 export function projectCompetitorAnalysis(
   live: LiveIntelligenceState,
@@ -77,91 +95,97 @@ export function projectCompetitorAnalysis(
     live.jobStatus === 'completed' || live.jobStatus === 'awaiting_review';
   const processedImages = live.processedImages;
 
-  // —— 可见资产 ——
-  const visibleAssetIds = isIdle
-    ? []
-    : isTerminal
-      ? analysis.assets.map((a) => a.id)
-      : analysis.assets.slice(0, Math.max(0, processedImages)).map((a) => a.id);
+  const acc = live.resultRefsAccumulated ?? {
+    classifiedAssetIds: [],
+    clusterIds: [],
+    sellingPointIds: [],
+    insightIds: [],
+    riskItemIds: [],
+    recipeFields: [],
+  };
 
-  const classifiedAssetIds = visibleAssetIds; // 已分类 = 已可见
-
-  // —— 聚类 ——
-  // 里程碑 composition_extracted 到达后显示全部聚类（4 个聚类是套图级结论）。
-  // 在该里程碑到达前，不显示任何聚类。
-  const hasCompositionMilestone = live.milestones.some(
-    (m) => m.id === 'composition_extracted',
+  // —— 可见资产 = 事件累积的 classifiedAssetIds；idle = 空 ——
+  // 仅保留 mock 中真实存在的资产（事件可能引用 mock 之外的 id）
+  const assetIdSet = new Set(analysis.assets.map((a) => a.id));
+  const visibleAssetIds = (acc.classifiedAssetIds ?? []).filter((id) =>
+    assetIdSet.has(id),
   );
-  const visibleClusterIds = hasCompositionMilestone
-    ? analysis.clusters.map((c) => c.id)
-    : [];
+  const classifiedAssetIds = visibleAssetIds;
 
-  // —— 卖点 ——
-  // 阶段 summarize_selling_points 完成后出现。
-  // 或 build_recipe 开始后（卖点顺序作为 Recipe 的前置）
-  const hasRecipeStarted = live.stages.build_recipe.status === 'active' ||
-    live.stages.build_recipe.status === 'completed' ||
-    live.stages.build_recipe.status === 'awaiting_review';
-  const visibleSellingPointIds =
-    live.stages.summarize_selling_points.status === 'completed' || hasRecipeStarted || isTerminal
-      ? analysis.sellingPoints.map((s) => s.id)
-      : [];
-
-  // —— 套图洞察 ——
-  // 随用途识别 + 构图里程碑逐步出现。idle = 空。
-  const hasPurposeMilestone = live.milestones.some(
-    (m) => m.id === 'purpose_classified',
+  // —— 聚类 = 事件累积的 clusterIds（非里程碑）——
+  const clusterIdSet = new Set(analysis.clusters.map((c) => c.id));
+  const visibleClusterIds = (acc.clusterIds ?? []).filter((id) =>
+    clusterIdSet.has(id),
   );
-  const visibleInsightIds = isIdle
-    ? []
-    : hasCompositionMilestone
-      ? analysis.insights.map((i) => i.id)
-      : hasPurposeMilestone
-        ? analysis.insights.slice(0, 2).map((i) => i.id) // 用途分布 + 构图聚类先出现
-        : [];
 
-  // —— 风险排除项 ——
-  // 随 warning.created 事件逐步出现。每个 warning 匹配 riskExclusion 中的一项。
-  const warningCount = live.risks.length;
-  // 可安全借鉴项只能在构图判断事件后出现（里程碑 composition_extracted）
-  const safeItemsVisible = hasCompositionMilestone || isTerminal;
-  const prohibitedItemsVisible = warningCount; // 每个 warning 对应一个 prohibited/factCheck
-  // 按"禁止继承先出，待校验后出，可借鉴最后"排序
-  const visibleRiskItemIds: string[] = [];
-  // 禁止继承项随 warning 出现
-  for (let i = 0; i < Math.min(prohibitedItemsVisible, analysis.riskExclusion.prohibited.length); i++) {
-    visibleRiskItemIds.push(analysis.riskExclusion.prohibited[i].id);
-  }
-  // 待事实校验项在风险场景的 build_recipe 阶段后出现
-  const hasRiskListMilestone = live.milestones.some((m) => m.id === 'risk_list_built');
-  if (hasRiskListMilestone || isTerminal) {
-    visibleRiskItemIds.push(...analysis.riskExclusion.factCheck.map((i) => i.id));
-  }
-  // 可安全借鉴项最后
-  if (safeItemsVisible) {
-    visibleRiskItemIds.push(...analysis.riskExclusion.safe.map((i) => i.id));
-  }
+  // —— 卖点 = 事件累积的 sellingPointIds ——
+  const sellingPointIdSet = new Set(analysis.sellingPoints.map((s) => s.id));
+  const visibleSellingPointIds = (acc.sellingPointIds ?? []).filter((id) =>
+    sellingPointIdSet.has(id),
+  );
 
-  // —— Recipe 字段 ——
+  // —— 套图洞察 = 事件累积的 insightIds ——
+  const insightIdSet = new Set(analysis.insights.map((i) => i.id));
+  const visibleInsightIds = (acc.insightIds ?? []).filter((id) =>
+    insightIdSet.has(id),
+  );
+
+  // —— 风险排除项 = 事件累积的 riskItemIds ——
+  const allRiskItems = [
+    ...analysis.riskExclusion.prohibited,
+    ...analysis.riskExclusion.factCheck,
+    ...analysis.riskExclusion.safe,
+  ];
+  const riskIdSet = new Set(allRiskItems.map((r) => r.id));
+  const visibleRiskItemIds = (acc.riskItemIds ?? []).filter((id) =>
+    riskIdSet.has(id),
+  );
+
+  // —— Recipe 字段（来自 live.recipe；与事件 recipeFields 同源）——
   const visibleRecipeFields = (Object.entries(live.recipe) as [RecipeFieldKey, boolean][])
     .filter(([, v]) => v === true)
     .map(([k]) => k);
 
-  // —— 置信度 ——
+  // —— 置信度（只含已可见实体）——
   const confidenceByEntityId: Record<string, ConfidenceInfo | undefined> = {};
-  // 资产置信度（只含已可见资产）
   for (const assetId of visibleAssetIds) {
     const asset = analysis.assets.find((a) => a.id === assetId);
     if (asset?.confidence) confidenceByEntityId[assetId] = asset.confidence;
   }
-  // 聚类置信度
   for (const clusterId of visibleClusterIds) {
     const cluster = analysis.clusters.find((c) => c.id === clusterId);
     if (cluster?.borrowability) confidenceByEntityId[clusterId] = cluster.borrowability;
   }
+  for (const insightId of visibleInsightIds) {
+    const insight = analysis.insights.find((i) => i.id === insightId);
+    if (insight?.confidence) confidenceByEntityId[insightId] = insight.confidence;
+  }
 
   // —— 里程碑 ——
   const completedMilestones = live.milestones.map((m) => m.id);
+
+  // —— 实体证据溯源：从 live.entityEvidence 聚合（一个实体可有多来源事件）——
+  const source = live.entityEvidence ?? {};
+  const allVisibleIds = new Set<string>([
+    ...visibleAssetIds,
+    ...visibleClusterIds,
+    ...visibleSellingPointIds,
+    ...visibleInsightIds,
+    ...visibleRiskItemIds,
+    ...visibleRecipeFields,
+  ]);
+  const entityEvidence: Record<string, EntityEvidenceSummary> = {};
+  for (const id of allVisibleIds) {
+    const entries = source[id];
+    if (!entries || entries.length === 0) continue;
+    const sourceEventIds = entries.map((e) => e.sourceEventId);
+    const traceSequences = entries.map((e) => e.sequence);
+    const evidenceRefs: EvidenceRef[] = [];
+    for (const e of entries) {
+      if (e.evidenceRefs) evidenceRefs.push(...e.evidenceRefs);
+    }
+    entityEvidence[id] = { sourceEventIds, traceSequences, evidenceRefs };
+  }
 
   return {
     classifiedAssetIds,
@@ -174,8 +198,10 @@ export function projectCompetitorAnalysis(
     visibleRecipeFields,
     confidenceByEntityId,
     completedMilestones,
+    entityEvidence,
     isIdle,
     isTerminal,
     processedImages,
+    riskCategoryCount: live.summaryMetrics.risks,
   };
 }

@@ -104,6 +104,8 @@ export interface LiveEventEnvelope {
   evidenceRefs?: EvidenceRef[];
   /** 产物引用（artifactId 列表） */
   artifactRefs?: string[];
+  /** F2-R1.1：事件明确声明它形成了哪些业务结果（稳定结果 ID 驱动投影） */
+  resultRefs?: CompetitorResultRefs;
 
   /** 是否需要人工介入 */
   requiresAction?: boolean;
@@ -148,3 +150,23 @@ export type ConnectionState =
 
 /** 演示场景 ID */
 export type ScenarioId = 'normal' | 'risk' | 'reconnect';
+
+/**
+ * F2-R1.1：事件产生的业务结果引用。
+ * 每个产生业务结果的事件必须明确声明它形成了哪些结果。
+ * 投影层从已应用事件的 resultRefs 推导可见实体。
+ */
+export interface CompetitorResultRefs {
+  /** 本次事件分类了哪些资产 */
+  classifiedAssetIds?: string[];
+  /** 本次事件形成了哪些聚类 */
+  clusterIds?: string[];
+  /** 本次事件形成了哪些卖点节点 */
+  sellingPointIds?: string[];
+  /** 本次事件形成了哪些套图洞察 */
+  insightIds?: string[];
+  /** 本次事件发现了哪些风险排除项 */
+  riskItemIds?: string[];
+  /** 本次事件标记了哪些 Recipe 字段 */
+  recipeFields?: string[];
+}

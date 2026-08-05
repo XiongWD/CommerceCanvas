@@ -55,10 +55,11 @@ export function SellingPointSequenceView({
                     </span>
                   </div>
                 </div>
-                {/* 卖点内容 */}
+                {/* 卖点内容（F2-R1.1：主体可点击 → 展示关联图片） */}
                 <div
                   data-testid={`selling-point-${sp.id}`}
-                  className="min-w-0 flex-1 rounded-sm p-2.5"
+                  onClick={() => sp.assetIds[0] && onSelectAsset(sp.assetIds[0])}
+                  className="min-w-0 flex-1 cursor-pointer rounded-sm p-2.5 transition-colors duration-snap hover:bg-[var(--gc-bg-elev-1)]"
                   style={{ background: 'var(--gc-bg-app)', border: '1px solid var(--gc-line)' }}
                 >
                   <div className="flex items-center gap-2">

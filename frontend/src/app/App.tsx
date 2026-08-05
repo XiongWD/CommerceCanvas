@@ -177,6 +177,7 @@ export function App() {
               assets={visibleAssets}
               selectedClusterId={selectedClusterId}
               onSelectCluster={handleSelectCluster}
+              onSelectAsset={handleSelectAsset}
             />
           )}
           {viewMode === 'selling-points' && (

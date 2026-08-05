@@ -10,6 +10,7 @@
  */
 
 import type {
+  CompetitorResultRefs,
   ConnectionState,
   JobStatus,
   StageId,
@@ -64,6 +65,18 @@ export interface MilestoneItem {
   titleZh: string;
   summaryZh?: string;
   sequence: number;
+}
+
+/** F2-R1.1：单个结果实体的证据溯源条目（每来源事件一条） */
+export interface EntityEvidenceEntry {
+  /** 产生该实体的稳定结果类别（classifiedAssetIds / clusterIds / ...） */
+  category: keyof CompetitorResultRefs;
+  /** 来源事件 ID */
+  sourceEventId: string;
+  /** 来源事件 sequence（trace 序） */
+  sequence: number;
+  /** 该事件携带的证据引用（可定位画布） */
+  evidenceRefs?: LiveEventEnvelope['evidenceRefs'];
 }
 
 /** Creative Recipe 字段完成度（逐步形成，任务书 §三） */
@@ -159,6 +172,18 @@ export interface LiveIntelligenceState {
   /** Creative Recipe 完成度 */
   recipe: RecipeProgress;
 
+  /**
+   * F2-R1.1：所有已应用事件 resultRefs 的累积（按 category 合并去重）。
+   * 投影层从这里读取"当前应该可见的结果"，而非从里程碑/阶段静态数组反推。
+   * 真实事件 resultRefs 已被 reducer 消费，不进 trace，故在此单独维护。
+   */
+  resultRefsAccumulated: CompetitorResultRefs;
+  /**
+   * F2-R1.1：实体 → 证据溯源（每个可见结果 ID 由哪些事件产生）。
+   * 键 = 合并后的结果 ID；值 = 产生该 ID 的所有事件来源（可多条）。
+   * 与 resultRefsAccumulated 同步维护，供投影层 entityEvidence 直接消费。
+   */
+  entityEvidence: Record<string, EntityEvidenceEntry[]>;
   /** 最近一次断线恢复信息（中文展示） */
   recoveryInfo?: {
     fromSequence: number;
@@ -238,6 +263,15 @@ export function createInitialState(scenario = 'normal'): LiveIntelligenceState {
       lighting: false,
       textSafetyZone: false,
     },
+    resultRefsAccumulated: {
+      classifiedAssetIds: [],
+      clusterIds: [],
+      sellingPointIds: [],
+      insightIds: [],
+      riskItemIds: [],
+      recipeFields: [],
+    },
+    entityEvidence: {},
   };
 }
 

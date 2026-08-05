@@ -11,6 +11,8 @@ interface ClusterViewProps {
   assets: CompetitorAsset[];
   selectedClusterId: string | null;
   onSelectCluster: (id: string | null) => void;
+  /** F2-R1.1：点击聚类内图片进入单图模式 */
+  onSelectAsset?: (id: string) => void;
 }
 
 export function ClusterView({
@@ -18,6 +20,7 @@ export function ClusterView({
   assets,
   selectedClusterId,
   onSelectCluster,
+  onSelectAsset,
 }: ClusterViewProps) {
   const clusterColor = (id: string) => {
     const letter = id.replace('cluster-', '').charAt(0).toUpperCase();
@@ -76,16 +79,17 @@ export function ClusterView({
                     {clusterAssets.length} 张
                   </span>
                 </div>
-                {/* 缩略图行 */}
+                {/* 缩略图行（F2-R1.1：点击可进入单图模式） */}
                 <div className="mt-1.5 flex gap-1">
                   {clusterAssets.slice(0, 6).map((a) => (
-                    <div
+                    <button
                       key={a.id}
-                      className="overflow-hidden rounded-sm"
+                      onClick={(e) => { e.stopPropagation(); onSelectAsset?.(a.id); }}
+                      className="overflow-hidden rounded-sm transition-transform duration-snap hover:scale-110"
                       style={{ width: 28, height: 28, background: `linear-gradient(135deg, ${a.thumbPalette.from}, ${a.thumbPalette.to})` }}
                     >
                       <img src={a.src} alt="" className="h-full w-full object-cover" draggable={false} />
-                    </div>
+                    </button>
                   ))}
                 </div>
                 {/* 构图特征 */}
