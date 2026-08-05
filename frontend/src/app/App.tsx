@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { GlobalRail } from '@/components/layout/GlobalRail';
 import { ContextSidebar } from '@/components/layout/ContextSidebar';
 import { InspectorPanel } from '@/components/layout/InspectorPanel';
@@ -17,48 +17,105 @@ import {
   MilestoneReveal,
 } from '@/features/live-intelligence';
 import { selectRecipeCompleteness } from '@/features/live-intelligence/state/live-intelligence-selectors';
+import { projectCompetitorAnalysis } from '@/features/competitor-analysis/state/competitor-analysis-projection';
 import type { CanvasViewMode, InspectorTab } from '@/types/competitor-analysis';
 
 /**
- * CommerceCanvas 全局工作台 Shell（F2：竞品套图分析完整展示页深化）。
+ * CommerceCanvas F2-R1：竞品套图分析完整展示页（投影驱动渐进页面）。
  *
- * 布局柱：
- *   顶部：演示控制 + 环境智能反馈
- *   主体：64px 图标栏 + 244px 上下文栏（Product Master + 分组筛选 + 套图统计）
- *         + 中央画布（最大，4 种查看模式）+ 分析轨迹 + 340px 检查器（4 Tab）
- *   底部：持续任务面板
+ * 核心修复：所有结果通过 projectCompetitorAnalysis 投影层推导，
+ * 不直接渲染完整 mock。idle 时不显示终态，结果随事件逐步形成。
  */
 export function App() {
-  const state = competitorAnalysisMock;
+  const analysisState = competitorAnalysisMock;
   const live = useLiveIntelligence('normal');
 
-  // 页面级状态：中央查看模式 + 选中资产 + 选中聚类 + 检查器 Tab
+  // —— 页面级状态 ——
   const [viewMode, setViewMode] = useState<CanvasViewMode>('single');
-  const [selectedAssetId, setSelectedAssetId] = useState(state.assets[0].id);
+  const [selectedAssetId, setSelectedAssetId] = useState(analysisState.assets[0].id);
   const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>('current-image');
+  const [traceCollapsed, setTraceCollapsed] = useState(false);
 
-  // Evidence 双向定位：trace 焦点 → 切换资产 + 画布高亮
+  // —— 投影层：从 live state 推导可见结果 ——
+  const projection = useMemo(
+    () => projectCompetitorAnalysis(live.state, analysisState),
+    [live.state, analysisState],
+  );
+
+  // —— 页面状态重置：scenarioId 或 runId 变化时 ——
+  const sessionKey = `${live.state.jobId}#${live.state.runId}`;
+  const [lastSessionKey, setLastSessionKey] = useState(sessionKey);
+  useEffect(() => {
+    if (sessionKey !== lastSessionKey) {
+      setLastSessionKey(sessionKey);
+      setSelectedClusterId(null);
+      setInspectorTab('current-image');
+      setViewMode('single');
+      // selectedAssetId 回到第一个或第一个已处理
+      setSelectedAssetId(projection.visibleAssetIds[0] ?? analysisState.assets[0].id);
+    }
+  }, [sessionKey, lastSessionKey, projection.visibleAssetIds, analysisState.assets]);
+
+  // —— 投影后的组件数据 ——
+  const visibleAssets = useMemo(
+    () => analysisState.assets.filter((a) => projection.visibleAssetIds.includes(a.id)),
+    [analysisState.assets, projection.visibleAssetIds],
+  );
+  const visibleClusters = useMemo(
+    () => analysisState.clusters.filter((c) => projection.visibleClusterIds.includes(c.id)),
+    [analysisState.clusters, projection.visibleClusterIds],
+  );
+  const visibleSellingPoints = useMemo(
+    () => analysisState.sellingPoints.filter((s) => projection.visibleSellingPointIds.includes(s.id)),
+    [analysisState.sellingPoints, projection.visibleSellingPointIds],
+  );
+  const visibleInsights = useMemo(
+    () => analysisState.insights.filter((i) => projection.visibleInsightIds.includes(i.id)),
+    [analysisState.insights, projection.visibleInsightIds],
+  );
+  const visibleRiskItems = useMemo(() => {
+    const all = [
+      ...analysisState.riskExclusion.prohibited,
+      ...analysisState.riskExclusion.factCheck,
+      ...analysisState.riskExclusion.safe,
+    ];
+    return all.filter((r) => projection.visibleRiskItemIds.includes(r.id));
+  }, [analysisState.riskExclusion, projection.visibleRiskItemIds]);
+
+  // —— Evidence focus ——
   const focusedAssetId = live.focus?.assetId ?? selectedAssetId;
-  const handleSelectAsset = (id: string) => {
+
+  const handleSelectAsset = useCallback((id: string) => {
     setSelectedAssetId(id);
     setViewMode('single');
+    setSelectedClusterId(null);
     live.clearFocus();
-  };
+  }, [live]);
 
-  // 聚类选择 → 切换检查器到洞察 Tab
-  const handleSelectCluster = (clusterId: string | null) => {
+  const handleSelectCluster = useCallback((clusterId: string | null) => {
     setSelectedClusterId(clusterId);
-    if (clusterId) setInspectorTab('suite-insights');
-  };
+    if (clusterId) {
+      setInspectorTab('suite-insights');
+      // 中央切换到聚类模式
+      setViewMode('clusters');
+    }
+  }, []);
 
   const recipeCompleteness = selectRecipeCompleteness(live.state);
-  const isIdle = live.state.jobStatus === 'idle';
 
-  // 渐进页面（§九）：idle 时不显示最终结论，套图总览只显示已处理图片
+  // —— 响应式：检测窗口宽度，窄屏自动折叠轨迹 ——
+  useEffect(() => {
+    const checkWidth = () => {
+      if (window.innerWidth <= 1366) setTraceCollapsed(true);
+    };
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
+
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
-      {/* 顶部：演示控制 */}
       <DemoControls
         status={live.simulatorStatus}
         speed={live.speed}
@@ -72,18 +129,17 @@ export function App() {
       />
       <AmbientStatus state={live.state} />
 
-      {/* 主体行 */}
       <div className="flex min-h-0 flex-1">
         <GlobalRail />
         <ContextSidebar
-          state={state}
+          state={analysisState}
           selectedAssetId={focusedAssetId}
           onSelectAsset={handleSelectAsset}
+          projection={projection}
         />
 
-        {/* 中央分析工作区：4 种查看模式 */}
+        {/* 中央分析工作区 */}
         <div className="relative flex min-w-0 flex-1 flex-col">
-          {/* 模式切换器 */}
           <div
             className="flex shrink-0 items-center justify-between border-b px-3 py-1.5"
             style={{ borderColor: 'var(--gc-line)', background: 'var(--gc-bg-app)' }}
@@ -96,10 +152,9 @@ export function App() {
             )}
           </div>
 
-          {/* 模式内容 */}
           {viewMode === 'single' && (
             <CompetitorAnalysisCanvas
-              assets={state.assets}
+              assets={analysisState.assets}
               selectedAssetId={focusedAssetId}
               onSelectAsset={handleSelectAsset}
               liveState={live.state}
@@ -110,51 +165,78 @@ export function App() {
           )}
           {viewMode === 'contact-sheet' && (
             <ContactSheetView
-              assets={state.assets}
+              assets={analysisState.assets}
               selectedAssetId={focusedAssetId}
               onSelectAsset={handleSelectAsset}
-              liveState={live.state}
-              isIdle={isIdle}
+              projection={projection}
             />
           )}
           {viewMode === 'clusters' && (
             <ClusterView
-              clusters={state.clusters}
-              assets={state.assets}
+              clusters={visibleClusters}
+              assets={visibleAssets}
               selectedClusterId={selectedClusterId}
               onSelectCluster={handleSelectCluster}
             />
           )}
           {viewMode === 'selling-points' && (
             <SellingPointSequenceView
-              sellingPoints={state.sellingPoints}
-              assets={state.assets}
+              sellingPoints={visibleSellingPoints}
+              assets={visibleAssets}
               onSelectAsset={handleSelectAsset}
             />
           )}
 
-          <MilestoneReveal key={`${live.state.jobId}#${live.state.runId}`} state={live.state} />
+          <MilestoneReveal key={sessionKey} state={live.state} />
         </div>
 
-        {/* 分析轨迹面板 */}
-        <aside
-          className="flex shrink-0 flex-col border-l"
-          style={{ width: 280, background: 'var(--gc-bg-app)', borderColor: 'var(--gc-line)' }}
-        >
-          <AnalysisTrace
-            state={live.state}
-            highlightedSequence={live.highlightedSequence}
-            onFocusEvidence={live.focusEvidence}
-          />
-        </aside>
+        {/* 分析轨迹（可折叠） */}
+        {!traceCollapsed && (
+          <aside
+            className="flex shrink-0 flex-col border-l"
+            style={{ width: 280, background: 'var(--gc-bg-app)', borderColor: 'var(--gc-line)' }}
+          >
+            <AnalysisTrace
+              state={live.state}
+              highlightedSequence={live.highlightedSequence}
+              onFocusEvidence={live.focusEvidence}
+            />
+          </aside>
+        )}
+        {/* 折叠后的窄栏：展开按钮 */}
+        {traceCollapsed && (
+          <button
+            onClick={() => setTraceCollapsed(false)}
+            className="flex shrink-0 flex-col items-center justify-center border-l py-2"
+            style={{
+              width: 28,
+              background: 'var(--gc-bg-elev-1)',
+              borderColor: 'var(--gc-line)',
+            }}
+            title="展开分析轨迹"
+          >
+            <span
+              className="gc-data text-2xs"
+              style={{ color: 'var(--gc-text-faint)', writingMode: 'vertical-rl' }}
+            >
+              轨迹 {live.state.trace.length}
+            </span>
+          </button>
+        )}
 
         <InspectorPanel
-          state={state}
+          state={analysisState}
           selectedAssetId={focusedAssetId}
           recipeCompletenessPct={recipeCompleteness}
           onSelectAsset={handleSelectAsset}
           activeTab={inspectorTab}
           onTabChange={setInspectorTab}
+          projection={projection}
+          sessionKey={sessionKey}
+          liveState={live.state}
+          visibleInsights={visibleInsights}
+          visibleRiskItems={visibleRiskItems}
+          onFocusEvidence={live.focusEvidence}
         />
       </div>
 

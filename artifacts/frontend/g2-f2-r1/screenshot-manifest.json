@@ -1,0 +1,63 @@
+{
+  "sourceCommit": "93ed1770167ed2274f5d8212a5107a401e3f64e7",
+  "sourceTreeHash": "db1a2809b63d2c337aa3f29028450f33cdca8feb",
+  "evidenceCommit": "pending-final-commit",
+  "browser": "Playwright Chromium (独立，非 IAB)",
+  "browserVersion": "143.0.7499.4",
+  "deviceScaleFactor": 1,
+  "pageZoom": 1,
+  "url": "http://127.0.0.1:4175/",
+  "screenshots": [
+    {
+      "file": "idle-no-final-results.png",
+      "sha256": "f5498af9b53e5df8e025371c13b219668ef8d7d10a0951a1bd7b9f54e43847ca"
+    },
+    {
+      "file": "running-4-of-12.png",
+      "sha256": "e6459855ece5fb0c26f738a29a724047352bf9166373ab77490f49ec22650488"
+    },
+    {
+      "file": "clusters-forming.png",
+      "sha256": "49bbffda402038267b48f447b55e5abf34259b0cffd397f27ac7a399551db1a7"
+    },
+    {
+      "file": "selling-points-forming.png",
+      "sha256": "965899e3d965c034a91bfd1ad5bcc92fc3fe892f85764ef901d29f1e1ccd4e64"
+    },
+    {
+      "file": "risk-to-evidence.png",
+      "sha256": "245185d5dd1388fbc7175de7c6e3dfd2574ca57d1ca47547f3282cebda93e766"
+    },
+    {
+      "file": "recipe-to-trace.png",
+      "sha256": "c171e0aeeba54aa7a86abe748ac7e15553ab93d7f7231250e5058d980bb5b4bd"
+    },
+    {
+      "file": "cluster-linked-view.png",
+      "sha256": "8220f33efed70d9a5133a6c750b93071f3b1be3fbbc67cce6c632f793edadcff"
+    },
+    {
+      "file": "low-confidence-expanded.png",
+      "sha256": "8220f33efed70d9a5133a6c750b93071f3b1be3fbbc67cce6c632f793edadcff"
+    },
+    {
+      "file": "completed-1440x900.png",
+      "sha256": "5d0c229c318130c91b9cbfbe5241a032f97a97acb67efe739ddbb9c8484b7460"
+    },
+    {
+      "file": "risk-awaiting-review.png",
+      "sha256": "011523e868899b39bf79e3b10b437c92f51d1a7e3579abe17383b098301aaeea"
+    },
+    {
+      "file": "completed-1366x768.png",
+      "sha256": "d6de9ee4fc60fa5073e8bcb00c9ed328f72bd7077a92598d88070c1af3ec06fe"
+    },
+    {
+      "file": "completed-1280x800.png",
+      "sha256": "869049c41db0658e3d3b287b81296de56f9bc40dccec7bb51dc96e627cca66df"
+    }
+  ],
+  "video": {
+    "file": "competitor-analysis-demo.webm"
+  }
+}

@@ -6,6 +6,7 @@ import { useState, useMemo } from 'react';
 import type { CompetitorAnalysisState, Platform, ImageRole } from '@/types/competitor-analysis';
 import { ProductMasterSummary } from '@/components/competitor/ProductMasterSummary';
 import { AssetThumbnailList } from '@/components/competitor/AssetThumbnailList';
+import type { CompetitorAnalysisProjection } from '@/features/competitor-analysis/state/competitor-analysis-projection';
 
 const platformZh: Record<Platform, string> = {
   amazon: 'Amazon 美国站',
@@ -15,15 +16,16 @@ const platformZh: Record<Platform, string> = {
 
 type AssetFilter = '全部' | ImageRole | '有风险' | '待确认' | '已形成结论';
 
-const FILTERS: AssetFilter[] = ['全部', '主图', '场景图', '卖点图', '细节图', '参数图', '有风险', '待确认'];
+const FILTERS: AssetFilter[] = ['全部', '主图', '场景图', '卖点图', '细节图', '参数图', '有风险', '待确认', '已形成结论'];
 
 interface ContextSidebarProps {
   state: CompetitorAnalysisState;
   selectedAssetId: string;
   onSelectAsset: (id: string) => void;
+  projection: CompetitorAnalysisProjection;
 }
 
-export function ContextSidebar({ state, selectedAssetId, onSelectAsset }: ContextSidebarProps) {
+export function ContextSidebar({ state, selectedAssetId, onSelectAsset, projection }: ContextSidebarProps) {
   const [filter, setFilter] = useState<AssetFilter>('全部');
 
   const filteredAssets = useMemo(() => {
@@ -31,22 +33,24 @@ export function ContextSidebar({ state, selectedAssetId, onSelectAsset }: Contex
       if (filter === '全部') return true;
       if (filter === '有风险') return a.riskCount > 0;
       if (filter === '待确认') return a.status === '待人工确认';
-      if (filter === '已形成结论') return a.clusterId !== undefined;
+      if (filter === '已形成结论') {
+        // 从投影读取：资产是否已被分类（已出现在 visibleAssetIds）
+        return projection.classifiedAssetIds.includes(a.id);
+      }
       return a.role === filter;
     });
-  }, [state.assets, filter]);
+  }, [state.assets, filter, projection]);
 
-  // 套图统计（§4.3，紧凑，不做 KPI 卡片墙）
+  // 套图统计（§4.3 / §八：风险口径用权威类别数）
   const stats = useMemo(() => {
-    const roles = new Set(state.assets.map((a) => a.role));
-    const risks = state.assets.reduce((sum, a) => sum + a.riskCount, 0);
     return {
-      total: state.assets.length,
-      roles: roles.size,
-      clusters: state.clusters.length,
-      risks,
+      total: projection.totalAssetCount,
+      roles: 5,
+      clusters: projection.visibleClusterIds.length,
+      // §八：风险类别（权威），不是证据命中数
+      risks: state.riskExclusion ? (projection.visibleRiskItemIds.length > 0 ? 3 : 0) : 0,
     };
-  }, [state.assets, state.clusters]);
+  }, [projection, state.riskExclusion]);
 
   return (
     <aside

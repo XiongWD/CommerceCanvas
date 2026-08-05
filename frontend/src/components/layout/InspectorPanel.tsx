@@ -1,33 +1,37 @@
 /**
- * 右侧属性检查器（F2 §七）。
- * 4 Tab：当前图片 / 套图洞察 / Creative Recipe / 风险排除。
- * 紧凑 Tab 导航，不再只是一个长列表。
+ * 右侧属性检查器（F2-R1 §七）。
+ * 4 Tab + 投影驱动渐进显示 + Recipe 审核按钮（接受/待调整/恢复/查看依据）。
+ * 审核状态按 sessionKey 隔离（restart/switchScenario 重置）。
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type {
   CompetitorAnalysisState,
   CompetitorAsset,
   InspectorTab,
+  RiskExclusionItem,
+  SuiteInsight,
 } from '@/types/competitor-analysis';
-import {
-  InheritanceLists,
-  Section,
-} from '@/components/competitor/AnalysisSummary';
+import { InheritanceLists, Section } from '@/components/competitor/AnalysisSummary';
 import { ConfidenceBadge } from '@/components/competitor/ConfidenceBadge';
 import { SuiteInsightsTab } from '@/components/competitor/SuiteInsightsTab';
-import { CreativeRecipeTab } from '@/components/competitor/CreativeRecipeTab';
 import { RiskExclusionTab } from '@/components/competitor/RiskExclusionTab';
+import type { CompetitorAnalysisProjection, RecipeFieldKey } from '@/features/competitor-analysis/state/competitor-analysis-projection';
+import type { LiveIntelligenceState } from '@/features/live-intelligence/state/live-intelligence-state';
+import type { EvidenceFocus } from '@/features/live-intelligence/useLiveIntelligence';
 
 interface InspectorPanelProps {
   state: CompetitorAnalysisState;
   selectedAssetId: string;
-  /** F2：Recipe 完成度（来自事件流） */
   recipeCompletenessPct?: number;
-  /** F2：点击洞察/风险关联图片 */
   onSelectAsset: (id: string) => void;
-  /** F2：外部控制 Tab（如点击聚类切换到洞察） */
   activeTab?: InspectorTab;
   onTabChange?: (tab: InspectorTab) => void;
+  projection: CompetitorAnalysisProjection;
+  sessionKey: string;
+  liveState: LiveIntelligenceState;
+  visibleInsights: SuiteInsight[];
+  visibleRiskItems: RiskExclusionItem[];
+  onFocusEvidence: (f: EvidenceFocus) => void;
 }
 
 const TABS: { tab: InspectorTab; labelZh: string }[] = [
@@ -44,6 +48,10 @@ export function InspectorPanel({
   onSelectAsset,
   activeTab: externalTab,
   onTabChange,
+  projection,
+  sessionKey,
+  visibleInsights,
+  visibleRiskItems,
 }: InspectorPanelProps) {
   const [internalTab, setInternalTab] = useState<InspectorTab>('current-image');
   const activeTab = externalTab ?? internalTab;
@@ -54,17 +62,19 @@ export function InspectorPanel({
 
   const asset = state.assets.find((a) => a.id === selectedAssetId) ?? state.assets[0];
 
+  // 风险排除：按投影分组（可见项分为 prohibited/factCheck/safe）
+  const visibleRiskExclusion = {
+    prohibited: visibleRiskItems.filter((r) => r.category === 'prohibited'),
+    factCheck: visibleRiskItems.filter((r) => r.category === 'fact-check'),
+    safe: visibleRiskItems.filter((r) => r.category === 'safe'),
+  };
+
   return (
     <aside
       data-testid="inspector-panel"
       className="flex shrink-0 flex-col border-l"
-      style={{
-        width: 'var(--gc-inspector-width)',
-        background: 'var(--gc-bg-app)',
-        borderColor: 'var(--gc-line)',
-      }}
+      style={{ width: 'var(--gc-inspector-width)', background: 'var(--gc-bg-app)', borderColor: 'var(--gc-line)' }}
     >
-      {/* Tab 导航 */}
       <nav className="flex shrink-0 border-b" style={{ borderColor: 'var(--gc-line)' }}>
         {TABS.map(({ tab, labelZh }) => {
           const isActive = activeTab === tab;
@@ -86,49 +96,57 @@ export function InspectorPanel({
         })}
       </nav>
 
-      {/* Tab 内容 */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {activeTab === 'current-image' && <CurrentImageTab asset={asset} state={state} />}
+        {activeTab === 'current-image' && (
+          <CurrentImageTab asset={asset} state={state} projection={projection} />
+        )}
         {activeTab === 'suite-insights' && (
-          <SuiteInsightsTab
-            insights={state.insights}
-            assets={state.assets}
-            onSelectAsset={onSelectAsset}
-          />
+          <SuiteInsightsTab insights={visibleInsights} assets={state.assets} onSelectAsset={onSelectAsset} />
         )}
         {activeTab === 'recipe' && (
-          <CreativeRecipeTab
+          <CreativeRecipeTabR1
             recipe={state.recipe}
             completenessPct={recipeCompletenessPct}
+            projection={projection}
+            sessionKey={sessionKey}
           />
         )}
         {activeTab === 'risk-exclusion' && (
-          <RiskExclusionTab
-            riskExclusion={state.riskExclusion}
-            onSelectAsset={onSelectAsset}
-          />
+          <RiskExclusionTab riskExclusion={visibleRiskExclusion} onSelectAsset={onSelectAsset} />
         )}
       </div>
     </aside>
   );
 }
 
-/** 当前图片 Tab（F2 §7.1） */
+/** 当前图片 Tab（投影驱动：未分析的资产不显示结论） */
 function CurrentImageTab({
   asset,
   state,
+  projection,
 }: {
   asset: CompetitorAsset;
   state: CompetitorAnalysisState;
+  projection: CompetitorAnalysisProjection;
 }) {
+  const isClassified = projection.classifiedAssetIds.includes(asset.id);
   const vl = asset.visualLanguage;
+
+  if (!isClassified && !projection.isTerminal) {
+    return (
+      <Section title="当前图片分析">
+        <div className="px-2 py-3 text-center text-xs" style={{ color: 'var(--gc-text-faint)' }}>
+          {projection.isIdle ? '等待开始分析' : '该图片尚未分析'}
+        </div>
+      </Section>
+    );
+  }
+
   return (
     <>
       <Section title="当前图片分析">
         <div className="mb-2 flex items-center justify-between">
-          <span className="gc-data text-2xs" style={{ color: 'var(--gc-accent-blue)' }}>
-            {asset.filename}
-          </span>
+          <span className="gc-data text-2xs" style={{ color: 'var(--gc-accent-blue)' }}>{asset.filename}</span>
           {asset.confidence && <ConfidenceBadge confidence={asset.confidence} />}
         </div>
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
@@ -140,7 +158,6 @@ function CurrentImageTab({
           <SummaryRow label="状态" value={asset.status} tone={asset.status === '待人工确认' ? 'amber' : 'green'} />
         </dl>
       </Section>
-
       <Section title="视觉语言">
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
           <SummaryRow label="主光" value={vl.keyLightZh} />
@@ -149,13 +166,9 @@ function CurrentImageTab({
           <SummaryRow label="景深" value={vl.depthZh} />
         </dl>
       </Section>
-
-      {/* 当前风险 */}
       <Section title="当前风险">
         {asset.risksZh.length === 0 ? (
-          <span className="text-xs" style={{ color: 'var(--gc-text-faint)' }}>
-            未检出风险
-          </span>
+          <span className="text-xs" style={{ color: 'var(--gc-text-faint)' }}>未检出风险</span>
         ) : (
           <ul className="flex flex-col gap-1">
             {asset.risksZh.map((r, i) => (
@@ -167,8 +180,6 @@ function CurrentImageTab({
           </ul>
         )}
       </Section>
-
-      {/* 套图级继承策略（折叠） */}
       <Section title="套图继承策略" defaultOpen={false}>
         <InheritanceLists inheritableZh={state.inheritableZh} prohibitedZh={state.prohibitedZh} />
       </Section>
@@ -176,31 +187,127 @@ function CurrentImageTab({
   );
 }
 
-function SummaryRow({
-  label,
-  value,
-  mono = false,
-  tone,
+/** Recipe Tab R1：渐进显示 + 明确审核按钮 + 状态按 sessionKey 隔离 */
+function CreativeRecipeTabR1({
+  recipe,
+  completenessPct,
+  projection,
+  sessionKey,
 }: {
-  label: string;
-  value: string;
-  mono?: boolean;
-  tone?: 'amber' | 'green';
+  recipe: CompetitorAnalysisState['recipe'];
+  completenessPct: number;
+  projection: CompetitorAnalysisProjection;
+  sessionKey: string;
 }) {
-  const color =
-    tone === 'amber'
-      ? 'var(--gc-accent-amber)'
-      : tone === 'green'
-        ? 'var(--gc-accent-green)'
-        : 'var(--gc-text-mid)';
+  // 审核状态按 sessionKey + recipeField 隔离
+  const [auditStates, setAuditStates] = useState<Record<string, 'suggested' | 'accepted' | 'adjusting'>>({});
+  // sessionKey 变化时重置
+  const [lastSession, setLastSession] = useState(sessionKey);
+  useEffect(() => {
+    if (sessionKey !== lastSession) {
+      setLastSession(sessionKey);
+      setAuditStates({});
+    }
+  }, [sessionKey, lastSession]);
+
+  const visibleFields = projection.visibleRecipeFields;
+  const allFields: { key: RecipeFieldKey; labelZh: string; valueZh: string; basisZh: string }[] = [
+    { key: 'purpose', labelZh: '用途', valueZh: recipe.purposeZh, basisZh: '来自 5 张场景卖点图的用途聚类' },
+    { key: 'canvas', labelZh: '画布', valueZh: `${recipe.canvas.width} × ${recipe.canvas.height}`, basisZh: 'Amazon 主图标准尺寸要求' },
+    { key: 'position', labelZh: '商品位置', valueZh: recipe.productPositionZh, basisZh: '4/5 张参考图为右侧或中心主体' },
+    { key: 'ratio', labelZh: '商品占比', valueZh: `${recipe.productRatio.min}%–${recipe.productRatio.max}%`, basisZh: '套图平均占比 58%–66%' },
+    { key: 'background', labelZh: '背景', valueZh: recipe.backgroundZh, basisZh: '6 张图片使用深灰工作空间背景' },
+    { key: 'lighting', labelZh: '光线', valueZh: recipe.lightingZh, basisZh: '左上柔光 + 冷色轮廓光在 5 张图片中重复' },
+    { key: 'textSafetyZone', labelZh: '文字安全区', valueZh: `左侧 ${recipe.textSafetyZonePct}%`, basisZh: '右侧主体构图对应左侧文案区' },
+  ];
+
+  const stateColor = (s: string | undefined) =>
+    s === 'accepted' ? 'var(--gc-accent-green)' : s === 'adjusting' ? 'var(--gc-accent-amber)' : 'var(--gc-text-faint)';
+  const stateLabel = (s: string | undefined) =>
+    s === 'accepted' ? '已接受' : s === 'adjusting' ? '待调整' : '建议';
+
+  return (
+    <div className="flex flex-col gap-2 px-4 py-3">
+      <div className="flex items-center justify-between rounded-sm px-2.5 py-2" style={{ background: 'var(--gc-bg-elev-2)', border: '1px solid var(--gc-line)' }}>
+        <div>
+          <span className="text-xs font-semibold" style={{ color: 'var(--gc-text-hi)' }}>套图 Creative Recipe 草案</span>
+          <div className="mt-0.5 text-2xs" style={{ color: 'var(--gc-accent-amber)' }}>尚未进入正式生成</div>
+        </div>
+        <div className="text-right">
+          <div className="gc-data text-base font-semibold" style={{ color: completenessPct >= 100 ? 'var(--gc-accent-green)' : 'var(--gc-accent-blue)' }}>
+            {completenessPct}%
+          </div>
+          <div className="text-2xs" style={{ color: 'var(--gc-text-faint)' }}>{visibleFields.length}/7 字段</div>
+        </div>
+      </div>
+
+      <Section title="Recipe 字段">
+        <dl className="flex flex-col gap-1">
+          {allFields.map((row) => {
+            const isVisible = visibleFields.includes(row.key);
+            const fs = auditStates[`${sessionKey}#${row.key}`] ?? 'suggested';
+            const color = stateColor(fs);
+            return (
+              <div
+                key={row.key}
+                data-testid={`recipe-field-${row.key}`}
+                className="rounded-sm px-2 py-1"
+                style={{ background: !isVisible ? 'var(--gc-bg-base)' : 'transparent' }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs shrink-0" style={{ color: 'var(--gc-text-faint)' }}>{row.labelZh}</span>
+                  {isVisible ? (
+                    <span className="truncate text-xs" style={{ color: 'var(--gc-text-mid)' }}>{row.valueZh}</span>
+                  ) : (
+                    <span className="text-2xs" style={{ color: 'var(--gc-text-faint)' }}>等待分析</span>
+                  )}
+                </div>
+                {isVisible && (
+                  <div className="mt-1 flex items-center justify-between">
+                    <span className="text-2xs" style={{ color: 'var(--gc-text-faint)' }}>依据：{row.basisZh}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="shrink-0 rounded-sm px-1.5 py-0.5 text-2xs" style={{ color, background: `${color}22`, border: `1px solid ${color}44` }}>
+                        {stateLabel(fs)}
+                      </span>
+                      <button
+                        onClick={() => setAuditStates((p) => ({ ...p, [`${sessionKey}#${row.key}`]: 'accepted' }))}
+                        className="rounded-sm px-1.5 py-0.5 text-2xs"
+                        style={{ color: 'var(--gc-accent-green)', border: '1px solid var(--gc-line)' }}
+                      >
+                        接受
+                      </button>
+                      <button
+                        onClick={() => setAuditStates((p) => ({ ...p, [`${sessionKey}#${row.key}`]: 'adjusting' }))}
+                        className="rounded-sm px-1.5 py-0.5 text-2xs"
+                        style={{ color: 'var(--gc-accent-amber)', border: '1px solid var(--gc-line)' }}
+                      >
+                        待调整
+                      </button>
+                      <button
+                        onClick={() => setAuditStates((p) => { const cp = { ...p }; delete cp[`${sessionKey}#${row.key}`]; return cp; })}
+                        className="rounded-sm px-1.5 py-0.5 text-2xs"
+                        style={{ color: 'var(--gc-text-faint)', border: '1px solid var(--gc-line)' }}
+                      >
+                        恢复
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </dl>
+      </Section>
+    </div>
+  );
+}
+
+function SummaryRow({ label, value, mono = false, tone }: { label: string; value: string; mono?: boolean; tone?: 'amber' | 'green' }) {
+  const color = tone === 'amber' ? 'var(--gc-accent-amber)' : tone === 'green' ? 'var(--gc-accent-green)' : 'var(--gc-text-mid)';
   return (
     <>
-      <dt className="text-xs" style={{ color: 'var(--gc-text-faint)' }}>
-        {label}
-      </dt>
-      <dd className={mono ? 'gc-data text-xs' : 'text-xs'} style={{ color }}>
-        {value}
-      </dd>
+      <dt className="text-xs" style={{ color: 'var(--gc-text-faint)' }}>{label}</dt>
+      <dd className={mono ? 'gc-data text-xs' : 'text-xs'} style={{ color }}>{value}</dd>
     </>
   );
 }
