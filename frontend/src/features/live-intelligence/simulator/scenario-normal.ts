@@ -52,16 +52,23 @@ export function buildNormalScenario(): ScenarioScript {
       emit({
         kind: 'observation.created',
         stageId: 'classify_purpose',
-        titleZh: '已识别图片用途：主图 1 张、场景图 2 张、卖点图 2 张、细节图 1 张',
-        summaryZh: '前 6 张分类完成',
-        resultRefs: { classifiedAssetIds: ['img-01', 'img-02', 'img-03', 'img-04', 'img-05', 'img-06'] },
+        titleZh: '已识别前 4 张图片用途：主图 1 张、场景图 2 张、卖点图 1 张',
+        summaryZh: '部分分类完成',
+        resultRefs: { classifiedAssetIds: ['img-01', 'img-02', 'img-03', 'img-04'] },
       });
       emit({
         kind: 'observation.created',
         stageId: 'classify_purpose',
-        titleZh: '已识别图片用途：场景图 2 张、卖点图 3 张、参数图 1 张',
+        titleZh: '已识别中间 4 张图片用途：场景图 2 张、卖点图 2 张',
+        summaryZh: '分类推进中',
+        resultRefs: { classifiedAssetIds: ['img-05', 'img-06', 'img-07', 'img-08'] },
+      });
+      emit({
+        kind: 'observation.created',
+        stageId: 'classify_purpose',
+        titleZh: '已识别全部 12 张图片用途：主图 1、场景 4、卖点 5、细节 1、参数 1',
         summaryZh: '4 类用途分类完成',
-        resultRefs: { classifiedAssetIds: ['img-07', 'img-08', 'img-09', 'img-10', 'img-11', 'img-12'] },
+        resultRefs: { classifiedAssetIds: ['img-09', 'img-10', 'img-11', 'img-12'] },
       });
       emit({
         kind: 'evidence.created',

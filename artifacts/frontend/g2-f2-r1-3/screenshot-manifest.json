@@ -1,0 +1,49 @@
+{
+  "sourceCommit": "ff4f93e52ef4574a8d4d878771bc4b8b11322383",
+  "sourceTreeHash": "b6466af2cb5dd53febe1e2614faddf369882118c",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium (独立，非 IAB)",
+  "browserVersion": "143.0.7499.4",
+  "screenshots": [
+    {
+      "file": "running-exactly-4-of-12.png",
+      "sha256": "bbdb4a1950d101a6e2ce2cba0b6ac297337b7bfd4ad811ad080bc94c7b3ebb73"
+    },
+    {
+      "file": "clusters-exactly-2-of-4.png",
+      "sha256": "42e39db929c2bf3d8dab339d4e011369c0448b2c2cda526ce01b89a323a4446e"
+    },
+    {
+      "file": "selling-points-exactly-3-of-6.png",
+      "sha256": "894d3219c243dc25c6b2dd764fe8670afbba48a4d0145e19196ff727102138c7"
+    },
+    {
+      "file": "cluster-a-detail.png",
+      "sha256": "15355330b1735d50fbbe75200c120ad25c569befcb013b904d8f5746967b202c"
+    },
+    {
+      "file": "selling-point-comfort-detail.png",
+      "sha256": "b59857c95443ee4a5548aaf6c811e1a77917e13b4417f40955d15c758d6a8cf9"
+    },
+    {
+      "file": "risk-evidence-trace-linked.png",
+      "sha256": "3e0477709a349f6fa7b031c871fbf4a4fd07a0c0c5999529fc3bc3fb7de70ba3"
+    },
+    {
+      "file": "recipe-basis-trace-linked.png",
+      "sha256": "0f8f59e5d648c4d033dc62432664ce5353c05a925ef934f03cce9cb0cb1d6545"
+    },
+    {
+      "file": "low-confidence-expanded.png",
+      "sha256": "714cb98a7b943c23acb46ca263cdd43c980751dbad7133366d56006415391bf1"
+    },
+    {
+      "file": "restarted-clean-state.png",
+      "sha256": "7eeb27e1a6cad6ea89e15fd493c1b29043c772910c4bbf1060f94dcf2c459cce"
+    },
+    {
+      "file": "completed-1440x900.png",
+      "sha256": "848fd8e674db3ada545b8f4fd49555f893a87067e15492358ab6e3aa15a217b8"
+    }
+  ]
+}

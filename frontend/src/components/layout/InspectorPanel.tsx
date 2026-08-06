@@ -39,6 +39,10 @@ interface InspectorPanelProps {
   onNavigateRecipe?: (field: RecipeFieldKey) => void;
   selectedRiskItemId?: string | null;
   selectedRecipeField?: RecipeFieldKey | null;
+  /** F2-R1.3：选中聚类 ID（按聚类过滤洞察） */
+  selectedClusterId?: string | null;
+  /** F2-R1.3：选中卖点 ID（显示卖点详情） */
+  selectedSellingPointId?: string | null;
 }
 
 const TABS: { tab: InspectorTab; labelZh: string }[] = [
@@ -63,6 +67,8 @@ export function InspectorPanel({
   onNavigateRecipe,
   selectedRiskItemId,
   selectedRecipeField,
+  selectedClusterId,
+  selectedSellingPointId,
 }: InspectorPanelProps) {
   const [internalTab, setInternalTab] = useState<InspectorTab>('current-image');
   const activeTab = externalTab ?? internalTab;
@@ -112,7 +118,29 @@ export function InspectorPanel({
           <CurrentImageTab asset={asset} state={state} projection={projection} />
         )}
         {activeTab === 'suite-insights' && (
-          <SuiteInsightsTab insights={visibleInsights} assets={state.assets} onSelectAsset={onSelectAsset} />
+          selectedSellingPointId ? (
+            <SellingPointDetail
+              spId={selectedSellingPointId}
+              sellingPoints={state.sellingPoints}
+              assets={state.assets}
+              onSelectAsset={onSelectAsset}
+            />
+          ) : (
+            <SuiteInsightsTab
+              insights={
+                selectedClusterId
+                  ? visibleInsights.filter((i) => {
+                      // R1.3：按聚类过滤洞察 — 聚类 ID 首字母匹配洞察 ID 或 assetIds 重叠
+                      const cluster = state.clusters.find((c) => c.id === selectedClusterId);
+                      if (!cluster) return visibleInsights;
+                      return i.assetIds.some((aid) => cluster.assetIds.includes(aid));
+                    })
+                  : visibleInsights
+              }
+              assets={state.assets}
+              onSelectAsset={onSelectAsset}
+            />
+          )
         )}
         {activeTab === 'recipe' && (
           <CreativeRecipeTabR1
@@ -343,5 +371,60 @@ function SummaryRow({ label, value, mono = false, tone }: { label: string; value
       <dt className="text-xs" style={{ color: 'var(--gc-text-faint)' }}>{label}</dt>
       <dd className={mono ? 'gc-data text-xs' : 'text-xs'} style={{ color }}>{value}</dd>
     </>
+  );
+}
+
+/** F2-R1.3：卖点详情（检查器内展示） */
+function SellingPointDetail({
+  spId,
+  sellingPoints,
+  assets,
+  onSelectAsset,
+}: {
+  spId: string;
+  sellingPoints: CompetitorAnalysisState['sellingPoints'];
+  assets: CompetitorAnalysisState['assets'];
+  onSelectAsset: (id: string) => void;
+}) {
+  const sp = sellingPoints.find((s) => s.id === spId);
+  if (!sp) return <div className="px-4 py-3 text-xs" style={{ color: 'var(--gc-text-faint)' }}>未找到卖点</div>;
+  const spAssets = sp.assetIds.map((id) => assets.find((a) => a.id === id)).filter(Boolean);
+
+  return (
+    <div className="flex flex-col gap-2 px-4 py-3">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-semibold" style={{ color: 'var(--gc-text-hi)' }}>{sp.nameZh}</span>
+        <span className="gc-data text-2xs" style={{ color: 'var(--gc-text-faint)' }}>第 {sp.order} 位</span>
+      </div>
+      <div className="flex flex-col gap-1">
+        <DetailKV label="构图依据" value={sp.compositionZh} />
+        <DetailKV label="光线依据" value={sp.lightingZh} />
+        <DetailKV label="可继承" value={sp.inheritable ? '是' : '需评估'} tone={sp.inheritable ? 'green' : 'amber'} />
+        <DetailKV label="Product Master 事实校验" value={sp.needsFactCheck ? '需要' : '不需要'} tone={sp.needsFactCheck ? 'amber' : 'green'} />
+      </div>
+      <div className="gc-section-label mt-1">关联图片（{spAssets.length} 张）</div>
+      <div className="flex flex-wrap gap-1">
+        {spAssets.map((a) => a && (
+          <button
+            key={a.id}
+            onClick={() => onSelectAsset(a.id)}
+            className="overflow-hidden rounded-sm transition-transform duration-snap hover:scale-110"
+            style={{ width: 36, height: 36, background: `linear-gradient(135deg, ${a.thumbPalette.from}, ${a.thumbPalette.to})` }}
+          >
+            <img src={a.src} alt="" className="h-full w-full object-cover" draggable={false} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DetailKV({ label, value, tone }: { label: string; value: string; tone?: 'green' | 'amber' }) {
+  const color = tone === 'green' ? 'var(--gc-accent-green)' : tone === 'amber' ? 'var(--gc-accent-amber)' : 'var(--gc-text-mid)';
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <span className="text-2xs" style={{ color: 'var(--gc-text-faint)' }}>{label}</span>
+      <span className="text-xs" style={{ color }}>{value}</span>
+    </div>
   );
 }

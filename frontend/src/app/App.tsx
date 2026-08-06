@@ -191,7 +191,15 @@ export function App() {
   }, []);
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden">
+    <div
+      className="flex h-screen w-screen flex-col overflow-hidden"
+      data-selected-cluster-id={selectedClusterId ?? ''}
+      data-selected-selling-point-id={selectedSellingPointId ?? ''}
+      data-selected-risk-item-id={selectedRiskItemId ?? ''}
+      data-selected-recipe-field={selectedRecipeField ?? ''}
+      data-focused-evidence-region={live.focus?.regionId ?? ''}
+      data-highlighted-trace-sequence={live.highlightedSequence ?? ''}
+    >
       <DemoControls
         status={live.simulatorStatus}
         speed={live.speed}
@@ -208,6 +216,7 @@ export function App() {
       <div className="flex min-h-0 flex-1">
         <GlobalRail />
         <ContextSidebar
+          key={`context-${sessionKey}`}
           state={analysisState}
           selectedAssetId={focusedAssetId}
           onSelectAsset={handleSelectAsset}
@@ -274,6 +283,7 @@ export function App() {
             style={{ width: 280, background: 'var(--gc-bg-app)', borderColor: 'var(--gc-line)' }}
           >
             <AnalysisTrace
+              key={`trace-${sessionKey}`}
               state={live.state}
               highlightedSequence={live.highlightedSequence}
               onFocusEvidence={live.focusEvidence}
@@ -310,6 +320,8 @@ export function App() {
           onNavigateRecipe={handleNavigateRecipe}
           selectedRiskItemId={selectedRiskItemId}
           selectedRecipeField={selectedRecipeField}
+          selectedClusterId={selectedClusterId}
+          selectedSellingPointId={selectedSellingPointId}
         />
       </div>
 
