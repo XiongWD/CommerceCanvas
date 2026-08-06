@@ -168,12 +168,18 @@ export function App() {
     }
   }, [projection, navigate]);
 
-  // —— 卖点联动（§五）——
+  // —— 卖点联动（§五 R1.3-E1：切检查器到套图洞察显示卖点详情）——
   const handleSelectSellingPoint = useCallback((spId: string) => {
+    if (spId === '') {
+      navigate({ sellingPointId: null });
+      return;
+    }
     const evidence = projection.entityEvidence?.[spId];
     const resolved = resolveEvidenceFromEntity(evidence as never);
     navigate({
       sellingPointId: spId,
+      viewMode: 'selling-points',
+      inspectorTab: 'suite-insights',
       traceSequence: resolved.traceSequence,
     });
   }, [projection, navigate]);

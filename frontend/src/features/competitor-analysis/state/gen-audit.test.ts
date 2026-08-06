@@ -14,7 +14,7 @@ import { buildNormalScenario } from '@/features/live-intelligence/simulator/scen
 import { buildRiskScenario } from '@/features/live-intelligence/simulator/scenario-risk';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../../../../../../..');
-const AUDIT_OUT = process.env.AUDIT_OUT || path.join(REPO_ROOT, 'artifacts/frontend/g2-f2-r1-2');
+const AUDIT_OUT = process.env.AUDIT_OUT || path.join(REPO_ROOT, 'artifacts/frontend/g2-f2-r1-3-e1');
 
 function dispatchAll(events, scenario, jobId) {
   let s = createInitialState(scenario);
@@ -24,42 +24,22 @@ function dispatchAll(events, scenario, jobId) {
 }
 
 describe('data-audit generation', () => {
-  it('generates data-audit.json with missingEntityIds check', async () => {
+  it('generates data-audit.json with missingEntityIds + navigationCoverage check', async () => {
     const normalState = dispatchAll(buildNormalScenario().events, 'normal', 'job-normal-001');
     const riskState = dispatchAll(buildRiskScenario().events, 'risk', 'job-risk-002');
 
     const audit = generateCompetitorDataAudit(competitorAnalysisMock, normalState, riskState);
 
-    // missingEntityIds: check all mock entity IDs have at least one source event in normal
-    const allMockIds = [
-      ...competitorAnalysisMock.assets.map((a) => a.id),
-      ...competitorAnalysisMock.clusters.map((c) => c.id),
-      ...competitorAnalysisMock.sellingPoints.map((s) => s.id),
-      ...competitorAnalysisMock.insights.map((i) => i.id),
-      ...competitorAnalysisMock.riskExclusion.prohibited.map((r) => r.id),
-      ...competitorAnalysisMock.riskExclusion.factCheck.map((r) => r.id),
-      ...competitorAnalysisMock.riskExclusion.safe.map((r) => r.id),
-    ];
-    const coveredInNormal = new Set([
-      ...(normalState.resultRefsAccumulated?.classifiedAssetIds ?? []),
-      ...(normalState.resultRefsAccumulated?.clusterIds ?? []),
-      ...(normalState.resultRefsAccumulated?.sellingPointIds ?? []),
-      ...(normalState.resultRefsAccumulated?.insightIds ?? []),
-      ...(normalState.resultRefsAccumulated?.riskItemIds ?? []),
-    ]);
-    const missingEntityIds = allMockIds.filter((id) => !coveredInNormal.has(id));
-
-    const fullAudit = {
-      ...audit,
-      missingEntityIds,
-      missingCount: missingEntityIds.length,
-    };
-
-    // Write to output
     await mkdir(AUDIT_OUT, { recursive: true });
-    await writeFile(path.join(AUDIT_OUT, 'data-audit.json'), JSON.stringify(fullAudit, null, 2));
+    await writeFile(path.join(AUDIT_OUT, 'data-audit.json'), JSON.stringify(audit, null, 2));
 
     // Assert: all entities covered
-    expect(missingEntityIds).toHaveLength(0);
+    expect(audit.missingEntityIds).toHaveLength(0);
+
+    // Assert: navigationCoverage has no missingIds
+    expect(audit.navigationCoverage.risks.missingIds).toHaveLength(0);
+    expect(audit.navigationCoverage.recipeFields.missingIds).toHaveLength(0);
+    expect(audit.navigationCoverage.clusters.missingIds).toHaveLength(0);
+    expect(audit.navigationCoverage.sellingPoints.missingIds).toHaveLength(0);
   });
 });

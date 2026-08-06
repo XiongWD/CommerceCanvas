@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-08-06T14:35:36.387Z",
+  "assets": {
+    "count": 12,
+    "uniqueSrc": 12
+  },
+  "roles": {
+    "主图": 1,
+    "场景图": 4,
+    "卖点图": 5,
+    "细节图": 1,
+    "参数图": 1
+  },
+  "clusters": 4,
+  "brandAssets": 5,
+  "riskCategories": 3,
+  "riskEvidenceCount": 5,
+  "recipe": {
+    "normal": "7/7",
+    "risk": "4/7"
+  },
+  "sourceEventCoverage": {
+    "classifiedAssets": 12,
+    "clusters": 4,
+    "sellingPoints": 6,
+    "insights": 7,
+    "riskItems": 15
+  },
+  "navigationCoverage": {
+    "risks": {
+      "total": 15,
+      "withTrace": 15,
+      "withEvidence": 5,
+      "missingIds": []
+    },
+    "recipeFields": {
+      "total": 7,
+      "withTrace": 7,
+      "missingIds": []
+    },
+    "clusters": {
+      "total": 4,
+      "withTrace": 4,
+      "withInsights": 4,
+      "missingIds": []
+    },
+    "sellingPoints": {
+      "total": 6,
+      "withTrace": 6,
+      "withAssets": 6,
+      "missingIds": []
+    }
+  },
+  "missingEntityIds": []
+}

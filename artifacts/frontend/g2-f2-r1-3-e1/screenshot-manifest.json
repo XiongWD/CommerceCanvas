@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "efeec56da627ecb8bee07249df92f58546b2e6db",
+  "sourceTreeHash": "1c6b6a2db0ec79d21ef0541fab6799d6468c7f76",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium (独立，非 IAB)",
+  "browserVersion": "143.0.7499.4",
+  "screenshots": [
+    {
+      "file": "selling-point-from-recipe-tab.png",
+      "sha256": "ad452a3402ace67f5bd334d34597da45f710844d414fd71b28b112e1acaaf02e"
+    },
+    {
+      "file": "restarted-zero-results.png",
+      "sha256": "cea7e24667e4aab43953d9a21dc91ba02bedeec098b17e168b4f3abff6db738e"
+    }
+  ]
+}
