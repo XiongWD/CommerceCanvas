@@ -32,9 +32,19 @@ export type LiveEventKind =
   | 'connection.reconnecting'
   | 'connection.recovered'
   | 'job.completed'
-  | 'job.failed';
+  | 'job.failed'
+  // F3 新增事件类型
+  | 'qc.result.created'
+  | 'cost.estimate.created'
+  | 'cost.updated'
+  | 'retry.scheduled'
+  | 'retry.started'
+  | 'retry.completed'
+  | 'route.upgraded'
+  | 'human.review.requested'
+  | 'artifact.linked';
 
-/** 客户可见的中文轨迹类型（8.2） */
+/** 客户可见的中文轨迹类型（8.2 + F3） */
 export type TraceCategoryZh =
   | '发现'
   | '判断'
@@ -42,7 +52,10 @@ export type TraceCategoryZh =
   | '风险'
   | '动作'
   | '成果'
-  | '系统';
+  | '系统'
+  | '质量检查'
+  | '成本'
+  | '重试';
 
 export type EventSeverity = 'info' | 'success' | 'warning' | 'error';
 
@@ -169,4 +182,52 @@ export interface CompetitorResultRefs {
   riskItemIds?: string[];
   /** 本次事件标记了哪些 Recipe 字段 */
   recipeFields?: string[];
+  /** F3：QC 结果 ID */
+  qcResultIds?: string[];
+  /** F3：Artifact 关系 ID */
+  artifactLinkIds?: string[];
+}
+
+// ===== F3 新增类型 =====
+
+/** 质量策略（客户可见中文名，不暴露 Provider/Model ID） */
+export type QualityStrategy = '快速' | '均衡' | '高质量' | '商品保真优先' | '文字准确优先';
+
+/** F3 成本指标 */
+export interface CostMetrics {
+  estimatedCents?: number;
+  actualCents?: number;
+  deltaCents?: number;
+  currency: 'USD';
+}
+
+/** F3 重试指标 */
+export interface RetryMetrics {
+  attempt: number;
+  maxAttempts: number;
+  reasonCode: string;
+  reasonZh: string;
+}
+
+/** F3 路由升级指标 */
+export interface RouteUpgradeMetrics {
+  fromStrategy: QualityStrategy;
+  toStrategy: QualityStrategy;
+  reasonZh: string;
+  estimatedCostDeltaCents?: number;
+  estimatedTimeDeltaSeconds?: number;
+}
+
+/** F3 QC 结果状态 */
+export type QCStatus = 'pass' | 'warning' | 'block';
+
+/** F3 QC 检查项 */
+export interface QCResultInfo {
+  id: string;
+  nameZh: string;
+  status: QCStatus;
+  targetZh: string;
+  reasonZh?: string;
+  evidenceCount: number;
+  requiresReview: boolean;
 }

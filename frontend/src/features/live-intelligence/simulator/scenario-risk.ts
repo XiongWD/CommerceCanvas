@@ -229,6 +229,118 @@ export function buildRiskScenario(): ScenarioScript {
   );
 
   advance(ctx, 1);
+
+  // F3：成本预估（均衡策略）
+  out.push(
+    ev(ctx, {
+      kind: 'cost.estimate.created',
+      titleZh: '成本预估：均衡策略，预计 ¥1.50（约 $0.21）',
+      traceCategory: '成本',
+      metrics: { estimatedCents: 21, currency: 'USD' },
+    }),
+  );
+  advance(ctx, 0.5);
+
+  // F3：QC 检查（结构冲突 → 阻断）
+  const riskQC = [
+    { id: 'qc-structure-risk', nameZh: '商品结构一致性', status: 'block', targetZh: '入耳式 vs 开放式', reasonZh: '竞品为入耳式结构，与 Product Master 开放式不一致', evidenceCount: 1, review: true },
+    { id: 'qc-logo-risk', nameZh: 'Logo/型号排除', status: 'pass', targetZh: '7 处竞品标识', evidenceCount: 7, review: false },
+    { id: 'qc-master-risk', nameZh: 'Product Master 事实一致性', status: 'warning', targetZh: 'SKU OW-A31-BLK', reasonZh: '降噪参数需复核', evidenceCount: 3, review: true },
+    { id: 'qc-recipe-risk', nameZh: 'Recipe 完整度', status: 'warning', targetZh: '4/7 字段', reasonZh: 'Recipe 部分完成，等待人工确认', evidenceCount: 4, review: true },
+    { id: 'qc-coverage-risk', nameZh: '图片覆盖度', status: 'pass', targetZh: '12/12 张', evidenceCount: 12, review: false },
+  ];
+  for (const qc of riskQC) {
+    advance(ctx, 0.3);
+    out.push(
+      ev(ctx, {
+        kind: 'qc.result.created',
+        titleZh: `QC 检查：${qc.nameZh} — ${qc.status === 'pass' ? '通过' : qc.status === 'warning' ? '待检查' : '阻断'}`,
+        traceCategory: '质量检查',
+        severity: qc.status === 'pass' ? 'success' : qc.status === 'warning' ? 'warning' : 'error',
+        evidenceRefs: [{ assetId: 'img-06', layer: 'subject' }],
+        metrics: { qcId: qc.id, qcName: qc.nameZh, qcStatus: qc.status, qcTarget: qc.targetZh, qcReason: qc.reasonZh ?? '', qcEvidence: qc.evidenceCount, qcReview: qc.review ? 'true' : 'false' },
+        resultRefs: { qcResultIds: [qc.id] },
+      }),
+    );
+  }
+
+  // F3：路由升级（均衡 → 商品保真优先）
+  advance(ctx, 0.5);
+  out.push(
+    ev(ctx, {
+      kind: 'route.upgraded',
+      titleZh: '路由升级：均衡 → 商品保真优先',
+      summaryZh: '低成本分析路径结果不充分，系统升级到商品保真策略',
+      traceCategory: '系统',
+      severity: 'warning',
+      metrics: {
+        fromStrategy: '均衡', toStrategy: '商品保真优先',
+        reasonZh: '商品结构冲突导致均衡策略结果不充分',
+        estimatedCostDeltaCents: 15, estimatedTimeDeltaSeconds: 12,
+      },
+    }),
+  );
+
+  // F3：成本更新（升级后实际成本）
+  advance(ctx, 0.5);
+  out.push(
+    ev(ctx, {
+      kind: 'cost.updated',
+      titleZh: '实际成本：¥2.58（约 $0.36），因路由升级增加',
+      traceCategory: '成本',
+      metrics: { actualCents: 36, deltaCents: 15, currency: 'USD' },
+    }),
+  );
+
+  // F3：节点重试
+  advance(ctx, 0.5);
+  out.push(
+    ev(ctx, {
+      kind: 'retry.scheduled',
+      titleZh: '第 1 次重试已排期：build_recipe',
+      summaryZh: '原因：商品结构阻断，自动重试 1 次',
+      traceCategory: '重试',
+      stageId: 'build_recipe',
+      severity: 'warning',
+      metrics: { attempt: 1, maxAttempts: 2, reasonCode: 'STRUCTURE_CONFLICT', reasonZh: '商品结构冲突导致自动重试' },
+    }),
+  );
+  advance(ctx, 1);
+  out.push(
+    ev(ctx, {
+      kind: 'retry.started',
+      titleZh: '第 1 次重试开始：商品保真优先策略',
+      traceCategory: '重试',
+      stageId: 'build_recipe',
+      metrics: { attempt: 1, maxAttempts: 2, reasonCode: 'STRUCTURE_CONFLICT', reasonZh: '商品保真策略重试' },
+    }),
+  );
+  advance(ctx, 2);
+  out.push(
+    ev(ctx, {
+      kind: 'retry.completed',
+      titleZh: '第 1 次重试完成：结构冲突仍存在',
+      summaryZh: '重试后结构冲突未被自动解决，进入人工确认',
+      traceCategory: '重试',
+      stageId: 'build_recipe',
+      severity: 'warning',
+      metrics: { attempt: 1, maxAttempts: 2, reasonCode: 'STRUCTURE_CONFLICT', reasonZh: '重试后冲突仍存在' },
+    }),
+  );
+
+  // F3：人工审核请求
+  advance(ctx, 0.5);
+  out.push(
+    ev(ctx, {
+      kind: 'human.review.requested',
+      titleZh: '需要人工审核：商品结构阻断',
+      summaryZh: '请在生成工作室启用商品保真策略前确认结构差异',
+      traceCategory: '系统',
+      requiresAction: true,
+    }),
+  );
+  advance(ctx, 0.5);
+
   out.push(
     ev(ctx, {
       kind: 'observation.created',

@@ -248,6 +248,10 @@ function applyOneImmutable(state: LiveIntelligenceState, event: LiveEventEnvelop
       severity: event.severity,
       evidenceRefs: event.evidenceRefs,
       replayed: event.replayed === true,
+      // F3：携带原始 kind/stageId/metrics，供 Job Detail 投影层扫描
+      kind: event.kind,
+      stageId: event.stageId,
+      metrics: event.metrics,
     };
     const trace = state.trace.concat(item);
     trace.sort((a, b) => a.sequence - b.sequence);

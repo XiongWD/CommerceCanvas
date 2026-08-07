@@ -270,6 +270,53 @@ export function buildNormalScenario(): ScenarioScript {
 
   // 风险汇总 + 完成 —— R1：权威 summaryMetrics
   advance(ctx, 1);
+
+  // F3：成本预估
+  out.push(
+    ev(ctx, {
+      kind: 'cost.estimate.created',
+      titleZh: '成本预估：均衡策略，预计 ¥1.50（约 $0.21）',
+      traceCategory: '成本',
+      metrics: { estimatedCents: 21, currency: 'USD' },
+    }),
+  );
+  advance(ctx, 0.5);
+
+  // F3：QC 检查（5 项，全部通过）
+  const qcChecks = [
+    { id: 'qc-structure', nameZh: '商品结构一致性', status: 'pass', targetZh: '开放式耳机结构', reasonZh: undefined, evidenceCount: 12 },
+    { id: 'qc-logo', nameZh: 'Logo/型号排除', status: 'pass', targetZh: '7 处竞品标识', evidenceCount: 7 },
+    { id: 'qc-master', nameZh: 'Product Master 事实一致性', status: 'pass', targetZh: 'SKU OW-A31-BLK', evidenceCount: 5 },
+    { id: 'qc-recipe', nameZh: 'Recipe 完整度', status: 'pass', targetZh: '7/7 字段', evidenceCount: 7 },
+    { id: 'qc-coverage', nameZh: '图片覆盖度', status: 'pass', targetZh: '12/12 张', evidenceCount: 12 },
+  ];
+  for (const qc of qcChecks) {
+    advance(ctx, 0.3);
+    out.push(
+      ev(ctx, {
+        kind: 'qc.result.created',
+        titleZh: `QC 检查：${qc.nameZh} — 通过`,
+        traceCategory: '质量检查',
+        severity: 'success',
+        evidenceRefs: qc.evidenceCount > 0 ? [{ assetId: 'img-01', layer: 'subject' }] : undefined,
+        metrics: { qcId: qc.id, qcName: qc.nameZh, qcStatus: qc.status, qcTarget: qc.targetZh, qcReason: qc.reasonZh ?? '', qcEvidence: qc.evidenceCount, qcReview: 'false' },
+        resultRefs: { qcResultIds: [qc.id] },
+      }),
+    );
+  }
+
+  // F3：成本更新（实际成本）
+  advance(ctx, 0.5);
+  out.push(
+    ev(ctx, {
+      kind: 'cost.updated',
+      titleZh: '实际成本：¥1.38（约 $0.19），低于预估',
+      traceCategory: '成本',
+      metrics: { actualCents: 19, deltaCents: -2, currency: 'USD' },
+    }),
+  );
+  advance(ctx, 0.5);
+
   out.push(
     ev(ctx, {
       kind: 'observation.created',

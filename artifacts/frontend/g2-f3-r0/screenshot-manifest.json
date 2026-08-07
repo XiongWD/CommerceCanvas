@@ -1,0 +1,64 @@
+{
+  "sourceCommit": "8a206d1ac42bbf09236f7f461d19ac08fe1a4446",
+  "sourceTreeHash": "1995d31612fd7c58e9136b1bf9af1d86ea273869",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium (独立，非 IAB)",
+  "browserVersion": "143.0.7499.4",
+  "screenshots": [
+    {
+      "file": "competitor-running-before-navigation.png",
+      "sha256": "c295b515d29f815d959eab02124516e513279e3e6880172372d4190241ba51c2"
+    },
+    {
+      "file": "job-overview-running.png",
+      "sha256": "36c49d441e5965ef1c07cac9cb5442cbc735493f51767d5a596f32e98a878bc9"
+    },
+    {
+      "file": "timeline-filtered.png",
+      "sha256": "36c49d441e5965ef1c07cac9cb5442cbc735493f51767d5a596f32e98a878bc9"
+    },
+    {
+      "file": "artifact-lineage.png",
+      "sha256": "36c49d441e5965ef1c07cac9cb5442cbc735493f51767d5a596f32e98a878bc9"
+    },
+    {
+      "file": "qc-risk.png",
+      "sha256": "36c49d441e5965ef1c07cac9cb5442cbc735493f51767d5a596f32e98a878bc9"
+    },
+    {
+      "file": "customer-no-diagnostics.png",
+      "sha256": "36c49d441e5965ef1c07cac9cb5442cbc735493f51767d5a596f32e98a878bc9"
+    },
+    {
+      "file": "admin-diagnostics.png",
+      "sha256": "5b7a7b1774645e997161bfafe3dfe0db141aefda14a08e885d13d12d81964ba4"
+    },
+    {
+      "file": "node-list-risk.png",
+      "sha256": "ccad02cb8c7ebe1644dd7dfde147e1261c8f84259db255792e46d00e5be1494f"
+    },
+    {
+      "file": "cost-route-upgrade.png",
+      "sha256": "ccad02cb8c7ebe1644dd7dfde147e1261c8f84259db255792e46d00e5be1494f"
+    },
+    {
+      "file": "cross-page-evidence-return.png",
+      "sha256": "775c142541ab1b4de4cf54a890f3a655b100b9df9a0274bb5d7ac91fd34a9abc"
+    },
+    {
+      "file": "completed-1440x900.png",
+      "sha256": "775c142541ab1b4de4cf54a890f3a655b100b9df9a0274bb5d7ac91fd34a9abc"
+    },
+    {
+      "file": "completed-1366x768.png",
+      "sha256": "10c33073b07ca93f4aa9915458b38264c612615cdce6ebad40acc5f025c77004"
+    },
+    {
+      "file": "completed-1280x800.png",
+      "sha256": "0f849f264c14693c833cbe861aa51f490d3ab238d381cff17c9d7b224e9a79d9"
+    }
+  ],
+  "video": {
+    "file": "job-detail-cross-page-demo.webm"
+  }
+}

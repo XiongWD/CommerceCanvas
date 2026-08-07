@@ -16,6 +16,7 @@ import type {
   StageId,
   StageStatus,
   MilestoneId,
+  LiveEventKind,
 } from '@/types/live-event';
 import type { LiveEventEnvelope } from '@/types/live-event';
 
@@ -39,6 +40,14 @@ export interface TraceItem {
   evidenceRefs?: LiveEventEnvelope['evidenceRefs'];
   /** 是否为重放事件（视觉降权） */
   replayed: boolean;
+  /**
+   * F3：来源事件 kind 与 stageId / metrics。
+   * 投影层据此扫描 cost / qc / retry / route / human-action 等事件，无需重复维护账本。
+   * 传输事件（连接）kind 为 undefined。
+   */
+  kind?: LiveEventKind;
+  stageId?: LiveEventEnvelope['stageId'];
+  metrics?: LiveEventEnvelope['metrics'];
 }
 
 /** Artifact 归并项（去重） */

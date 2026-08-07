@@ -33,6 +33,15 @@ const KIND_TO_CATEGORY: Partial<Record<LiveEventKind, TraceCategoryZh>> = {
   'connection.recovered': '系统',
   'job.completed': '系统',
   'job.failed': '系统',
+  'qc.result.created': '质量检查',
+  'cost.estimate.created': '成本',
+  'cost.updated': '成本',
+  'retry.scheduled': '重试',
+  'retry.started': '重试',
+  'retry.completed': '重试',
+  'route.upgraded': '系统',
+  'human.review.requested': '系统',
+  'artifact.linked': '成果',
 };
 
 /** kind → 默认严重度 */
@@ -56,6 +65,15 @@ const KIND_TO_SEVERITY: Record<LiveEventKind, EventSeverity> = {
   'connection.recovered': 'success',
   'job.completed': 'success',
   'job.failed': 'error',
+  'qc.result.created': 'info',
+  'cost.estimate.created': 'info',
+  'cost.updated': 'info',
+  'retry.scheduled': 'warning',
+  'retry.started': 'info',
+  'retry.completed': 'warning',
+  'route.upgraded': 'warning',
+  'human.review.requested': 'warning',
+  'artifact.linked': 'success',
 };
 
 /**
@@ -88,6 +106,15 @@ const KIND_TO_SURFACE: Record<LiveEventKind, EventSurface> = {
   'connection.recovered': 'trace',
   'job.completed': 'trace',
   'job.failed': 'trace',
+  'qc.result.created': 'trace',
+  'cost.estimate.created': 'trace',
+  'cost.updated': 'trace',
+  'retry.scheduled': 'trace',
+  'retry.started': 'trace',
+  'retry.completed': 'trace',
+  'route.upgraded': 'trace',
+  'human.review.requested': 'trace',
+  'artifact.linked': 'trace',
 };
 
 /** 该事件是否应进入客户分析轨迹 */
@@ -130,5 +157,11 @@ export function categoryTone(c: TraceCategoryZh): {
       return { color: 'var(--gc-accent-green)', bg: 'var(--gc-accent-green-soft)' };
     case '系统':
       return { color: 'var(--gc-text-lo)', bg: 'var(--gc-bg-elev-1)' };
+    case '质量检查':
+      return { color: 'var(--gc-accent-green)', bg: 'var(--gc-accent-green-soft)' };
+    case '成本':
+      return { color: 'var(--gc-accent-blue)', bg: 'var(--gc-accent-blue-soft)' };
+    case '重试':
+      return { color: 'var(--gc-accent-amber)', bg: 'var(--gc-accent-amber-soft)' };
   }
 }
