@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
   FileText,
@@ -8,6 +9,7 @@ import {
   Pause,
   Play,
   RotateCcw,
+  LayoutList,
 } from 'lucide-react';
 import type { LiveIntelligenceApi } from '@/features/live-intelligence/useLiveIntelligence';
 import {
@@ -21,17 +23,26 @@ import { ExpandedTaskPanel } from '@/features/live-intelligence/components/Expan
 
 /**
  * 底部持续任务面板（任务书 §8.5）。
- * 三态：紧凑（默认）/ 展开（阶段+事件+介入）/ 任务详情（本轮同页抽屉占位）。
+ * F3-R1 §一：拆分两个按钮——
+ *   「展开/收起」：只控制 ExpandedTaskPanel（本地抽屉）。
+ *   「任务详情」：通过 React Router navigate(`/jobs/:jobId`) 进入正式 Job Detail 页。
  * 紧凑态显示任务名/阶段/进度/发现/风险/产物/用时/连接，状态全部来自事件流。
  * 不遮挡中央商品区域（展开层向上弹出）。
  */
 export function PersistentTaskBar({ live }: { live: LiveIntelligenceApi }) {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const state = live.state;
   const sp = selectStageProgress(state);
   const progress = selectProgressMode(state);
   const conn = selectConnectionZh(state);
   const statusZh = selectJobStatusZh(state);
+
+  // F3-R1 §一：正式任务详情入口——通过 React Router，不偷改 URL
+  const goToJobDetail = () => {
+    const jobId = state.jobId || 'latest';
+    navigate(`/jobs/${jobId}`);
+  };
 
   const stagePct = progress.mode === 'determinate' && progress.total ? Math.round(((progress.current ?? 0) / progress.total) * 100) : null;
   const isRunning = live.simulatorStatus === 'running';
@@ -170,13 +181,27 @@ export function PersistentTaskBar({ live }: { live: LiveIntelligenceApi }) {
             />
             {conn.labelZh}
           </span>
+          {/* F3-R1 §一：拆分两个按钮——展开/收起（本地抽屉）与任务详情（正式路由） */}
           <button
             onClick={() => setExpanded((e) => !e)}
+            data-testid="task-expand-toggle"
             className="flex items-center gap-1 rounded-sm px-2 py-1 text-2xs"
             style={{ color: 'var(--gc-text-mid)', border: '1px solid var(--gc-line)' }}
           >
             {expanded ? <ChevronUp size={12} /> : <PanelTopOpen size={12} />}
-            {expanded ? '收起' : '任务详情'}
+            {expanded ? '收起' : '展开'}
+          </button>
+          <button
+            onClick={goToJobDetail}
+            data-testid="task-goto-detail"
+            className="flex items-center gap-1 rounded-sm px-2 py-1 text-2xs"
+            style={{
+              color: 'var(--gc-accent-blue)',
+              border: '1px solid var(--gc-accent-blue-line)',
+              background: 'var(--gc-accent-blue-soft)',
+            }}
+          >
+            <LayoutList size={11} /> 任务详情
           </button>
         </div>
       </div>

@@ -1,11 +1,18 @@
 /**
- * F3 Job Detail 投影层：从 LiveIntelligenceState + CompetitorAnalysisState 推导
+ * F3-R1 Job Detail 投影层：从 LiveIntelligenceState + CompetitorAnalysisState 推导
  * "任务详情页面当前应显示什么"。
  *
- * 设计原则（与 competitor-analysis-projection 一致，任务书 §七）：
- *   - 展示只从归并态推导，禁止各组件各自维护状态（NG-024）。
- *   - QC / 成本 / 重试 / 路由升级 / 人工动作 全部从 live.trace 扫描（trace 已携带 kind/metrics）。
- *   - 真实分母 / 权威统计来自 live.summaryMetrics 与 live.stages，不从轨迹条数反推。
+ * R1 关键修复（reviewer 驳回点）：
+ *   - 节点时间/attempt/发现数 只读权威 stageAudit（reducer 归并），不再扫 trace 猜测。
+ *     原因：stage.* 多为 ambient 不进 trace，扫 trace 拿不到 startedAt/completedAt/attemptCount。
+ *   - 节点状态输出中文（STAGE_STATUS_ZH），不直接显示 active/completed 英文。
+ *   - Artifact 读权威 artifactAudit（含 lineage），不再错读 metrics.artifactRefs。
+ *   - Retry 读权威 retryAttempts（归并键 stageId+attempt），3 个 lifecycle 事件只形成 1 个 attempt。
+ *   - Route 读权威 routeUpgradeRecords（含成本+耗时+策略）。
+ *   - findingsProduced 来自 stageAudit 真实计数，不再写死 0。
+ *
+ * 任务书 §七：展示只从归并态推导，禁止各组件各自维护状态（NG-024）。
+ * 全部字段从 live（单一真实来源）推导；analysisData 提供 jobNameZh / sku 等元数据。
  */
 
 import type {
@@ -20,7 +27,11 @@ import {
   selectJobStatusZh,
 } from '@/features/live-intelligence/state/live-intelligence-selectors';
 import type { CompetitorAnalysisState } from '@/types/competitor-analysis';
-import type { StageId } from '@/types/live-event';
+import {
+  STAGE_STATUS_ZH,
+  type StageId,
+  type EvidenceRef,
+} from '@/types/live-event';
 import type {
   ArtifactProjection,
   CostSummaryProjection,
@@ -48,6 +59,11 @@ function str(v: unknown): string | undefined {
   return String(v);
 }
 
+/** 把 metrics 字段安全读为 boolean */
+function bool(v: unknown): boolean {
+  return v === true;
+}
+
 /** QC 状态归一：仅允许 'pass' | 'warning' | 'block'，其余回退 'pass' */
 function normalizeQCStatus(raw: unknown): QCStatus {
   if (raw === 'warning' || raw === 'block') return raw;
@@ -65,7 +81,6 @@ function deriveStageRiskStatus(
     if (t.stageId !== stageId) continue;
     if (t.kind === 'warning.created') {
       hasWarning = true;
-      // 阻断 = 该 warning 显式要求人工介入
       const metrics = t.metrics as Record<string, unknown> | undefined;
       if (metrics?.requiresAction === true || t.severity === 'error') hasBlock = true;
     }
@@ -76,21 +91,6 @@ function deriveStageRiskStatus(
     riskStatus: hasBlock ? 'block' : hasWarning ? 'warning' : 'none',
     hasWarning,
   };
-}
-
-/** 统计单阶段产出的产物 artifactId 列表（扫描 artifact.created 事件 stageId） */
-function deriveStageArtifacts(live: LiveIntelligenceState, stageId: StageId): string[] {
-  const ids: string[] = [];
-  for (const t of live.trace) {
-    if (t.stageId !== stageId) continue;
-    if (t.kind !== 'artifact.created') continue;
-    const metrics = t.metrics as Record<string, unknown> | undefined;
-    const refs = metrics?.artifactRefs;
-    if (Array.isArray(refs)) {
-      for (const id of refs) if (typeof id === 'string') ids.push(id);
-    }
-  }
-  return ids;
 }
 
 /** 概览投影 */
@@ -118,54 +118,58 @@ function projectOverview(
   };
 }
 
-/** 阶段节点投影 */
+/**
+ * 阶段节点投影（F3-R1：只读权威 stageAudit，不再扫 trace 猜测）。
+ * - startedAt/completedAt/attemptCount/findingsProduced/artifactIds 全部来自 stageAudit。
+ * - status 来自 live.stages（阶段状态机），经 STAGE_STATUS_ZH 映射为中文。
+ */
 function projectNodes(live: LiveIntelligenceState): JobNodeProjection[] {
   return live.stageOrder.map((stageId) => {
     const stage = live.stages[stageId];
+    const audit = live.stageAudit[stageId];
     const nameZh = STAGE_LABEL_ZH[stageId] ?? stageId;
     const { riskStatus } = deriveStageRiskStatus(live, stageId);
 
-    // startedAt / completedAt：扫描该阶段首条 stage.started 与首条 stage.completed
-    let startedAt: string | undefined;
-    let completedAt: string | undefined;
-    let attemptCount = 0;
-    for (const t of live.trace) {
-      if (t.stageId !== stageId) continue;
-      if (t.kind === 'stage.started') {
-        attemptCount += 1;
-        if (!startedAt) startedAt = t.occurredAt;
-      }
-      if (t.kind === 'stage.completed' && !completedAt) completedAt = t.occurredAt;
-    }
-    // stage.started 是 ambient（不进 trace），回退用 trace 中阶段首条事件时间
-    if (!startedAt) {
-      const first = live.trace.find((t) => t.stageId === stageId);
-      if (first) startedAt = first.occurredAt;
-    }
-    // attemptCount 至少 1（若阶段已被触碰）
+    // 时间与尝试次数来自权威 audit state
+    const startedAt = audit?.firstStartedAt;
+    const completedAt = audit?.completedAt;
+    // attemptCount：已开始的阶段至少 1（risk build_recipe 初始 + 1 retry = 2）
+    let attemptCount = audit?.attemptCount ?? 0;
     if (attemptCount === 0 && stage.status !== 'pending') attemptCount = 1;
 
-    const progressMode: string =
-      stage.status === 'active' && !stage.progress ? 'indeterminate' : 'determinate';
+    // 已用时间：completedAt - firstStartedAt（若都存在）
+    let elapsedSeconds: number | undefined;
+    if (audit?.firstStartedAt && audit?.completedAt) {
+      const start = Date.parse(audit.firstStartedAt);
+      const end = Date.parse(audit.completedAt);
+      if (Number.isFinite(start) && Number.isFinite(end) && end >= start) {
+        elapsedSeconds = Math.round((end - start) / 1000);
+      }
+    }
+
+    const progressMode: string = audit?.progressMode ?? 'determinate';
 
     return {
       stageId,
       nameZh,
-      status: stage.status,
+      // F3-R1 §三：客户模式显示中文状态，不显示英文 active/completed/awaiting_review
+      status: STAGE_STATUS_ZH[stage.status] ?? stage.status,
+      statusRaw: stage.status,
       startedAt,
       completedAt,
-      elapsedSeconds: undefined,
+      elapsedSeconds,
       progressMode,
       attemptCount,
-      findingsProduced: 0,
-      artifactsProduced: deriveStageArtifacts(live, stageId),
+      // F3-R1：findingsProduced 来自权威 audit 真实计数，不再写死 0
+      findingsProduced: audit?.findingsProduced ?? 0,
+      artifactsProduced: audit?.artifactIds.slice() ?? [],
       riskStatus,
       awaitingReview: stage.status === 'awaiting_review',
     };
   });
 }
 
-/** 轨迹条目投影（直接映射 TraceItem） */
+/** 轨迹条目投影（直接映射 TraceItem，含 evidenceRefs 用于跨页定位） */
 function projectTimeline(live: LiveIntelligenceState): JobTimelineItem[] {
   return live.trace.map((t: TraceItem) => ({
     sequence: t.sequence,
@@ -174,36 +178,39 @@ function projectTimeline(live: LiveIntelligenceState): JobTimelineItem[] {
     titleZh: t.titleZh,
     summaryZh: t.summaryZh,
     severity: t.severity,
-    evidenceRefs: t.evidenceRefs,
+    evidenceRefs: t.evidenceRefs as EvidenceRef[] | undefined,
   }));
 }
 
-/** 产物投影（来自 live.artifacts，回填来源事件信息） */
+/**
+ * 产物投影（F3-R1：读权威 artifactAudit，含 lineage）。
+ * 不再扫 trace 错读 metrics.artifactRefs；artifactAudit 由 reducer 归并 event.artifactRefs。
+ */
 function projectArtifacts(live: LiveIntelligenceState): ArtifactProjection[] {
-  return live.artifacts.map((a) => {
-    // 找到产生该 artifactId 的来源事件（artifact.created 且 refs 含 a.artifactId）
-    const source = live.trace.find((t) => {
-      if (t.kind !== 'artifact.created') return false;
-      const metrics = t.metrics as Record<string, unknown> | undefined;
-      const refs = metrics?.artifactRefs;
-      return Array.isArray(refs) && refs.includes(a.artifactId);
-    });
-    return {
-      artifactId: a.artifactId,
-      nameZh: a.titleZh,
-      type: 'creative_recipe',
-      generatedByStage: source?.stageId,
-      createdAt: a.createdAt,
-      status: '已生成',
-      version: 'v1',
-      sourceEventId: source?.eventId ?? '',
-      linkedAssetCount: 0,
-      previewable: true,
-    };
-  });
+  const records = Object.values(live.artifactAudit);
+  // 按 sourceSequence 排序，保证稳定展示顺序
+  records.sort((a, b) => a.sourceSequence - b.sourceSequence);
+  return records.map((a) => ({
+    artifactId: a.artifactId,
+    nameZh: a.nameZh,
+    type: a.type,
+    generatedByStage: a.generatedByStage,
+    createdAt: a.createdAt,
+    status: a.status,
+    version: a.version,
+    // sourceEventId 必填非空（audit 记录在 reducer 中已保证）
+    sourceEventId: a.sourceEventId,
+    sourceSequence: a.sourceSequence,
+    linkedAssetCount: a.linkedAssetIds.length,
+    parentArtifactIds: a.parentArtifactIds.slice(),
+    previewable: true,
+  }));
 }
 
-/** QC 结果投影（扫描 qc.result.created） */
+/**
+ * QC 结果投影（扫 qc.result.created 事件，保留 sourceEventId/sourceSequence/evidenceRefs）。
+ * F3-R1 §五：qcReview 必须是 boolean（reducer 已接收 boolean，不再 string）。
+ */
 function projectQCResults(live: LiveIntelligenceState): QCResultProjection[] {
   const out: QCResultProjection[] = [];
   for (const t of live.trace) {
@@ -218,8 +225,10 @@ function projectQCResults(live: LiveIntelligenceState): QCResultProjection[] {
       targetZh: str(m.qcTarget) ?? '',
       reasonZh: str(m.qcReason) || undefined,
       evidenceCount: num(m.qcEvidence) ?? 0,
+      sourceEventId: t.eventId,
       sourceSequence: t.sequence,
-      requiresReview: m.qcReview === true,
+      evidenceRefs: t.evidenceRefs as EvidenceRef[] | undefined,
+      requiresReview: bool(m.qcReview),
     });
   }
   return out;
@@ -242,49 +251,48 @@ function projectCostSummary(live: LiveIntelligenceState): CostSummaryProjection 
     if (act !== undefined) actualCents = act;
     if (delta !== undefined) deltaCents += delta;
   }
-  // 若未显式给出 delta，则由估算/实际推导
   if (deltaCents === 0 && hasEvents) {
     deltaCents = actualCents - estimatedCents;
   }
   return { estimatedCents, actualCents, deltaCents, currency: 'USD', hasEvents };
 }
 
-/** 重试记录投影（扫描 retry.* 事件） */
+/**
+ * 重试记录投影（F3-R1 §六：读权威 retryAttempts，归并键 stageId+attempt）。
+ * 一次 lifecycle(scheduled→started→completed) 只形成 1 个 attempt，不再 3 事件当 3 次。
+ */
 function projectRetryRecords(live: LiveIntelligenceState): RetryProjection[] {
-  const out: RetryProjection[] = [];
-  for (const t of live.trace) {
-    if (!t.kind?.startsWith('retry.')) continue;
-    const m = (t.metrics ?? {}) as Record<string, unknown>;
-    const attempt = num(m.attempt) ?? num(m.retryAttempt) ?? out.length + 1;
-    const maxAttempts = num(m.maxAttempts) ?? 3;
-    out.push({
-      attempt,
-      maxAttempts,
-      reasonZh: str(m.reasonZh) ?? t.summaryZh ?? t.titleZh,
-      reasonCode: str(m.reasonCode) ?? 'unknown',
-      stageId: t.stageId,
-      sequence: t.sequence,
-    });
-  }
-  return out;
+  const attempts = Object.values(live.retryAttempts);
+  attempts.sort((a, b) => a.sourceSequence - b.sourceSequence);
+  return attempts.map((a) => ({
+    key: a.key,
+    stageId: a.stageId,
+    attempt: a.attempt,
+    maxAttempts: a.maxAttempts,
+    reasonZh: a.reasonZh,
+    reasonCode: a.reasonCode,
+    scheduledAt: a.scheduledAt,
+    startedAt: a.startedAt,
+    completedAt: a.completedAt,
+    status: a.status,
+    sourceSequence: a.sourceSequence,
+  }));
 }
 
-/** 路由升级投影（扫描 route.upgraded） */
+/**
+ * 路由升级投影（F3-R1 §七：读权威 routeUpgradeRecords，含成本+耗时+策略）。
+ * 不能只显示成本。
+ */
 function projectRouteUpgrades(live: LiveIntelligenceState): RouteUpgradeProjection[] {
-  const out: RouteUpgradeProjection[] = [];
-  for (const t of live.trace) {
-    if (t.kind !== 'route.upgraded') continue;
-    const m = (t.metrics ?? {}) as Record<string, unknown>;
-    out.push({
-      fromStrategy: str(m.fromStrategy) ?? '',
-      toStrategy: str(m.toStrategy) ?? '',
-      reasonZh: str(m.reasonZh) ?? t.summaryZh ?? t.titleZh,
-      costDeltaCents: num(m.estimatedCostDeltaCents) ?? num(m.costDeltaCents),
-      timeDeltaSeconds: num(m.estimatedTimeDeltaSeconds) ?? num(m.timeDeltaSeconds),
-      sequence: t.sequence,
-    });
-  }
-  return out;
+  return live.routeUpgradeRecords.map((r) => ({
+    fromStrategy: r.fromStrategy,
+    toStrategy: r.toStrategy,
+    reasonZh: r.reasonZh,
+    costDeltaCents: r.costDeltaCents,
+    timeDeltaSeconds: r.timeDeltaSeconds,
+    sourceEventId: r.sourceEventId,
+    sourceSequence: r.sourceSequence,
+  }));
 }
 
 /** 人工动作投影（扫描 human.review.requested，含 requiresAction 事件） */

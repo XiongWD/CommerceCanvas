@@ -18,7 +18,13 @@ import type {
   MilestoneId,
   LiveEventKind,
 } from '@/types/live-event';
-import type { LiveEventEnvelope } from '@/types/live-event';
+import type {
+  LiveEventEnvelope,
+  StageAuditState,
+  ArtifactAuditRecord,
+  RetryAttemptState,
+  RouteUpgradeRecord,
+} from '@/types/live-event';
 
 /** 单个阶段归并态 */
 export interface StageState {
@@ -198,6 +204,28 @@ export interface LiveIntelligenceState {
     fromSequence: number;
     recoveredCount: number;
   };
+
+  // ===== F3-R1 审计态（reducer 权威归并，Job Detail 只读这些，不再扫 trace 猜测） =====
+  /**
+   * 阶段审计态：每个阶段的 firstStartedAt / lastStartedAt / completedAt / attemptCount /
+   * findingsProduced / artifactIds / progressMode。
+   * 解决 R0 问题：stage.* 多为 ambient 不进 trace，导致 projection 扫 trace 拿不到时间/attempt。
+   */
+  stageAudit: Record<StageId, StageAuditState>;
+  /**
+   * Artifact 审计记录：含 lineage（parentArtifactIds）与来源事件。
+   * 解决 R0 问题：producer 用 event.artifactRefs、projection 错读 metrics.artifactRefs，字段错配。
+   */
+  artifactAudit: Record<string, ArtifactAuditRecord>;
+  /**
+   * 重试尝试：归并键 `${stageId}#${attempt}`，一次 lifecycle(scheduled→started→completed) 一条。
+   * 解决 R0 问题：3 个事件被当成 3 次 retry。
+   */
+  retryAttempts: Record<string, RetryAttemptState>;
+  /**
+   * 路由升级记录：含 from/to 策略 + 中文原因 + 成本/耗时影响。
+   */
+  routeUpgradeRecords: RouteUpgradeRecord[];
 }
 
 /** 阶段中文展示名（映射层的一部分，与 event-presentation-map 协同） */
@@ -235,8 +263,16 @@ export const RECIPE_FIELDS: (keyof RecipeProgress)[] = [
 /** 初始空状态（idle） */
 export function createInitialState(scenario = 'normal'): LiveIntelligenceState {
   const stages = {} as Record<StageId, StageState>;
+  const stageAudit = {} as Record<StageId, StageAuditState>;
   for (const id of STAGE_ORDER) {
     stages[id] = { id, status: 'pending' };
+    stageAudit[id] = {
+      stageId: id,
+      attemptCount: 0,
+      findingsProduced: 0,
+      artifactIds: [],
+      progressMode: 'determinate',
+    };
   }
   return {
     scenario,
@@ -281,6 +317,11 @@ export function createInitialState(scenario = 'normal'): LiveIntelligenceState {
       recipeFields: [],
     },
     entityEvidence: {},
+    // F3-R1 审计态初始值
+    stageAudit,
+    artifactAudit: {},
+    retryAttempts: {},
+    routeUpgradeRecords: [],
   };
 }
 

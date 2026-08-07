@@ -11,6 +11,12 @@
  */
 
 import type { CompetitorResultRefs, LiveEventEnvelope, StageId, StageStatus, MilestoneId } from '@/types/live-event';
+import type {
+  StageAuditState,
+  ArtifactAuditRecord,
+  RetryAttemptState,
+  RouteUpgradeRecord,
+} from '@/types/live-event';
 import { shouldShowInTrace } from '../mappings/event-presentation-map';
 import {
   createInitialState,
@@ -413,6 +419,12 @@ function applyOneImmutable(state: LiveIntelligenceState, event: LiveEventEnvelop
     risks: Math.max(next.summaryMetrics.risks, next.risks.length),
   };
 
+  // ===== F3-R1 审计态归并（权威来源，Job Detail 只读这些，不再扫 trace 猜测） =====
+  next = applyStageAudit(next, event);
+  next = applyArtifactAudit(next, event);
+  next = applyRetryAttempt(next, event);
+  next = applyRouteUpgrade(next, event);
+
   // —— 任务终态 ——
   if (event.kind === 'job.completed') {
     next.jobStatus = next.requiresAction ? 'awaiting_review' : 'completed';
@@ -427,6 +439,243 @@ function applyOneImmutable(state: LiveIntelligenceState, event: LiveEventEnvelop
   }
 
   return next;
+}
+
+/**
+ * F3-R1 §二：阶段审计态归并。
+ * 把 stage.queued/started/progress/completed/awaiting_review/failed 与 retry.* 归并到 stageAudit。
+ * 客户 trace 继续降噪（stage.* 多为 ambient），但 Job Detail 节点只读 stageAudit，不扫 trace。
+ *
+ * 关键契约（risk 场景）：
+ *   build_recipe 初始执行 + 1 次 retry → attemptCount = 2
+ */
+function applyStageAudit(state: LiveIntelligenceState, event: LiveEventEnvelope): LiveIntelligenceState {
+  if (!event.stageId) {
+    // 无阶段事件不更新 stageAudit（但发现数可能影响全局，此处只处理有 stageId 的）
+    // 仍允许 observation/decision/evidence.created 无 stageId 时不更新
+    return state;
+  }
+  const stageId = event.stageId as StageId;
+  const audit = state.stageAudit[stageId];
+  if (!audit) return state;
+
+  let updated: StageAuditState | null = null;
+  const touch = () => {
+    if (!updated) updated = { ...audit, artifactIds: audit.artifactIds.slice() };
+  };
+
+  switch (event.kind) {
+    case 'stage.started': {
+      touch();
+      updated!.attemptCount += 1;
+      if (!updated!.firstStartedAt) updated!.firstStartedAt = event.occurredAt;
+      updated!.lastStartedAt = event.occurredAt;
+      updated!.progressMode = event.progress?.mode === 'indeterminate' ? 'indeterminate' : 'determinate';
+      if (event.progress?.mode === 'determinate') {
+        updated!.progress = {
+          current: event.progress.current ?? 0,
+          total: event.progress.total ?? 0,
+          unitZh: event.progress.unitZh,
+        };
+      }
+      break;
+    }
+    case 'stage.progress': {
+      touch();
+      updated!.lastStartedAt = updated!.lastStartedAt ?? event.occurredAt;
+      updated!.progressMode = event.progress?.mode === 'indeterminate' ? 'indeterminate' : 'determinate';
+      if (event.progress?.mode === 'determinate') {
+        updated!.progress = {
+          current: event.progress.current ?? updated!.progress?.current ?? 0,
+          total: event.progress.total ?? updated!.progress?.total ?? 0,
+          unitZh: event.progress.unitZh,
+        };
+      }
+      break;
+    }
+    case 'stage.completed':
+    case 'stage.awaiting_review':
+    case 'stage.failed': {
+      touch();
+      if (!updated!.completedAt) updated!.completedAt = event.occurredAt;
+      break;
+    }
+    case 'retry.started': {
+      // retry.started 也算一次 attempt（首次 stage.started 已 +1，retry 再 +1）
+      // 但首次 started 已经计数；为避免重复，只在 attempt 已>0 时根据 metrics.attempt 校正
+      touch();
+      const m = (event.metrics ?? {}) as Record<string, unknown>;
+      const attemptNum = typeof m.attempt === 'number' ? m.attempt : updated!.attemptCount + 1;
+      updated!.attemptCount = Math.max(updated!.attemptCount, attemptNum + 1);
+      updated!.lastStartedAt = event.occurredAt;
+      break;
+    }
+    default:
+      break;
+  }
+
+  // 发现数：observation/decision/evidence.created 在该阶段产出
+  if (
+    event.stageId &&
+    (event.kind === 'observation.created' ||
+      event.kind === 'decision.created' ||
+      event.kind === 'evidence.created')
+  ) {
+    touch();
+    updated!.findingsProduced += 1;
+  }
+
+  // 该阶段产出的 artifact（来自 artifact.created 的 artifactRefs —— 注意：是 event.artifactRefs，非 metrics）
+  if (event.kind === 'artifact.created' && event.artifactRefs?.length) {
+    touch();
+    for (const aid of event.artifactRefs) {
+      if (!updated!.artifactIds.includes(aid)) updated!.artifactIds.push(aid);
+    }
+  }
+
+  if (!updated) return state;
+  return { ...state, stageAudit: { ...state.stageAudit, [stageId]: updated } };
+}
+
+/**
+ * F3-R1 §四：Artifact 审计记录归并。
+ * 修复 R0 字段错配（producer 用 event.artifactRefs，projection 错读 metrics.artifactRefs）：
+ * 统一读 event.artifactRefs；归并为权威 ArtifactAuditRecord，含 lineage。
+ *
+ * artifact.created  → 新建记录（若 metrics.artifactType / version / parentArtifactIds / linkedAssetIds 存在则用之）
+ * artifact.linked   → 在已有记录上追加 linkedAssetIds（lineage 衍生关系）
+ */
+function applyArtifactAudit(state: LiveIntelligenceState, event: LiveEventEnvelope): LiveIntelligenceState {
+  const m = (event.metrics ?? {}) as Record<string, unknown>;
+
+  if (event.kind === 'artifact.created' && event.artifactRefs?.length) {
+    const audit = { ...state.artifactAudit };
+    const typeZh = typeof m.artifactType === 'string' ? m.artifactType : 'creative_recipe';
+    const version = typeof m.version === 'string' ? m.version : 'v1';
+    const statusZh = typeof m.artifactStatus === 'string' ? m.artifactStatus : '已生成';
+    const parents = Array.isArray(m.parentArtifactIds) ? (m.parentArtifactIds as string[]) : [];
+    const linked = Array.isArray(m.linkedAssetIds) ? (m.linkedAssetIds as string[]) : [];
+    for (const aid of event.artifactRefs) {
+      if (!audit[aid]) {
+        const rec: ArtifactAuditRecord = {
+          artifactId: aid,
+          nameZh: event.titleZh,
+          type: typeZh,
+          generatedByStage: event.stageId,
+          createdAt: event.occurredAt,
+          sourceEventId: event.eventId,
+          sourceSequence: event.sequence,
+          version,
+          linkedAssetIds: linked.slice(),
+          parentArtifactIds: parents.slice(),
+          status: statusZh,
+        };
+        audit[aid] = rec;
+      }
+    }
+    return { ...state, artifactAudit: audit };
+  }
+
+  if (event.kind === 'artifact.linked' && event.artifactRefs?.length) {
+    const audit = { ...state.artifactAudit };
+    const linked = Array.isArray(m.linkedAssetIds) ? (m.linkedAssetIds as string[]) : [];
+    const parents = Array.isArray(m.parentArtifactIds) ? (m.parentArtifactIds as string[]) : [];
+    for (const aid of event.artifactRefs) {
+      const existing = audit[aid];
+      if (existing) {
+        const mergedLinked = [...existing.linkedAssetIds];
+        for (const l of linked) if (!mergedLinked.includes(l)) mergedLinked.push(l);
+        const mergedParents = [...existing.parentArtifactIds];
+        for (const p of parents) if (!mergedParents.includes(p)) mergedParents.push(p);
+        audit[aid] = { ...existing, linkedAssetIds: mergedLinked, parentArtifactIds: mergedParents };
+      } else {
+        // 新建一个 link 记录（artifact.linked 可能在 created 之前/之后）
+        audit[aid] = {
+          artifactId: aid,
+          nameZh: typeof m.artifactName === 'string' ? m.artifactName : aid,
+          type: typeof m.artifactType === 'string' ? m.artifactType : 'linked',
+          generatedByStage: event.stageId,
+          createdAt: event.occurredAt,
+          sourceEventId: event.eventId,
+          sourceSequence: event.sequence,
+          version: typeof m.version === 'string' ? m.version : 'v1',
+          linkedAssetIds: linked.slice(),
+          parentArtifactIds: parents.slice(),
+          status: '已链接',
+        };
+      }
+    }
+    return { ...state, artifactAudit: audit };
+  }
+
+  return state;
+}
+
+/**
+ * F3-R1 §六：重试尝试归并。
+ * 一次 retry.scheduled → retry.started → retry.completed 属于一个 attempt（归并键 stageId+attempt），
+ * 不是三条重试。risk 场景必须 retryAttempts.length === 1 且 build_recipe.attemptCount === 2。
+ */
+function applyRetryAttempt(state: LiveIntelligenceState, event: LiveEventEnvelope): LiveIntelligenceState {
+  if (!event.kind.startsWith('retry.')) return state;
+  const m = (event.metrics ?? {}) as Record<string, unknown>;
+  const stageId = event.stageId;
+  const attempt = typeof m.attempt === 'number' ? m.attempt : 1;
+  const maxAttempts = typeof m.maxAttempts === 'number' ? m.maxAttempts : 3;
+  const reasonCode = typeof m.reasonCode === 'string' ? m.reasonCode : 'UNKNOWN';
+  const reasonZh = typeof m.reasonZh === 'string' ? m.reasonZh : event.titleZh;
+  const key = stageId ? `${stageId}#${attempt}` : `#${attempt}`;
+
+  const existing = state.retryAttempts[key];
+  const base: RetryAttemptState = existing ?? {
+    key,
+    stageId,
+    attempt,
+    maxAttempts,
+    reasonCode,
+    reasonZh,
+    status: 'scheduled',
+    sourceSequence: event.sequence,
+  };
+
+  const updated: RetryAttemptState = { ...base };
+  if (event.kind === 'retry.scheduled') {
+    updated.status = 'scheduled';
+    updated.scheduledAt = event.occurredAt;
+    if (!existing) updated.sourceSequence = event.sequence;
+  } else if (event.kind === 'retry.started') {
+    updated.status = 'started';
+    updated.startedAt = event.occurredAt;
+    if (!existing) updated.sourceSequence = event.sequence;
+  } else if (event.kind === 'retry.completed') {
+    updated.status = 'completed';
+    updated.completedAt = event.occurredAt;
+    if (!existing) updated.sourceSequence = event.sequence;
+  }
+
+  return {
+    ...state,
+    retryAttempts: { ...state.retryAttempts, [key]: updated },
+  };
+}
+
+/**
+ * F3-R1 §七：路由升级记录归并。
+ * 必须含 from/to 策略 + 中文原因 + 成本影响 + 耗时影响（不能只显示成本）。
+ */
+function applyRouteUpgrade(state: LiveIntelligenceState, event: LiveEventEnvelope): LiveIntelligenceState {
+  if (event.kind !== 'route.upgraded') return state;
+  const m = (event.metrics ?? {}) as Record<string, unknown>;
+  const rec: RouteUpgradeRecord = {
+    fromStrategy: typeof m.fromStrategy === 'string' ? m.fromStrategy : '',
+    toStrategy: typeof m.toStrategy === 'string' ? m.toStrategy : '',
+    reasonZh: typeof m.reasonZh === 'string' ? m.reasonZh : event.summaryZh ?? event.titleZh,
+    costDeltaCents: typeof m.estimatedCostDeltaCents === 'number' ? m.estimatedCostDeltaCents : undefined,
+    timeDeltaSeconds: typeof m.estimatedTimeDeltaSeconds === 'number' ? m.estimatedTimeDeltaSeconds : undefined,
+    sourceEventId: event.eventId,
+    sourceSequence: event.sequence,
+  };
+  return { ...state, routeUpgradeRecords: [...state.routeUpgradeRecords, rec] };
 }
 
 /**

@@ -230,6 +230,7 @@ export function buildNormalScenario(): ScenarioScript {
   });
 
   // 阶段 7：形成套图 Creative Recipe —— R1：7 字段全部标记
+  // F3-R1 §四：真正产生 Artifact lineage（多 Artifact + 父子关系）
   emitStage(ctx, out, 'build_recipe', {
     durationSec: 6,
     inline: (emit) => {
@@ -248,13 +249,82 @@ export function buildNormalScenario(): ScenarioScript {
         metrics: { recipeFields: ['ratio', 'background', 'lighting'] },
         resultRefs: { recipeFields: ['ratio', 'background', 'lighting'] },
       });
+      // F3-R1：Artifact 1 — 用途分类结果（由 classify_purpose 产出，此处引用为 lineage 根）
+      // 用 artifact.linked 建立：用途分类结果 → 构图聚类 → 风险排除 → Recipe 谱系
+      emit({
+        kind: 'artifact.linked',
+        stageId: 'build_recipe',
+        titleZh: '用途分类结果已纳入 Recipe 谱系',
+        summaryZh: '12 张图片用途分类作为 Recipe 的输入',
+        artifactRefs: ['art-purpose'],
+        metrics: {
+          artifactName: '图片用途分类结果',
+          artifactType: '用途分类结果',
+          version: 'v1',
+          linkedAssetIds: ['img-01', 'img-02', 'img-03', 'img-04', 'img-05', 'img-06', 'img-07', 'img-08', 'img-09', 'img-10', 'img-11', 'img-12'],
+          parentArtifactIds: [],
+        },
+      });
+      // F3-R1：Artifact 2 — Evidence 索引
+      emit({
+        kind: 'artifact.linked',
+        stageId: 'build_recipe',
+        titleZh: 'Evidence 索引已纳入 Recipe 谱系',
+        summaryZh: '商品主体与背景分离证据索引',
+        artifactRefs: ['art-evidence'],
+        metrics: {
+          artifactName: 'Evidence 索引',
+          artifactType: 'Evidence 索引',
+          version: 'v1',
+          linkedAssetIds: ['img-01', 'img-02'],
+          parentArtifactIds: ['art-purpose'],
+        },
+      });
+      // F3-R1：Artifact 3 — 构图聚类
+      emit({
+        kind: 'artifact.linked',
+        stageId: 'build_recipe',
+        titleZh: '构图聚类已纳入 Recipe 谱系',
+        summaryZh: '4 种构图模式聚类结果',
+        artifactRefs: ['art-clusters'],
+        metrics: {
+          artifactName: '构图聚类',
+          artifactType: '构图聚类',
+          version: 'v1',
+          linkedAssetIds: ['img-01', 'img-03', 'img-05', 'img-07'],
+          parentArtifactIds: ['art-evidence'],
+        },
+      });
+      // F3-R1：Artifact 4 — 风险排除清单
+      emit({
+        kind: 'artifact.linked',
+        stageId: 'build_recipe',
+        titleZh: '风险排除清单已纳入 Recipe 谱系',
+        summaryZh: '7 处品牌资产 + 3 项普通风险排除',
+        artifactRefs: ['art-risk-list'],
+        metrics: {
+          artifactName: '风险排除清单',
+          artifactType: '风险排除清单',
+          version: 'v1',
+          linkedAssetIds: ['img-01', 'img-03', 'img-08', 'img-12'],
+          parentArtifactIds: ['art-evidence'],
+        },
+      });
+      // F3-R1：Artifact 5 — Creative Recipe（最终，父 = 聚类 + 风险清单）
       emit({
         kind: 'artifact.created',
         stageId: 'build_recipe',
         titleZh: '套图 Creative Recipe 草案已生成，可提前查看',
         summaryZh: '草案 v1',
         artifactRefs: ['recipe-draft-v1'],
-        metrics: { recipeFields: ['textSafetyZone'] },
+        metrics: {
+          recipeFields: ['textSafetyZone'],
+          artifactType: 'Creative Recipe',
+          version: 'v1',
+          artifactStatus: '已生成',
+          linkedAssetIds: ['img-01'],
+          parentArtifactIds: ['art-clusters', 'art-risk-list'],
+        },
         resultRefs: { recipeFields: ['textSafetyZone'] },
       });
     },
@@ -282,13 +352,14 @@ export function buildNormalScenario(): ScenarioScript {
   );
   advance(ctx, 0.5);
 
-  // F3：QC 检查（5 项，全部通过）
+  // F3-R1：QC 检查（5 项，全部通过）。差异化 Evidence：每项指向对应类型，非全部同一 subject。
+  // qcReview 必须是 boolean（R0 错用 string 'true'/'false'）。
   const qcChecks = [
-    { id: 'qc-structure', nameZh: '商品结构一致性', status: 'pass', targetZh: '开放式耳机结构', reasonZh: undefined, evidenceCount: 12 },
-    { id: 'qc-logo', nameZh: 'Logo/型号排除', status: 'pass', targetZh: '7 处竞品标识', evidenceCount: 7 },
-    { id: 'qc-master', nameZh: 'Product Master 事实一致性', status: 'pass', targetZh: 'SKU OW-A31-BLK', evidenceCount: 5 },
-    { id: 'qc-recipe', nameZh: 'Recipe 完整度', status: 'pass', targetZh: '7/7 字段', evidenceCount: 7 },
-    { id: 'qc-coverage', nameZh: '图片覆盖度', status: 'pass', targetZh: '12/12 张', evidenceCount: 12 },
+    { id: 'qc-structure', nameZh: '商品结构一致性', status: 'pass', targetZh: '开放式耳机结构', reasonZh: undefined, evidenceCount: 12, evidence: { assetId: 'img-01', layer: 'subject' as const }, review: false },
+    { id: 'qc-logo', nameZh: 'Logo/型号排除', status: 'pass', targetZh: '7 处竞品标识', evidenceCount: 7, evidence: { assetId: 'img-01', layer: 'logo' as const, regionId: 'ev-01-logo' }, review: false },
+    { id: 'qc-master', nameZh: 'Product Master 事实一致性', status: 'pass', targetZh: 'SKU OW-A31-BLK', evidenceCount: 5, evidence: { assetId: 'img-12', layer: 'text' as const }, review: false },
+    { id: 'qc-recipe', nameZh: 'Recipe 完整度', status: 'pass', targetZh: '7/7 字段', evidenceCount: 7, evidence: { assetId: 'img-01', layer: 'safe' as const }, review: false },
+    { id: 'qc-coverage', nameZh: '图片覆盖度', status: 'pass', targetZh: '12/12 张', evidenceCount: 12, evidence: { assetId: 'img-05', layer: 'subject' as const }, review: false },
   ];
   for (const qc of qcChecks) {
     advance(ctx, 0.3);
@@ -298,8 +369,8 @@ export function buildNormalScenario(): ScenarioScript {
         titleZh: `QC 检查：${qc.nameZh} — 通过`,
         traceCategory: '质量检查',
         severity: 'success',
-        evidenceRefs: qc.evidenceCount > 0 ? [{ assetId: 'img-01', layer: 'subject' }] : undefined,
-        metrics: { qcId: qc.id, qcName: qc.nameZh, qcStatus: qc.status, qcTarget: qc.targetZh, qcReason: qc.reasonZh ?? '', qcEvidence: qc.evidenceCount, qcReview: 'false' },
+        evidenceRefs: [qc.evidence],
+        metrics: { qcId: qc.id, qcName: qc.nameZh, qcStatus: qc.status, qcTarget: qc.targetZh, qcReason: qc.reasonZh ?? '', qcEvidence: qc.evidenceCount, qcReview: qc.review },
         resultRefs: { qcResultIds: [qc.id] },
       }),
     );

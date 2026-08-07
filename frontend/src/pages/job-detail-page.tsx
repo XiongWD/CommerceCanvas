@@ -51,13 +51,27 @@ export function JobDetailPage() {
     return detail.timelineItems.filter((t) => filterDef.matchCats.includes(t.category as TraceCategoryZh));
   }, [detail.timelineItems, tlFilter]);
 
-  // 跨页面导航：QC 风险 → 返回竞品分析 + Evidence
+  // F3-R1 §八：跨页面导航 QC 风险 → 返回竞品分析 + Evidence（稳定导航目标，经 Router state）
   const handleQcNavigate = (qcId: string) => {
     const qc = detail.qcResults.find((q) => q.id === qcId);
-    if (!qc?.sourceSequence) return;
-    const traceItem = detail.timelineItems.find((t) => t.sequence === qc.sourceSequence);
-    if (traceItem?.evidenceRefs?.[0]) {
-      const ref = traceItem.evidenceRefs[0];
+    if (!qc) return;
+    // 优先用 QC 自身的差异化 evidenceRefs（F3-R1 §五：每项 QC 有对应类型 Evidence）
+    const ref = qc.evidenceRefs?.[0];
+    const target: {
+      jobId: string;
+      runId: number;
+      qcResultId: string;
+      traceSequence?: number;
+      evidence?: { assetId?: string; layer?: string; regionId?: string };
+    } = {
+      jobId: live.state.jobId,
+      runId: live.state.runId,
+      qcResultId: qc.id,
+      traceSequence: qc.sourceSequence,
+    };
+    if (ref) {
+      target.evidence = { assetId: ref.assetId, layer: ref.layer, regionId: ref.regionId };
+      // 同步设置 live focus（确保返回分析页时立即聚焦）
       live.focusEvidence({
         assetId: ref.assetId,
         layer: ref.layer,
@@ -66,7 +80,10 @@ export function JobDetailPage() {
         fromSequence: qc.sourceSequence,
       });
     }
-    navigate(`/products/ow-a31-blk/competitor-analysis/${live.state.jobId || 'latest'}`);
+    if (qc.sourceSequence) live.highlightTraceSequence(qc.sourceSequence);
+    navigate(`/products/ow-a31-blk/competitor-analysis/${live.state.jobId || 'latest'}`, {
+      state: target,
+    });
   };
 
   return (
@@ -139,12 +156,16 @@ export function JobDetailPage() {
         <Section title="节点状态" icon={<ShieldCheck size={13} />}>
           <div className="flex flex-col gap-1">
             {detail.nodes.map((node) => {
-              const tone = node.status === 'completed' ? 'var(--gc-accent-green)' :
-                node.status === 'active' ? 'var(--gc-accent-blue)' :
-                node.status === 'awaiting_review' ? 'var(--gc-accent-amber)' :
-                node.status === 'failed' ? 'var(--gc-accent-red)' : 'var(--gc-text-faint)';
+              // F3-R1 §三：样式用 statusRaw（原始键），展示用 status（中文）
+              const tone = node.statusRaw === 'completed' ? 'var(--gc-accent-green)' :
+                node.statusRaw === 'active' ? 'var(--gc-accent-blue)' :
+                node.statusRaw === 'awaiting_review' ? 'var(--gc-accent-amber)' :
+                node.statusRaw === 'failed' ? 'var(--gc-accent-red)' : 'var(--gc-text-faint)';
               return (
                 <div key={node.stageId} data-testid={`job-node-${node.stageId}`}
+                  data-node-status={node.statusRaw}
+                  data-node-attempt={node.attemptCount}
+                  data-node-findings={node.findingsProduced}
                   className="flex items-start gap-2 rounded-sm px-2 py-1.5"
                   style={{ background: 'var(--gc-bg-app)', borderLeft: `2px solid ${tone}` }}
                 >
@@ -155,6 +176,8 @@ export function JobDetailPage() {
                       <span className="gc-data text-2xs" style={{ color: 'var(--gc-text-faint)' }}>{node.status}</span>
                     </div>
                     <div className="mt-0.5 flex flex-wrap gap-x-3 text-2xs" style={{ color: 'var(--gc-text-faint)' }}>
+                      {node.startedAt && <span>开始 {fmtTime(node.startedAt)}</span>}
+                      {node.completedAt && <span>完成 {fmtTime(node.completedAt)}</span>}
                       {node.elapsedSeconds !== undefined && <span>用时 {formatElapsed(node.elapsedSeconds)}</span>}
                       <span>尝试 {node.attemptCount}</span>
                       {node.findingsProduced > 0 && <span>发现 {node.findingsProduced}</span>}
@@ -210,7 +233,7 @@ export function JobDetailPage() {
           </div>
         </Section>
 
-        {/* —— 4.4 Artifact 关系 —— */}
+        {/* —— 4.4 Artifact 关系（F3-R1：含 lineage 谱系） —— */}
         <Section title="Artifact 关系" icon={<FileText size={13} />}>
           <div className="flex flex-col gap-1">
             {detail.artifacts.length === 0 ? (
@@ -218,17 +241,23 @@ export function JobDetailPage() {
             ) : (
               detail.artifacts.map((a) => (
                 <div key={a.artifactId} data-testid={`job-artifact-${a.artifactId}`}
+                  data-source-event={a.sourceEventId}
+                  data-parent-count={a.parentArtifactIds.length}
                   className="rounded-sm px-2 py-1.5" style={{ background: 'var(--gc-bg-app)', border: '1px solid var(--gc-line)' }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium" style={{ color: 'var(--gc-text-hi)' }}>{a.nameZh}</span>
                     <span className="gc-data text-2xs" style={{ color: 'var(--gc-text-faint)' }}>{a.version}</span>
-                    <span className="text-2xs" style={{ color: a.status === 'completed' ? 'var(--gc-accent-green)' : 'var(--gc-accent-amber)' }}>{a.status}</span>
+                    <span className="text-2xs" style={{ color: a.status === '待确认' ? 'var(--gc-accent-amber)' : 'var(--gc-accent-green)' }}>{a.status}</span>
                   </div>
                   <div className="mt-0.5 flex flex-wrap gap-x-3 text-2xs" style={{ color: 'var(--gc-text-faint)' }}>
+                    <span className="gc-data">{a.type}</span>
                     {a.generatedByStage && <span>来源：{STAGE_LABEL_ZH[a.generatedByStage as keyof typeof STAGE_LABEL_ZH] ?? a.generatedByStage}</span>}
-                    <span>事件 #{a.sourceEventId}</span>
+                    <span>事件 #{a.sourceSequence}</span>
                     {a.linkedAssetCount > 0 && <span>关联 {a.linkedAssetCount} 张</span>}
+                    {a.parentArtifactIds.length > 0 && (
+                      <span style={{ color: 'var(--gc-accent-blue)' }}>← 衍生自 {a.parentArtifactIds.length} 个产物</span>
+                    )}
                   </div>
                 </div>
               ))
@@ -247,6 +276,8 @@ export function JobDetailPage() {
                 const label = qc.status === 'pass' ? '通过' : qc.status === 'warning' ? '待检查' : '阻断';
                 return (
                   <div key={qc.id} data-testid={`job-qc-${qc.id}`}
+                    data-qc-status={qc.status}
+                    data-qc-review={qc.requiresReview ? 'true' : 'false'}
                     onClick={() => qc.status !== 'pass' && handleQcNavigate(qc.id)}
                     className="cursor-pointer rounded-sm px-2 py-1.5 transition-colors hover:bg-[var(--gc-bg-elev-1)]"
                     style={{ background: 'var(--gc-bg-app)', borderLeft: `2px solid ${tone}` }}
@@ -258,7 +289,9 @@ export function JobDetailPage() {
                     <div className="mt-0.5 text-2xs" style={{ color: 'var(--gc-text-faint)' }}>
                       {qc.targetZh} · 证据 {qc.evidenceCount}
                       {qc.reasonZh && ` · ${qc.reasonZh}`}
-                      {qc.requiresReview && <span style={{ color: 'var(--gc-accent-amber)' }}> · 需人工确认</span>}
+                      {qc.requiresReview && (
+                        <span data-testid={`qc-review-flag-${qc.id}`} style={{ color: 'var(--gc-accent-amber)' }}> · 需人工确认</span>
+                      )}
                     </div>
                     {qc.status !== 'pass' && (
                       <div className="mt-0.5 text-2xs" style={{ color: 'var(--gc-accent-blue)' }}>
@@ -289,30 +322,56 @@ export function JobDetailPage() {
               <span className="text-2xs" style={{ color: 'var(--gc-text-faint)' }}>暂无成本事件</span>
             )}
           </div>
-          {/* 路由升级 */}
+          {/* 路由升级（F3-R1 §七：完整展示策略+原因+成本+耗时影响，不只成本） */}
           {detail.routeUpgrades.length > 0 && (
-            <div className="mb-2 rounded-sm px-2 py-1.5" style={{ background: 'var(--gc-accent-amber-soft)', border: '1px solid rgba(224,169,58,0.3)' }}>
+            <div className="mb-2 rounded-sm px-2 py-1.5" data-testid="route-upgrade-block"
+              style={{ background: 'var(--gc-accent-amber-soft)', border: '1px solid rgba(224,169,58,0.3)' }}>
               <div className="flex items-center gap-1 text-2xs" style={{ color: 'var(--gc-accent-amber)' }}>
                 <RefreshCw size={11} /> 路由升级
               </div>
               {detail.routeUpgrades.map((r, i) => (
                 <div key={i} className="mt-1 text-2xs" style={{ color: 'var(--gc-text-mid)' }}>
-                  {r.fromStrategy} <ArrowRight size={9} className="inline" /> {r.toStrategy}
-                  <span style={{ color: 'var(--gc-text-faint)' }}> · {r.reasonZh}</span>
-                  {r.costDeltaCents && <span className="gc-data" style={{ color: 'var(--gc-accent-amber)' }}> +${(r.costDeltaCents / 100).toFixed(2)}</span>}
+                  <div>
+                    <span className="gc-data">{r.fromStrategy}</span>
+                    <ArrowRight size={9} className="inline" />
+                    <span className="gc-data" style={{ color: 'var(--gc-accent-amber)' }}>{r.toStrategy}</span>
+                  </div>
+                  <div style={{ color: 'var(--gc-text-faint)' }}>原因：{r.reasonZh}</div>
+                  <div className="mt-0.5 flex flex-wrap gap-x-3">
+                    {r.costDeltaCents !== undefined && r.costDeltaCents > 0 && (
+                      <span className="gc-data" style={{ color: 'var(--gc-accent-amber)' }}>
+                        成本 +${(r.costDeltaCents / 100).toFixed(2)}
+                      </span>
+                    )}
+                    {r.timeDeltaSeconds !== undefined && r.timeDeltaSeconds > 0 && (
+                      <span className="gc-data" style={{ color: 'var(--gc-accent-amber)' }}>
+                        预计耗时 +{r.timeDeltaSeconds} 秒
+                      </span>
+                    )}
+                    <span style={{ color: 'var(--gc-accent-purple)' }}>
+                      质量策略提升：{r.toStrategy}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           )}
-          {/* 重试 */}
+          {/* 重试（F3-R1 §六：归并后的单 attempt，含 lifecycle 状态） */}
           {detail.retryRecords.length > 0 && (
-            <div className="rounded-sm px-2 py-1.5" style={{ background: 'var(--gc-bg-app)', border: '1px solid var(--gc-line)' }}>
+            <div className="rounded-sm px-2 py-1.5" data-testid="retry-block">
               <div className="flex items-center gap-1 text-2xs" style={{ color: 'var(--gc-accent-amber)' }}>
-                <RefreshCw size={11} /> 重试记录
+                <RefreshCw size={11} /> 重试记录（{detail.retryRecords.length} 次）
               </div>
-              {detail.retryRecords.map((r, i) => (
-                <div key={i} className="mt-1 text-2xs" style={{ color: 'var(--gc-text-mid)' }}>
-                  第 {r.attempt}/{r.maxAttempts} 次 · {r.reasonZh}
+              {detail.retryRecords.map((r) => (
+                <div key={r.key} data-testid={`retry-attempt-${r.key}`}
+                  className="mt-1 text-2xs" style={{ color: 'var(--gc-text-mid)' }}>
+                  <span className="gc-data">第 {r.attempt}/{r.maxAttempts} 次</span>
+                  {' · '}
+                  <span style={{ color: 'var(--gc-text-faint)' }}>{r.reasonZh}</span>
+                  {' · '}
+                  <span style={{ color: 'var(--gc-accent-amber)' }}>
+                    {r.status === 'completed' ? '已完成' : r.status === 'started' ? '进行中' : '已排期'}
+                  </span>
                 </div>
               ))}
             </div>
@@ -356,7 +415,7 @@ export function JobDetailPage() {
 
 function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col overflow-hidden p-3" style={{ background: 'var(--gc-bg-elev-1)' }}>
+    <div data-testid={`job-section-${title}`} className="flex flex-col overflow-hidden p-3" style={{ background: 'var(--gc-bg-elev-1)' }}>
       <div className="mb-2 flex items-center gap-1.5">
         <span style={{ color: 'var(--gc-text-lo)' }}>{icon}</span>
         <span className="gc-section-label">{title}</span>
@@ -373,4 +432,15 @@ function Metric({ label, children }: { label: string; children: React.ReactNode 
       <span style={{ color: 'var(--gc-text-mid)' }}>{children}</span>
     </span>
   );
+}
+
+/** ISO 时间 → HH:MM:SS 紧凑展示 */
+function fmtTime(iso: string): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const mm = String(d.getUTCMinutes()).padStart(2, '0');
+  const ss = String(d.getUTCSeconds()).padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
 }

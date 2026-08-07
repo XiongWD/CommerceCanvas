@@ -1,8 +1,9 @@
 /**
- * F3：应用外壳 AppShell。
+ * F3：应用外壳 AppShell + App（BrowserRouter 包装）。
  *
- * - useLiveIntelligence 在此层调用一次，经 LiveContext 向下传递给所有页面（不重复挂载模拟器）。
- * - Shell 级组件：DemoControls / AmbientStatus / GlobalRail / PersistentTaskBar。
+ * - useLiveIntelligence 在 AppShell 层调用一次，经 LiveContext 向下传递给所有页面（不重复挂载模拟器）。
+ * - AppShell 不含 Router，便于测试用 MemoryRouter 包装（避免 Router 嵌套）。
+ * - App = BrowserRouter > AppShell，供生产入口使用。
  * - 路由：
  *     /products/:productId/competitor-analysis/:runId → 竞品分析页
  *     /jobs/:jobId                                    → 任务详情页
@@ -16,42 +17,52 @@ import { LiveContext } from './live-context';
 import { CompetitorAnalysisPage } from '@/pages/competitor-analysis-page';
 import { JobDetailPage } from '@/pages/job-detail-page';
 
-export function App() {
-  // useLiveIntelligence 必须在 Routes 之上调用一次（NG-024：单一真实来源）
+/**
+ * AppShell：真实应用结构（不含 BrowserRouter，便于测试用 MemoryRouter 包装）。
+ * useLiveIntelligence 在此层调用一次（NG-024：单一真实来源）。
+ */
+export function AppShell() {
   const live = useLiveIntelligence('normal');
 
   return (
     <LiveContext.Provider value={live}>
-      <BrowserRouter>
-        <div className="flex h-screen w-screen flex-col overflow-hidden">
-          <DemoControls
-            status={live.simulatorStatus}
-            speed={live.speed}
-            scenarioId={live.scenarioId}
-            onStart={live.start}
-            onPause={live.pause}
-            onResume={live.resume}
-            onRestart={live.restart}
-            onSpeed={live.setSpeed}
-            onSwitch={live.switchScenario}
-          />
-          <AmbientStatus state={live.state} />
+      <div className="flex h-screen w-screen flex-col overflow-hidden">
+        <DemoControls
+          status={live.simulatorStatus}
+          speed={live.speed}
+          scenarioId={live.scenarioId}
+          onStart={live.start}
+          onPause={live.pause}
+          onResume={live.resume}
+          onRestart={live.restart}
+          onSpeed={live.setSpeed}
+          onSwitch={live.switchScenario}
+        />
+        <AmbientStatus state={live.state} />
 
-          <div className="flex min-h-0 flex-1">
-            <GlobalRail />
-            <Routes>
-              <Route
-                path="/products/:productId/competitor-analysis/:runId"
-                element={<CompetitorAnalysisPage />}
-              />
-              <Route path="/jobs/:jobId" element={<JobDetailPage />} />
-              <Route path="*" element={<CompetitorAnalysisPage />} />
-            </Routes>
-          </div>
-
-          <PersistentTaskBar live={live} />
+        <div className="flex min-h-0 flex-1">
+          <GlobalRail />
+          <Routes>
+            <Route
+              path="/products/:productId/competitor-analysis/:runId"
+              element={<CompetitorAnalysisPage />}
+            />
+            <Route path="/jobs/:jobId" element={<JobDetailPage />} />
+            <Route path="*" element={<CompetitorAnalysisPage />} />
+          </Routes>
         </div>
-      </BrowserRouter>
+
+        <PersistentTaskBar live={live} />
+      </div>
     </LiveContext.Provider>
+  );
+}
+
+/** App：生产入口，BrowserRouter 包装 AppShell。 */
+export function App() {
+  return (
+    <BrowserRouter>
+      <AppShell />
+    </BrowserRouter>
   );
 }

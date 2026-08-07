@@ -203,6 +203,72 @@ export function buildRiskScenario(): ScenarioScript {
     }),
   );
   advance(ctx, 1);
+  // F3-R1 §四：Artifact lineage（用途分类 → Evidence → 构图聚类 → 风险排除 → Recipe 草案）
+  // 风险场景同样需要可审计谱系；Recipe 为待确认版本
+  out.push(
+    ev(ctx, {
+      kind: 'artifact.linked',
+      stageId: 'build_recipe',
+      titleZh: '用途分类结果已纳入 Recipe 谱系',
+      summaryZh: '12 张图片用途分类作为 Recipe 输入',
+      artifactRefs: ['art-purpose'],
+      metrics: {
+        artifactName: '图片用途分类结果',
+        artifactType: '用途分类结果',
+        version: 'v1',
+        linkedAssetIds: ['img-01', 'img-02', 'img-03', 'img-04', 'img-05', 'img-06', 'img-07', 'img-08', 'img-09', 'img-10', 'img-11', 'img-12'],
+        parentArtifactIds: [],
+      },
+    }),
+  );
+  out.push(
+    ev(ctx, {
+      kind: 'artifact.linked',
+      stageId: 'build_recipe',
+      titleZh: 'Evidence 索引已纳入 Recipe 谱系',
+      summaryZh: '商品结构与竞品标识证据索引',
+      artifactRefs: ['art-evidence'],
+      metrics: {
+        artifactName: 'Evidence 索引',
+        artifactType: 'Evidence 索引',
+        version: 'v1',
+        linkedAssetIds: ['img-06', 'img-01'],
+        parentArtifactIds: ['art-purpose'],
+      },
+    }),
+  );
+  out.push(
+    ev(ctx, {
+      kind: 'artifact.linked',
+      stageId: 'build_recipe',
+      titleZh: '构图聚类已纳入 Recipe 谱系',
+      summaryZh: '4 种构图模式聚类结果',
+      artifactRefs: ['art-clusters'],
+      metrics: {
+        artifactName: '构图聚类',
+        artifactType: '构图聚类',
+        version: 'v1',
+        linkedAssetIds: ['img-01', 'img-03', 'img-05', 'img-07'],
+        parentArtifactIds: ['art-evidence'],
+      },
+    }),
+  );
+  out.push(
+    ev(ctx, {
+      kind: 'artifact.linked',
+      stageId: 'build_recipe',
+      titleZh: '风险排除清单已纳入 Recipe 谱系',
+      summaryZh: '7 处品牌资产 + 结构阻断排除',
+      artifactRefs: ['art-risk-list'],
+      metrics: {
+        artifactName: '风险排除清单',
+        artifactType: '风险排除清单',
+        version: 'v1',
+        linkedAssetIds: ['img-01', 'img-06', 'img-12'],
+        parentArtifactIds: ['art-evidence'],
+      },
+    }),
+  );
   // Recipe 部分完成：4/7（purpose/canvas/position/ratio）
   out.push(
     ev(ctx, {
@@ -212,7 +278,14 @@ export function buildRiskScenario(): ScenarioScript {
       summaryZh: '草案 v1 · 待确认 · 4/7 字段',
       artifactRefs: ['recipe-draft-v1-risk'],
       requiresAction: true,
-      metrics: { recipeFields: ['purpose', 'canvas', 'position', 'ratio'] },
+      metrics: {
+        recipeFields: ['purpose', 'canvas', 'position', 'ratio'],
+        artifactType: 'Creative Recipe',
+        version: 'v1',
+        artifactStatus: '待确认',
+        linkedAssetIds: ['img-06'],
+        parentArtifactIds: ['art-clusters', 'art-risk-list'],
+      },
       resultRefs: { recipeFields: ['purpose', 'canvas', 'position', 'ratio'] },
     }),
   );
@@ -241,13 +314,14 @@ export function buildRiskScenario(): ScenarioScript {
   );
   advance(ctx, 0.5);
 
-  // F3：QC 检查（结构冲突 → 阻断）
+  // F3-R1：QC 检查（结构冲突 → 阻断）。差异化 Evidence：每项指向对应类型，非全部同一 subject。
+  // qcReview 必须是 boolean（R0 错用 string 'true'/'false'，导致 requiresReview 永远 false）。
   const riskQC = [
-    { id: 'qc-structure-risk', nameZh: '商品结构一致性', status: 'block', targetZh: '入耳式 vs 开放式', reasonZh: '竞品为入耳式结构，与 Product Master 开放式不一致', evidenceCount: 1, review: true },
-    { id: 'qc-logo-risk', nameZh: 'Logo/型号排除', status: 'pass', targetZh: '7 处竞品标识', evidenceCount: 7, review: false },
-    { id: 'qc-master-risk', nameZh: 'Product Master 事实一致性', status: 'warning', targetZh: 'SKU OW-A31-BLK', reasonZh: '降噪参数需复核', evidenceCount: 3, review: true },
-    { id: 'qc-recipe-risk', nameZh: 'Recipe 完整度', status: 'warning', targetZh: '4/7 字段', reasonZh: 'Recipe 部分完成，等待人工确认', evidenceCount: 4, review: true },
-    { id: 'qc-coverage-risk', nameZh: '图片覆盖度', status: 'pass', targetZh: '12/12 张', evidenceCount: 12, review: false },
+    { id: 'qc-structure-risk', nameZh: '商品结构一致性', status: 'block', targetZh: '入耳式 vs 开放式', reasonZh: '竞品为入耳式结构，与 Product Master 开放式不一致', evidenceCount: 1, evidence: { assetId: 'img-06', layer: 'subject' as const }, review: true },
+    { id: 'qc-logo-risk', nameZh: 'Logo/型号排除', status: 'pass', targetZh: '7 处竞品标识', reasonZh: undefined, evidenceCount: 7, evidence: { assetId: 'img-01', layer: 'logo' as const, regionId: 'ev-01-logo' }, review: false },
+    { id: 'qc-master-risk', nameZh: 'Product Master 事实一致性', status: 'warning', targetZh: 'SKU OW-A31-BLK', reasonZh: '降噪参数需复核', evidenceCount: 3, evidence: { assetId: 'img-12', layer: 'text' as const }, review: true },
+    { id: 'qc-recipe-risk', nameZh: 'Recipe 完整度', status: 'warning', targetZh: '4/7 字段', reasonZh: 'Recipe 部分完成，等待人工确认', evidenceCount: 4, evidence: { assetId: 'img-01', layer: 'safe' as const }, review: true },
+    { id: 'qc-coverage-risk', nameZh: '图片覆盖度', status: 'pass', targetZh: '12/12 张', reasonZh: undefined, evidenceCount: 12, evidence: { assetId: 'img-05', layer: 'subject' as const }, review: false },
   ];
   for (const qc of riskQC) {
     advance(ctx, 0.3);
@@ -257,8 +331,8 @@ export function buildRiskScenario(): ScenarioScript {
         titleZh: `QC 检查：${qc.nameZh} — ${qc.status === 'pass' ? '通过' : qc.status === 'warning' ? '待检查' : '阻断'}`,
         traceCategory: '质量检查',
         severity: qc.status === 'pass' ? 'success' : qc.status === 'warning' ? 'warning' : 'error',
-        evidenceRefs: [{ assetId: 'img-06', layer: 'subject' }],
-        metrics: { qcId: qc.id, qcName: qc.nameZh, qcStatus: qc.status, qcTarget: qc.targetZh, qcReason: qc.reasonZh ?? '', qcEvidence: qc.evidenceCount, qcReview: qc.review ? 'true' : 'false' },
+        evidenceRefs: [qc.evidence],
+        metrics: { qcId: qc.id, qcName: qc.nameZh, qcStatus: qc.status, qcTarget: qc.targetZh, qcReason: qc.reasonZh ?? '', qcEvidence: qc.evidenceCount, qcReview: qc.review },
         resultRefs: { qcResultIds: [qc.id] },
       }),
     );

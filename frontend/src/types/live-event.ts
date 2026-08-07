@@ -111,8 +111,11 @@ export interface LiveEventEnvelope {
 
   progress?: ProgressInfo;
 
-  /** 业务指标（发现数/风险数等，等宽字体展示；recipeFields 为字段名数组） */
-  metrics?: Record<string, number | string | string[]>;
+  /**
+   * 业务指标（发现数/风险数等，等宽字体展示；recipeFields 为字段名数组）。
+   * F3-R1：放宽为允许 boolean（QC `qcReview` 必须是 boolean 而非 string 'true'）。
+   */
+  metrics?: Record<string, number | string | string[] | boolean>;
   /** 证据引用（点击轨迹定位画布） */
   evidenceRefs?: EvidenceRef[];
   /** 产物引用（artifactId 列表） */
@@ -231,3 +234,125 @@ export interface QCResultInfo {
   evidenceCount: number;
   requiresReview: boolean;
 }
+
+// ===== F3-R1 审计态类型（reducer 权威归并，不再扫 trace 猜测） =====
+
+/**
+ * 单阶段审计态（F3-R1 §二）。
+ * 由 stage.queued / started / progress / completed / awaiting_review / retry.* 归并。
+ * 客户 trace 继续降噪（stage.* 多为 ambient），但 Job Detail 节点只读权威 audit state。
+ */
+export interface StageAuditState {
+  stageId: StageId;
+  /** 首次开始时间（ISO，来自首个 stage.started） */
+  firstStartedAt?: string;
+  /** 最近一次开始时间（retry 后会被覆盖） */
+  lastStartedAt?: string;
+  /** 完成时间（ISO，来自 stage.completed / awaiting_review 后定格） */
+  completedAt?: string;
+  /** 尝试次数（初始执行 + 每次 retry.started 计一次；至少 1 当阶段已开始） */
+  attemptCount: number;
+  /** 该阶段产出的发现数（observation/decision/evidence.created 计数） */
+  findingsProduced: number;
+  /** 该阶段产生的 artifactId 列表（来自 artifact.created 的 artifactRefs） */
+  artifactIds: string[];
+  /** 真实进度类型：determinate / indeterminate */
+  progressMode: 'determinate' | 'indeterminate';
+  /** 该阶段进度（determinate 时） */
+  progress?: { current: number; total: number; unitZh?: string };
+}
+
+/**
+ * Artifact 审计记录（F3-R1 §四）。
+ * 修复 R0 producer(event.artifactRefs) vs projection(metrics.artifactRefs) 字段错配：
+ * 统一读 event.artifactRefs，并在 reducer 归并为权威结构，含 lineage。
+ */
+export interface ArtifactAuditRecord {
+  artifactId: string;
+  /** 中文名称（来自产生事件 titleZh） */
+  nameZh: string;
+  /** 类型（用途分类结果 / Evidence 索引 / 构图聚类 / 风险排除清单 / Creative Recipe） */
+  type: string;
+  /** 生成节点 stageId */
+  generatedByStage?: StageId;
+  /** 生成时间（ISO） */
+  createdAt: string;
+  /** 来源事件 ID（必填，非空） */
+  sourceEventId: string;
+  /** 来源事件 sequence */
+  sourceSequence: number;
+  /** 版本（如 v1 / 草案） */
+  version: string;
+  /** 关联的资产 ID 列表 */
+  linkedAssetIds: string[];
+  /** 父 Artifact ID 列表（lineage 谱系：本 artifact 由哪些 artifact 衍生） */
+  parentArtifactIds: string[];
+  /** 状态中文：已生成 / 待确认 / 已链接 */
+  status: string;
+}
+
+/**
+ * 单次重试尝试（F3-R1 §六）。
+ * 一次 retry.scheduled → retry.started → retry.completed 属于一个 attempt，不是三条重试。
+ * 归并键：stageId + attempt。
+ */
+export interface RetryAttemptState {
+  /** 归并键：`${stageId}#${attempt}` */
+  key: string;
+  stageId?: StageId;
+  attempt: number;
+  maxAttempts: number;
+  reasonCode: string;
+  reasonZh: string;
+  scheduledAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  /** 状态：scheduled / started / completed */
+  status: 'scheduled' | 'started' | 'completed';
+  /** 来源事件 sequence（首条） */
+  sourceSequence: number;
+}
+
+/**
+ * 路由升级记录（F3-R1 §七）。
+ */
+export interface RouteUpgradeRecord {
+  fromStrategy: string;
+  toStrategy: string;
+  reasonZh: string;
+  costDeltaCents?: number;
+  timeDeltaSeconds?: number;
+  sourceEventId: string;
+  sourceSequence: number;
+}
+
+/**
+ * 跨页面导航目标（F3-R1 §八）。
+ * 通过 Router state 传递，不依赖临时组件闭包。
+ */
+export interface CrossPageNavigationTarget {
+  jobId: string;
+  runId: number;
+  assetId?: string;
+  evidence?: { assetId?: string; layer?: string; regionId?: string };
+  traceSequence?: number;
+  qcResultId?: string;
+}
+
+/** 阶段状态 → 中文映射（F3-R1 §三：客户模式不得显示英文状态） */
+export const STAGE_STATUS_ZH: Record<StageStatus, string> = {
+  pending: '等待执行',
+  active: '执行中',
+  completed: '已完成',
+  awaiting_review: '等待人工确认',
+  failed: '执行失败',
+};
+
+/** 任务状态 → 中文映射 */
+export const JOB_STATUS_ZH: Record<JobStatus, string> = {
+  idle: '空闲',
+  running: '执行中',
+  completed: '已完成',
+  awaiting_review: '等待人工确认',
+  failed: '执行失败',
+};
