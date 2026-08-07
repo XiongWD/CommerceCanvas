@@ -1,7 +1,7 @@
 {
-  "sourceCommit": "2b13fe71a1c824880dbf78591229fe23d8214aef",
-  "sourceTreeHash": "30be3eb934f5275e73e3e8cd21992b2605775bba",
-  "evidencePayloadCommit": "pending",
+  "sourceCommit": "a0d85a2b79c5272b25f2c1e28beb82d1772ad9d5",
+  "sourceTreeHash": "2da0278256435c884027ac4538ad65344e90a90e",
+  "evidencePayloadCommit": "64bb2aa0dc9246508d1d94cd5eeb673b4db8665b",
   "browser": "Playwright Chromium (独立，非 IAB)",
   "browserVersion": "143.0.7499.4",
   "captureRules": "所有跨页操作点击真实 UI；禁止 history.pushState/PopStateEvent/page.goto(/jobs) 代替产品导航",
