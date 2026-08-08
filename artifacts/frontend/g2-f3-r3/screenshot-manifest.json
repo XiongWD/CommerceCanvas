@@ -1,0 +1,22 @@
+{
+  "sourceCommit": "9edd532ccc65a1b36a2e2152ade6233aa35a4310",
+  "sourceTreeHash": "294a6080f19e99cc6472e43ec7f44ba1b93fb2a4",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium (独立，非 IAB)",
+  "browserVersion": "143.0.7499.4",
+  "captureRules": "所有跨页操作点击真实 UI；Browser Back 用 page.goBack()；每截图前 exact assert",
+  "screenshots": [
+    {
+      "file": "e1-qc-evidence-exact.png",
+      "sha256": "4be959a6f9c351fad971d17c970dc816e8733e6c0f06709b432ef096e23f08ce"
+    },
+    {
+      "file": "e2-browser-back-persistence.png",
+      "sha256": "4756a94fc6929c2afe62ff6f8b1fd63e95eeaf228b95fafe910c9ddc831d518c"
+    },
+    {
+      "file": "e3-persistent-task-artifacts.png",
+      "sha256": "2c16fd7b0f0869967d7695cb7d376f45becff5d666577277446f96f28ca97803"
+    }
+  ]
+}
