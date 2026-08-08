@@ -16,6 +16,7 @@ import { useLiveIntelligence, DemoControls, AmbientStatus } from '@/features/liv
 import { LiveContext } from './live-context';
 import { CompetitorAnalysisPage } from '@/pages/competitor-analysis-page';
 import { JobDetailPage } from '@/pages/job-detail-page';
+import { DesignFoundationPage } from '@/pages/DesignFoundationPage';
 
 /**
  * AppShell：真实应用结构（不含 BrowserRouter，便于测试用 MemoryRouter 包装）。
@@ -48,6 +49,7 @@ export function AppShell() {
               element={<CompetitorAnalysisPage />}
             />
             <Route path="/jobs/:jobId" element={<JobDetailPage />} />
+            <Route path="/__dev/design-foundation" element={<DesignFoundationPage />} />
             <Route path="*" element={<CompetitorAnalysisPage />} />
           </Routes>
         </div>
