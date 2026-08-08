@@ -1,10 +1,36 @@
+/**
+ * F3.5 R0 — Graphite Canvas × Astryx CSS Cascade
+ *
+ * Layer order（从低到高优先级）：
+ *   reset            — 全局 box-sizing / margin reset
+ *   tw-preflight     — Tailwind v3 preflight（@tailwind base 放入显式 layer）
+ *   astryx-reset     — Astryx theme-neutral reset（@layer reset from theme.css）
+ *   astryx-base      — Astryx component base styles（@layer astryx-base from astryx.css）
+ *   astryx-theme     — Astryx theme tokens
+ *   graphite-base    — CommerceCanvas Graphite Canvas 全局 base（body / scrollbar / mono）
+ *   tw-components    — Tailwind v3 components
+ *   tw-utilities     — Tailwind v3 utilities（最高优先级，布局工具类）
+ *
+ * 原则：Astryx reset 不会静默覆盖 Graphite Canvas；Tailwind utilities 保持最高优先级。
+ */
+@layer reset, tw-preflight, astryx-reset, astryx-base, astryx-theme, graphite-base, tw-components, tw-utilities;
+
 @import './tokens.css';
 
-@tailwind base;
+/* Astryx CSS imports（使用 package exports map 指定的路径） */
+@import '@astryxdesign/theme-neutral/theme.css';
+@import '@astryxdesign/core/astryx.css';
+
+/* Tailwind v3 preflight 放入显式 layer（避免 unlayered 覆盖 Astryx） */
+@layer tw-preflight {
+  @tailwind base;
+}
+
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
+/* Graphite Canvas 全局 base */
+@layer graphite-base {
   html,
   body,
   #root {
@@ -47,7 +73,7 @@
   }
 }
 
-@layer components {
+@layer tw-components {
   /* 内容分隔标题：低对比、无大标题（任务书 §7.2）*/
   .gc-section-label {
     @apply text-2xs font-medium uppercase tracking-wider;
