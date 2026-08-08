@@ -422,7 +422,8 @@ export function buildRiskScenario(): ScenarioScript {
   out.push(
     ev(ctx, {
       kind: 'observation.created',
-      titleZh: '分析汇总：24 项发现、3 项风险（含 1 项结构阻断）、1 份待确认产物',
+      // F3-R3 §7：metrics.artifacts 语义 = 最终产物数（待确认的 1 份 Recipe）。
+      titleZh: '分析汇总：24 项发现、3 项风险（含 1 项结构阻断）、1 份待确认最终产物（共 5 份中间+最终）',
       summaryZh: '结构阻断为阻断项，需人工复核后才能进入生成',
       metrics: { findings: 24, risks: 3, artifacts: 1, blockingConflicts: 1 },
     }),

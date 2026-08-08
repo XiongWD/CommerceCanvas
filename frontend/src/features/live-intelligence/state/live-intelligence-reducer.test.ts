@@ -165,14 +165,17 @@ describe('场景 A 正常完成（业务事实）', () => {
     expect(a.events.map((e) => e.eventId)).toEqual(b.events.map((e) => e.eventId));
   });
 
-  it('终态 completed，findings=24，risks=3，artifacts=5(含 lineage)，recipe=7/7', () => {
+  it('终态 completed，findings=24，risks=3，artifacts(final)=1/total=5，recipe=7/7', () => {
     const s = dispatchAll(buildNormalScenario().events, 'normal', 'job-normal-001');
     expect(s.jobStatus).toBe('completed');
     expect(s.summaryMetrics.findings).toBe(24);
     expect(s.summaryMetrics.risks).toBe(3);
-    // F3-R2 P0-2：summaryMetrics.artifacts 与 artifactMetrics.total 单一口径（5 个含 lineage）
-    expect(s.summaryMetrics.artifacts).toBe(5);
+    // F3-R3 §7：summaryMetrics.artifacts 语义 = 最终产物数（= artifactMetrics.final = 1）
+    // 不再与 artifactMetrics.total(5) 混淆；权威 total 由 artifactMetrics 维护
+    expect(s.summaryMetrics.artifacts).toBe(1);
     expect(s.artifactMetrics.total).toBe(5);
+    expect(s.artifactMetrics.final).toBe(1);
+    expect(s.artifactMetrics.intermediate).toBe(4);
     expect(s.artifactMetrics.intermediate + s.artifactMetrics.final).toBe(s.artifactMetrics.total);
     // 7 字段全 true
     expect(Object.values(s.recipe).every(Boolean)).toBe(true);
@@ -274,7 +277,10 @@ describe('场景 C 断线恢复（Last-Event-ID 语义）', () => {
 describe('P1 权威统计对账', () => {
   it('页面指标与状态字段一致（normal）', () => {
     const s = dispatchAll(buildNormalScenario().events, 'normal', 'job-normal-001');
-    expect(s.summaryMetrics.artifacts).toBe(s.artifacts.length);
+    // F3-R3 §7：summaryMetrics.artifacts = 最终产物数（1），非 artifacts.length（5 total）。
+    // 权威 total = artifactMetrics.total（与 artifacts 数组长度一致）。
+    expect(s.summaryMetrics.artifacts).toBe(s.artifactMetrics.final);
+    expect(s.artifactMetrics.total).toBe(Object.keys(s.artifactAudit).length);
     expect(s.summaryMetrics.risks).toBe(s.risks.length);
   });
 });

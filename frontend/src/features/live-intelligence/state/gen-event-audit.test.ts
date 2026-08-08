@@ -107,7 +107,8 @@ describe('event-audit 生成', () => {
     expect(audit.normal.uniqueEventIds).toBe(audit.normal.scenarioEvents);
     expect(audit.normal.findings).toBe(24);
     expect(audit.normal.risks).toBe(3);
-    expect(audit.normal.artifacts).toBe(5);
+    // F3-R3 §7：summaryMetrics.artifacts = 最终产物数（1），非 total（5）
+    expect(audit.normal.artifacts).toBe(1);
     expect(audit.normal.blockingConflicts).toBe(0);
     expect(audit.normal.recipeFields).toBe(7);
     expect(audit.risk.buildRecipeStatus).toBe('awaiting_review');

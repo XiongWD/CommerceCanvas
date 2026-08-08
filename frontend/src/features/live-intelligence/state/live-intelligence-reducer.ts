@@ -408,15 +408,18 @@ function applyOneImmutable(state: LiveIntelligenceState, event: LiveEventEnvelop
     next.summaryMetrics = { ...next.summaryMetrics, risks: Number(event.metrics.risks) };
   }
   if (event.metrics?.artifacts !== undefined) {
+    // F3-R3 §7：metrics.artifacts 语义 = 最终产物数（= artifactMetrics.final），非 total。
+    // 不再与 artifacts.length 取 max（那是 total 口径，会造成 final vs total 语义冲突）。
+    // 权威 total 由 state.artifactMetrics 维护，Overview/Task/Audit 全部读 artifactMetrics。
     next.summaryMetrics = { ...next.summaryMetrics, artifacts: Number(event.metrics.artifacts) };
   }
   if (event.metrics?.blockingConflicts !== undefined) {
     next.summaryMetrics = { ...next.summaryMetrics, blockingConflicts: Number(event.metrics.blockingConflicts) };
   }
-  // artifacts.length 与 summaryMetrics.artifacts 对账：始终以 max 同步
+  // risks.length 与 summaryMetrics.risks 对账：始终以 max 同步
+  // （artifacts 不再对账，避免 final vs total 口径冲突）
   next.summaryMetrics = {
     ...next.summaryMetrics,
-    artifacts: Math.max(next.summaryMetrics.artifacts, next.artifacts.length),
     risks: Math.max(next.summaryMetrics.risks, next.risks.length),
   };
 

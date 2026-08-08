@@ -401,7 +401,9 @@ export function buildNormalScenario(): ScenarioScript {
   out.push(
     ev(ctx, {
       kind: 'observation.created',
-      titleZh: '分析汇总：共 24 项发现、3 项普通风险、1 份产物',
+      // F3-R3 §7：metrics.artifacts 语义 = 最终产物数（= artifactMetrics.final），非 total。
+      // 文案明确「最终产物」，避免与 artifactMetrics.total=5 语义冲突。
+      titleZh: '分析汇总：共 24 项发现、3 项普通风险、1 份最终产物（共 5 份中间+最终）',
       summaryZh: '3 项风险均为非阻断，0 项结构冲突，可在生成阶段处理',
       metrics: { findings: 24, risks: 3, artifacts: 1, blockingConflicts: 0 },
     }),

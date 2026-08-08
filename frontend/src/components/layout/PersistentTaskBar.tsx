@@ -52,8 +52,16 @@ export function PersistentTaskBar({ live }: { live: LiveIntelligenceApi }) {
       data-testid="persistent-task-bar"
       data-received-count={state.receivedCount}
       data-run-id={state.runId}
+      data-job-id={state.jobId}
       data-simulator-identity={live.simulatorInstanceId}
       data-job-status={state.jobStatus}
+      data-artifact-total={state.artifactMetrics.total}
+      data-artifact-intermediate={state.artifactMetrics.intermediate}
+      data-artifact-final={state.artifactMetrics.final}
+      data-focused-asset={live.focus?.assetId ?? ''}
+      data-focused-layer={live.focus?.layer ?? ''}
+      data-focused-region={live.focus?.regionId ?? ''}
+      data-highlighted-seq={live.highlightedSequence ?? ''}
       className="relative flex shrink-0 flex-col"
       style={{
         borderTop: '1px solid var(--gc-line)',
@@ -132,6 +140,11 @@ export function PersistentTaskBar({ live }: { live: LiveIntelligenceApi }) {
         </Metric>
         <Metric icon={<AlertTriangle size={12} />} tone="amber">
           风险 <span className="gc-data">{state.summaryMetrics.risks}</span>
+        </Metric>
+        {/* F3-R3 §6：Persistent Task 使用唯一权威 artifactMetrics（与 Overview/Artifact 区/Audit 同源） */}
+        <Metric icon={<FileText size={12} />} tone="green">
+          产物 <span className="gc-data">{state.artifactMetrics.total}</span>
+          <span className="gc-data" style={{ color: 'var(--gc-text-faint)' }}> · 最终 {state.artifactMetrics.final}</span>
         </Metric>
         <Metric icon={<Clock size={12} />} tone="neutral">
           <span className="gc-data">{formatElapsed(state.elapsedSeconds)}</span>
