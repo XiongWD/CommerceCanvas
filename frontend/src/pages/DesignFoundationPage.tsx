@@ -1,14 +1,12 @@
 /**
- * F3.5 R2 — Foundation Smoke Test（dev-only route /__dev/design-foundation）。
+ * F3.5 R5 — Foundation Smoke Test（dev-only route /__dev/design-foundation）。
  *
- * R2 修正：
- * - 所有 Policy B 组件使用 @/components/ui/ wrapper（不直接 import Astryx）
- * - Policy A 组件直接 import Astryx
- * - Table/Popover/DropdownMenu 使用 wrapper
- * - Dark theme 修正后所有控件 dark surface
+ * R5：Astryx runtime 完全移除。所有可见原子来自 @/components/ui/* Graphite
+ * Native wrappers（B Policy），Policy A 原子（Checkbox/Switch/Skeleton/Code/
+ * Divider/Stack）退化为页面内联原生实现，仅供本 smoke 渲染。
  */
-import { useState } from 'react';
-// Policy B — CommerceCanvas Wrapper（全部从 @/components/ui/ 导入）
+import { useState, type CSSProperties, type ReactNode } from 'react';
+// Policy B — CommerceCanvas Wrapper（Graphite Native，全部从 @/components/ui/ 导入）
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { Text } from '@/components/ui/Text';
@@ -22,18 +20,162 @@ import { Tooltip } from '@/components/ui/Tooltip';
 import { Popover } from '@/components/ui/Popover';
 import { DropdownMenu } from '@/components/ui/DropdownMenu';
 import { Dialog, DialogHeader } from '@/components/ui/Dialog';
-import { Table, TableRow, TableCell, TableHeaderCell, TableHeader, TableBody } from '@/components/ui/Table';
+import {
+  Table,
+  TableRow,
+  TableCell,
+  TableHeaderCell,
+  TableHeader,
+  TableBody,
+} from '@/components/ui/Table';
 import { List, ListItem } from '@/components/ui/List';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { EmptyState } from '@/components/ui/EmptyState';
-// Policy A — Astryx Direct
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { Switch } from '@astryxdesign/core/Switch';
-import { Skeleton } from '@astryxdesign/core/Skeleton';
-import { Code } from '@astryxdesign/core/Code';
-import { Divider } from '@astryxdesign/core/Divider';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Settings, Play, AlertTriangle, CheckCircle, Search } from 'lucide-react';
+
+/* ------------------------------------------------------------------
+ * Policy A 原子的内联原生替代（仅本 smoke 页使用，不导出）。
+ * R5：Astryx 移除后，这些原子退化为最小内联实现，保持 smoke 视觉。
+ * ------------------------------------------------------------------ */
+
+function Divider({ style }: { style?: CSSProperties }) {
+  return <div style={{ height: 1, background: 'var(--gc-line)', ...style }} />;
+}
+
+function Stack({
+  direction = 'vertical',
+  gap = 1,
+  align,
+  wrap,
+  children,
+  style,
+}: {
+  direction?: 'vertical' | 'horizontal';
+  gap?: number;
+  align?: 'center' | 'flex-start' | 'flex-end' | 'stretch';
+  wrap?: 'wrap' | 'nowrap';
+  children: ReactNode;
+  style?: CSSProperties;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: direction === 'horizontal' ? 'row' : 'column',
+        gap: `${gap * 8}px`,
+        alignItems: align,
+        flexWrap: wrap === 'wrap' ? 'wrap' : undefined,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Code({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+  return (
+    <span
+      className="font-mono"
+      style={{
+        fontFamily: 'var(--gc-font-mono)',
+        fontSize: '12px',
+        color: 'var(--gc-text-lo)',
+        background: 'var(--gc-bg-elev-1)',
+        padding: '1px 5px',
+        border: '1px solid var(--gc-line)',
+        borderRadius: 2,
+        fontVariantNumeric: 'tabular-nums',
+        ...style,
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+function Switch({
+  label,
+  value,
+  onChange,
+}: {
+  label?: ReactNode;
+  value?: boolean;
+  onChange?: (v: boolean) => void;
+}) {
+  return (
+    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={value ? 'true' : 'false'}
+        onClick={() => onChange?.(!value)}
+        style={{
+          width: 32,
+          height: 18,
+          borderRadius: 9999,
+          border: '1px solid var(--gc-line-strong)',
+          background: value ? 'var(--gc-action-primary)' : 'var(--gc-bg-elev-2)',
+          position: 'relative',
+          cursor: 'pointer',
+          padding: 0,
+          transition: 'background-color 120ms ease',
+        }}
+      >
+        <span
+          style={{
+            position: 'absolute',
+            top: 1,
+            left: value ? 15 : 1,
+            width: 14,
+            height: 14,
+            borderRadius: 9999,
+            background: '#fff',
+            transition: 'left 120ms ease',
+          }}
+        />
+      </button>
+      {label && <span style={{ fontSize: '13px', color: 'var(--gc-text-mid)' }}>{label}</span>}
+    </label>
+  );
+}
+
+function CheckboxInput({
+  label,
+  value,
+  onChange,
+}: {
+  label?: ReactNode;
+  value?: boolean;
+  onChange?: (v: boolean) => void;
+}) {
+  return (
+    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+      <input
+        type="checkbox"
+        checked={!!value}
+        onChange={(e) => onChange?.(e.target.checked)}
+        style={{ accentColor: 'var(--gc-action-primary)', width: 14, height: 14 }}
+      />
+      {label && <span style={{ fontSize: '13px', color: 'var(--gc-text-mid)' }}>{label}</span>}
+    </label>
+  );
+}
+
+function Skeleton({ width, height, style }: { width?: number | string; height?: number | string; style?: CSSProperties }) {
+  return (
+    <div
+      style={{
+        width,
+        height,
+        background: 'var(--gc-bg-elev-1)',
+        border: '1px solid var(--gc-line)',
+        borderRadius: 2,
+        ...style,
+      }}
+    />
+  );
+}
 
 export function DesignFoundationPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -43,11 +185,14 @@ export function DesignFoundationPage() {
   const [selectorVal, setSelectorVal] = useState('balanced' as string | null);
 
   return (
-    <div data-testid="design-foundation-page" data-astryx-theme="neutral" style={{ padding: 24, maxWidth: 1200, margin: '0 auto', minHeight: '100vh' }}>
+    <div
+      data-testid="design-foundation-page"
+      style={{ padding: 24, maxWidth: 1200, margin: '0 auto', minHeight: '100vh' }}
+    >
       {/* Typography */}
       <section data-testid="foundation-typography" style={{ marginBottom: 32 }}>
         <Heading level={1} type="display-1">CommerceCanvas 设计基础</Heading>
-        <Text type="body" color="secondary">Graphite Canvas × Astryx Industrial UI Foundation</Text>
+        <Text type="body" color="secondary">Graphite Canvas × Graphite Native UI Foundation</Text>
         <Divider style={{ marginTop: 12 }} />
         <Stack direction="vertical" gap={1}>
           <Heading level={2}>竞品套图分析</Heading>
@@ -79,10 +224,18 @@ export function DesignFoundationPage() {
         <Stack direction="vertical" gap={3} style={{ maxWidth: 480 }}>
           <TextInput label="商品名称" placeholder="OpenWave OW-A31-BLK" value="" onChange={() => {}} />
           <TextArea label="生成指令" placeholder="保留构图方向…" value="" />
-          <Selector label="质量策略" hasClear options={[
-            { label: '快速', value: 'fast' }, { label: '均衡', value: 'balanced' },
-            { label: '高质量', value: 'high' }, { label: '商品保真优先', value: 'fidelity' },
-          ]} value={selectorVal} onChange={(v: string | null) => setSelectorVal(v)} />
+          <Selector
+            label="质量策略"
+            hasClear
+            options={[
+              { label: '快速', value: 'fast' },
+              { label: '均衡', value: 'balanced' },
+              { label: '高质量', value: 'high' },
+              { label: '商品保真优先', value: 'fidelity' },
+            ]}
+            value={selectorVal}
+            onChange={(v: string | null) => setSelectorVal(v)}
+          />
           <Switch label="启用商品保真策略" value={switchOn} onChange={setSwitchOn} />
           <CheckboxInput label="禁止继承竞品 Logo" value={checkbox} onChange={setCheckbox} />
         </Stack>
@@ -110,7 +263,7 @@ export function DesignFoundationPage() {
       {/* Table */}
       <section data-testid="foundation-table" style={{ marginBottom: 32 }}>
         <Heading level={3}>密集数据表</Heading>
-        <Table density="compact" dividers="rows" hasHover>
+        <Table density="compact" dividers="rows">
           <TableHeader>
             <TableRow>
               <TableHeaderCell>Job ID</TableHeaderCell>
@@ -157,10 +310,17 @@ export function DesignFoundationPage() {
           <Tooltip content="该 QC 检查商品结构与 Product Master 一致性">
             <Button label="QC 说明" variant="ghost" />
           </Tooltip>
-          <Popover content={<div style={{ padding: 12, maxWidth: 280 }}>
-            <Text type="label">商品保真优先</Text>
-            <Text type="supporting" color="secondary">低成本分析路径结果不充分，系统升级策略。+$0.15 +12秒。</Text>
-          </div>} placement="below">
+          <Popover
+            content={
+              <div style={{ padding: 12, maxWidth: 280 }}>
+                <Text type="label">商品保真优先</Text>
+                <Text type="supporting" color="secondary">
+                  低成本分析路径结果不充分，系统升级策略。+$0.15 +12秒。
+                </Text>
+              </div>
+            }
+            placement="below"
+          >
             <Button label="路由策略详情" variant="ghost" />
           </Popover>
           <DropdownMenu
@@ -176,7 +336,7 @@ export function DesignFoundationPage() {
           <Button label="打开确认对话框" variant="primary" onClick={() => setDialogOpen(true)} />
         </Stack>
         <Dialog isOpen={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogHeader title="确认商品结构阻断" />
+          <DialogHeader title="确认商品结构阻断" onOpenChange={setDialogOpen} />
           <div style={{ padding: '0 24px 24px' }}>
             <Text type="body">检测到竞品为入耳式结构，自有商品 OW-A31-BLK 为开放式。</Text>
           </div>
@@ -191,15 +351,24 @@ export function DesignFoundationPage() {
       <section data-testid="foundation-dense-list" style={{ marginBottom: 32 }}>
         <Heading level={3}>密集数据列表</Heading>
         <List hasDividers>
-          <ListItem startContent={<CheckCircle size={14} style={{ color: 'var(--gc-accent-green)' }} />}
-            label="图片用途分类结果" description="12 张 · 4 种用途"
-            endContent={<Badge variant="neutral" label="seq 8" />} />
-          <ListItem startContent={<AlertTriangle size={14} style={{ color: 'var(--gc-accent-amber)' }} />}
-            label="风险排除清单" description="7 处品牌资产 · 3 项普通风险"
-            endContent={<Badge variant="warning" label="seq 15" />} />
-          <ListItem startContent={<CheckCircle size={14} style={{ color: 'var(--gc-accent-green)' }} />}
-            label="套图 Creative Recipe" description="7/7 字段 · 草案 v1"
-            endContent={<Badge variant="success" label="seq 22" />} />
+          <ListItem
+            startContent={<CheckCircle size={14} style={{ color: 'var(--gc-accent-green)' }} />}
+            label="图片用途分类结果"
+            description="12 张 · 4 种用途"
+            endContent={<Badge variant="neutral" label="seq 8" />}
+          />
+          <ListItem
+            startContent={<AlertTriangle size={14} style={{ color: 'var(--gc-accent-amber)' }} />}
+            label="风险排除清单"
+            description="7 处品牌资产 · 3 项普通风险"
+            endContent={<Badge variant="warning" label="seq 15" />}
+          />
+          <ListItem
+            startContent={<CheckCircle size={14} style={{ color: 'var(--gc-accent-green)' }} />}
+            label="套图 Creative Recipe"
+            description="7/7 字段 · 草案 v1"
+            endContent={<Badge variant="success" label="seq 22" />}
+          />
         </List>
       </section>
 
@@ -207,8 +376,12 @@ export function DesignFoundationPage() {
       <section data-testid="foundation-progress" style={{ marginBottom: 32 }}>
         <Heading level={3}>进度与占位</Heading>
         <Stack direction="vertical" gap={3} style={{ maxWidth: 480 }}>
-          <div><ProgressBar label="阶段进度" value={5} max={7} /></div>
-          <div><ProgressBar label="不确定进度" isIndeterminate /></div>
+          <div>
+            <ProgressBar label="阶段进度" value={5} max={7} />
+          </div>
+          <div>
+            <ProgressBar label="不确定进度" isIndeterminate />
+          </div>
           <Stack direction="vertical" gap={1}>
             <Skeleton width="60%" height={16} />
             <Skeleton width="100%" height={12} />
@@ -220,8 +393,12 @@ export function DesignFoundationPage() {
       {/* EmptyState */}
       <section data-testid="foundation-empty" style={{ marginBottom: 32 }}>
         <Heading level={3}>空状态</Heading>
-        <EmptyState title="暂无竞品分析任务" description="从商品工作区选择商品开始分析。"
-          icon={<Search size={24} />} actions={<Button label="新建分析任务" variant="primary" />} />
+        <EmptyState
+          title="暂无竞品分析任务"
+          description="从商品工作区选择商品开始分析。"
+          icon={<Search size={24} />}
+          actions={<Button label="新建分析任务" variant="primary" />}
+        />
       </section>
     </div>
   );

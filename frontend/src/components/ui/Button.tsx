@@ -1,52 +1,132 @@
 /**
- * CommerceCanvas UI — Button (Policy B, F3.5 R1 §8).
+ * F3.5 R5 — Graphite Native Button（无 Astryx runtime）。
  *
- * Thin wrapper over `@astryxdesign/core/Button`. Per component-policy.md all
- * CommerceCanvas code MUST import Button from `@/components/ui/Button`, never
- * directly from Astryx. This wrapper:
- *   - centralizes the Astryx import so the policy boundary is enforced in one place,
- *   - stamps `data-cc-component="Button"` + an optional `data-cc-testid` so
- *     Graphite tests / telemetry can identify CC-owned button instances,
- *   - re-exports the props + variant/size types verbatim.
+ * 原生 button + Graphite 视觉契约：
+ *   - compact 密度（高度 28px，行内控件对齐 F0-F3 工作台）
+ *   - variant: primary / secondary / ghost / destructive
+ *   - primary 使用 --gc-action-primary（深蓝 S4 CTA），其余克制低饱和
  *
- * Graphite accent mapping (variant=primary -> --gc-accent-blue etc.) happens at
- * the Astryx theme-override layer, NOT by remapping props here. Keeping this a
- * pure pass-through avoids re-implementing variant logic.
- *
- * API (verified against node_modules/@astryxdesign/core/dist/Button/Button.d.ts):
- *   label (required), variant, size, isDisabled, isLoading, isInterruptible,
- *   clickAction, icon, isIconOnly, width, children, endContent, tooltip,
- *   href, as, target, rel, onClick.
+ * 契约（兼容 R2 Astryx Button API 的子集）：
+ *   label, variant, icon, isLoading, isDisabled, onClick, children, testId
  */
-import {
-  Button as AstryxButton,
-  type ButtonProps as AstryxButtonProps,
-} from '@astryxdesign/core/Button';
+import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 
-export type { ButtonVariant, ButtonSize } from '@astryxdesign/core/Button';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
+export type ButtonSize = 'compact' | 'md';
 
-/**
- * CommerceCanvas Button props. Identical to Astryx ButtonProps plus an optional
- * `testId` shorthand rendered as `data-cc-testid`.
- */
-export type ButtonProps = Omit<AstryxButtonProps, 'data-testid'> & {
+export interface ButtonProps
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'color'> {
+  label?: ReactNode;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  icon?: ReactNode;
+  isLoading?: boolean;
+  isDisabled?: boolean;
   /** CommerceCanvas test identifier; rendered as `data-cc-testid`. */
   testId?: string;
+  children?: ReactNode;
+}
+
+const VARIANT_BASE: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '6px',
+  height: '28px',
+  padding: '0 12px',
+  borderRadius: '4px',
+  fontSize: '13px',
+  fontWeight: 500,
+  lineHeight: '1',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  cursor: 'pointer',
+  transition: 'background-color 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease',
+  whiteSpace: 'nowrap',
+  userSelect: 'none',
 };
 
-/**
- * CommerceCanvas Button — thin Astryx pass-through.
- *
- * @example
- *   import { Button } from '@/components/ui/Button';
- *   <Button label="Save" variant="primary" testId="save-btn" />
- */
-export function Button({ testId, ...props }: ButtonProps) {
+const VARIANT_STYLE: Record<ButtonVariant, CSSProperties> = {
+  // S4: primary CTA — 深蓝，与白色文字高对比
+  primary: {
+    background: 'var(--gc-action-primary)',
+    color: '#ffffff',
+    borderColor: 'var(--gc-action-primary)',
+  },
+  secondary: {
+    background: 'var(--gc-bg-elev-2)',
+    color: 'var(--gc-text-hi)',
+    borderColor: 'var(--gc-line-strong)',
+  },
+  ghost: {
+    background: 'transparent',
+    color: 'var(--gc-text-mid)',
+    borderColor: 'transparent',
+  },
+  destructive: {
+    background: 'transparent',
+    color: 'var(--gc-accent-red)',
+    borderColor: 'var(--gc-accent-red)',
+  },
+};
+
+export function Button({
+  label,
+  variant = 'secondary',
+  size = 'compact',
+  icon,
+  isLoading = false,
+  isDisabled = false,
+  testId,
+  children,
+  disabled,
+  style,
+  ...rest
+}: ButtonProps) {
+  const height = size === 'md' ? 32 : 28;
+  const resolved: CSSProperties = {
+    ...VARIANT_BASE,
+    ...VARIANT_STYLE[variant],
+    height,
+    ...style,
+  };
+
+  const actuallyDisabled = isDisabled || disabled || isLoading;
+
   return (
-    <AstryxButton
+    <button
+      type="button"
       data-cc-component="Button"
       data-cc-testid={testId}
-      {...props}
+      data-variant={variant}
+      disabled={actuallyDisabled}
+      style={{
+        ...resolved,
+        cursor: actuallyDisabled ? 'not-allowed' : resolved.cursor,
+        opacity: actuallyDisabled ? 0.5 : 1,
+      }}
+      {...rest}
+    >
+      {isLoading && <Spinner />}
+      {!isLoading && icon}
+      {label ?? children}
+    </button>
+  );
+}
+
+function Spinner() {
+  return (
+    <span
+      aria-hidden
+      style={{
+        width: 12,
+        height: 12,
+        borderRadius: '9999px',
+        border: '2px solid currentColor',
+        borderTopColor: 'transparent',
+        display: 'inline-block',
+        animation: 'cc-btn-spin 700ms linear infinite',
+      }}
     />
   );
 }

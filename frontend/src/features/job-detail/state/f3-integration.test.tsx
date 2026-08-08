@@ -10,8 +10,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { Theme } from '@astryxdesign/core/theme';
-import { neutralTheme } from '@astryxdesign/theme-neutral/built';
 import { AppShell } from '@/app/App';
 import { liveReducer } from '@/features/live-intelligence/state/live-intelligence-reducer';
 import { createInitialState } from '@/features/live-intelligence/state/live-intelligence-state';
@@ -37,9 +35,7 @@ function dispatchAll(events, scenario, jobId) {
 function renderApp(initialPath = '/') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
-      <Theme theme={neutralTheme}>
-        <AppShell />
-      </Theme>
+      <AppShell />
     </MemoryRouter>,
   );
 }

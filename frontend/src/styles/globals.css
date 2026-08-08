@@ -1,19 +1,15 @@
 /**
- * F3.5 R2 — Graphite Canvas × Astryx CSS Cascade（dark theme 修正）。
+ * F3.5 R5 — Graphite Native Foundation（Astryx runtime 完全移除）。
  *
  * Layer order（从低到高优先级）：
- *   reset → tw-preflight → astryx-base → astryx-theme → graphite-base → tw-components → tw-utilities
+ *   reset → tw-preflight → graphite-base → tw-components → tw-utilities
  *
- * 关键：color-scheme: dark 必须 unlayered（!important in layer 优先级反转，无法跨层覆盖）
+ * Graphite Canvas 作为唯一视觉来源：tokens.css 提供 --gc-* 语义 token，
+ * globals.css 提供全局 base + Tailwind layer 组织。无外部 UI runtime。
  */
-@layer reset, tw-preflight, astryx-base, astryx-theme, graphite-base, tw-components, tw-utilities;
+@layer reset, tw-preflight, graphite-base, tw-components, tw-utilities;
 
 @import './tokens.css';
-
-/* Astryx 官方 CSS imports（顺序：reset → astryx → theme） */
-@import '@astryxdesign/core/reset.css';
-@import '@astryxdesign/core/astryx.css';
-@import '@astryxdesign/theme-neutral/theme.css';
 
 /* Tailwind v3 preflight 放入显式 layer */
 @layer tw-preflight {
@@ -23,39 +19,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* F3.5 R2 P0-1：强制 dark color-scheme（unlayered，优先级高于所有 layer）。
-   Astryx StyleX 编译的 component class 在 @layer astryx-base 嵌入了
-   color-scheme: light dark。CSS layer 中 !important 优先级反转（早 layer >
-   晚 layer），因此 graphite-base 内的 !important 无法覆盖 astryx-base。
-   Unlayered !important 优先级高于所有 layer 的 !important。 */
-[data-astryx-theme="neutral"],
-[data-astryx-theme="neutral"] * {
-  color-scheme: dark !important;
-}
-
-/* F3.5 R4 P0：Visual Salience — 拆分 Astryx accent 到 Graphite semantic tokens。
-   R3 错误：全局 --color-accent = #2563eb 让 Button primary / Tab selected /
-   focus ring / icon / link 全部使用同一高饱和蓝。R4 按 visual-salience-contract.md
-   拆分：primary CTA 深蓝，selection/focus 更弱，text/link 最弱。
-
-   必须 unlayered：Astryx theme 在 @layer astryx-theme 定义，layer 内覆盖无效。 */
-[data-astryx-theme="neutral"] {
-  /* S4: primary CTA — deep blue, high contrast with white text */
-  --color-accent: var(--gc-action-primary);
-  --color-accent-muted: var(--gc-accent-blue-soft);
-  --color-on-accent: #ffffff;
-  /* S3: selection/focus accent — softer blue, less visual weight than CTA */
-  --color-text-accent: var(--gc-action-text);
-  --color-icon-accent: var(--gc-action-text);
-  --color-border-blue: var(--gc-accent-blue-line);
-}
-
 /* Graphite Canvas 全局 base */
 @layer graphite-base {
   html,
   body,
   #root {
     height: 100%;
+  }
+
+  /* 强制 dark color-scheme：Graphite Canvas 为深色工作台，原生控件（scrollbar/
+     form control）按 dark 渲染。Unlayered 永远成立。 */
+  :root {
+    color-scheme: dark;
   }
 
   body {
@@ -123,5 +98,22 @@
       transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
     }
+  }
+}
+
+/* Graphite Native Button 加载指示器（cc-btn-spin）。非 layer，避免被覆盖。 */
+@keyframes cc-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Graphite Native ProgressBar 不确定态（cc-progress-indeterminate）。 */
+@keyframes cc-progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
   }
 }

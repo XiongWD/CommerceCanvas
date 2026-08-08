@@ -1,49 +1,54 @@
 /**
- * F3.5 R2 §12-15 — 结构化 Component Policy 权威数据源（唯一 source of truth）。
+ * F3.5 R5 — 结构化 Component Policy 权威数据源（唯一 source of truth）。
  *
- * R2 修正：恢复 FROZEN contract（component-policy.md），所有 LOCKED B 组件为 B。
- * component-policy.md / f4-ui-foundation-map.md 必须与此一致。
+ * R5 修正：Astryx runtime 完全移除。Policy B 组件全部为 Graphite Native
+ * 实现（原生 React + Tailwind/CSS + --gc-* token）。原 Policy A（Astryx
+ * Direct）原子（CheckboxInput/Switch/Skeleton/Code/Divider/Stack）退化为
+ * Policy C（CommerceCanvas Custom）页面内联原生实现。原 `astryxExport` 字段
+ * 保留为可选历史记录，但运行时已不再依赖任何 Astryx 包。
  */
-export type ComponentPolicy = 'A' | 'B' | 'C';
+export type ComponentPolicy = 'B' | 'C';
 
 export interface ComponentPolicyEntry {
   component: string;
   policy: ComponentPolicy;
-  astryxExport?: string;
+  /** Graphite Native wrapper path（Policy B）。 */
   ccWrapperPath?: string;
+  /** 原 Astryx 导出路径，仅作历史记录；R5 后运行时不再使用。 */
+  legacyAstryxExport?: string;
   status: 'verified' | 'planned';
 }
 
 export const COMPONENT_POLICY: ComponentPolicyEntry[] = [
-  // Policy B — CommerceCanvas Wrapper（全部 LOCKED B per component-policy.md）
-  { component: 'Button', policy: 'B', astryxExport: '@astryxdesign/core/Button', ccWrapperPath: '@/components/ui/Button', status: 'verified' },
-  { component: 'IconButton', policy: 'B', astryxExport: '@astryxdesign/core/IconButton', ccWrapperPath: '@/components/ui/IconButton', status: 'verified' },
-  { component: 'Text', policy: 'B', astryxExport: '@astryxdesign/core/Text', ccWrapperPath: '@/components/ui/Text', status: 'verified' },
-  { component: 'Heading', policy: 'B', astryxExport: '@astryxdesign/core/Heading', ccWrapperPath: '@/components/ui/Heading', status: 'verified' },
-  { component: 'TextInput', policy: 'B', astryxExport: '@astryxdesign/core/TextInput', ccWrapperPath: '@/components/ui/TextInput', status: 'verified' },
-  { component: 'TextArea', policy: 'B', astryxExport: '@astryxdesign/core/TextArea', ccWrapperPath: '@/components/ui/TextArea', status: 'verified' },
-  { component: 'Selector', policy: 'B', astryxExport: '@astryxdesign/core/Selector', ccWrapperPath: '@/components/ui/Selector', status: 'verified' },
-  { component: 'TabList', policy: 'B', astryxExport: '@astryxdesign/core/TabList', ccWrapperPath: '@/components/ui/TabList', status: 'verified' },
-  { component: 'Tooltip', policy: 'B', astryxExport: '@astryxdesign/core/Tooltip', ccWrapperPath: '@/components/ui/Tooltip', status: 'verified' },
-  { component: 'Popover', policy: 'B', astryxExport: '@astryxdesign/core/Popover', ccWrapperPath: '@/components/ui/Popover', status: 'verified' },
-  { component: 'DropdownMenu', policy: 'B', astryxExport: '@astryxdesign/core/DropdownMenu', ccWrapperPath: '@/components/ui/DropdownMenu', status: 'verified' },
-  { component: 'Dialog', policy: 'B', astryxExport: '@astryxdesign/core/Dialog', ccWrapperPath: '@/components/ui/Dialog', status: 'verified' },
-  { component: 'Badge', policy: 'B', astryxExport: '@astryxdesign/core/Badge', ccWrapperPath: '@/components/ui/Badge', status: 'verified' },
-  { component: 'Table', policy: 'B', astryxExport: '@astryxdesign/core/Table', ccWrapperPath: '@/components/ui/Table', status: 'verified' },
-  { component: 'List', policy: 'B', astryxExport: '@astryxdesign/core/List', ccWrapperPath: '@/components/ui/List', status: 'verified' },
-  { component: 'ProgressBar', policy: 'B', astryxExport: '@astryxdesign/core/ProgressBar', ccWrapperPath: '@/components/ui/ProgressBar', status: 'verified' },
-  { component: 'EmptyState', policy: 'B', astryxExport: '@astryxdesign/core/EmptyState', ccWrapperPath: '@/components/ui/EmptyState', status: 'verified' },
+  // Policy B — CommerceCanvas Graphite Native Wrapper（R5：原生实现，无 Astryx runtime）
+  { component: 'Button', policy: 'B', ccWrapperPath: '@/components/ui/Button', status: 'verified' },
+  { component: 'IconButton', policy: 'B', ccWrapperPath: '@/components/ui/IconButton', status: 'verified' },
+  { component: 'Text', policy: 'B', ccWrapperPath: '@/components/ui/Text', status: 'verified' },
+  { component: 'Heading', policy: 'B', ccWrapperPath: '@/components/ui/Heading', status: 'verified' },
+  { component: 'TextInput', policy: 'B', ccWrapperPath: '@/components/ui/TextInput', status: 'verified' },
+  { component: 'TextArea', policy: 'B', ccWrapperPath: '@/components/ui/TextArea', status: 'verified' },
+  { component: 'Selector', policy: 'B', ccWrapperPath: '@/components/ui/Selector', status: 'verified' },
+  { component: 'TabList', policy: 'B', ccWrapperPath: '@/components/ui/TabList', status: 'verified' },
+  { component: 'Tooltip', policy: 'B', ccWrapperPath: '@/components/ui/Tooltip', status: 'verified' },
+  { component: 'Popover', policy: 'B', ccWrapperPath: '@/components/ui/Popover', status: 'verified' },
+  { component: 'DropdownMenu', policy: 'B', ccWrapperPath: '@/components/ui/DropdownMenu', status: 'verified' },
+  { component: 'Dialog', policy: 'B', ccWrapperPath: '@/components/ui/Dialog', status: 'verified' },
+  { component: 'Badge', policy: 'B', ccWrapperPath: '@/components/ui/Badge', status: 'verified' },
+  { component: 'Table', policy: 'B', ccWrapperPath: '@/components/ui/Table', status: 'verified' },
+  { component: 'List', policy: 'B', ccWrapperPath: '@/components/ui/List', status: 'verified' },
+  { component: 'ProgressBar', policy: 'B', ccWrapperPath: '@/components/ui/ProgressBar', status: 'verified' },
+  { component: 'EmptyState', policy: 'B', ccWrapperPath: '@/components/ui/EmptyState', status: 'verified' },
 
-  // Policy A — Astryx Direct（无 CommerceCanvas 定制需求）
-  { component: 'CheckboxInput', policy: 'A', astryxExport: '@astryxdesign/core/CheckboxInput', status: 'verified' },
-  { component: 'RadioList', policy: 'A', astryxExport: '@astryxdesign/core/RadioList', status: 'verified' },
-  { component: 'Switch', policy: 'A', astryxExport: '@astryxdesign/core/Switch', status: 'verified' },
-  { component: 'Skeleton', policy: 'A', astryxExport: '@astryxdesign/core/Skeleton', status: 'verified' },
-  { component: 'Code', policy: 'A', astryxExport: '@astryxdesign/core/Code', status: 'verified' },
-  { component: 'Divider', policy: 'A', astryxExport: '@astryxdesign/core/Divider', status: 'verified' },
-  { component: 'Stack', policy: 'A', astryxExport: '@astryxdesign/core/Stack', status: 'verified' },
+  // Policy C — CommerceCanvas Custom（R5：原 Policy A 退化为内联原生实现）
+  { component: 'CheckboxInput', policy: 'C', status: 'verified' },
+  { component: 'RadioList', policy: 'C', status: 'planned' },
+  { component: 'Switch', policy: 'C', status: 'verified' },
+  { component: 'Skeleton', policy: 'C', status: 'verified' },
+  { component: 'Code', policy: 'C', status: 'verified' },
+  { component: 'Divider', policy: 'C', status: 'verified' },
+  { component: 'Stack', policy: 'C', status: 'verified' },
 
-  // Policy C — CommerceCanvas Custom
+  // Policy C — CommerceCanvas Custom（业务组件）
   { component: 'AppShell', policy: 'C', status: 'verified' },
   { component: 'MediaCanvas', policy: 'C', status: 'verified' },
   { component: 'EvidenceViewer', policy: 'C', status: 'verified' },

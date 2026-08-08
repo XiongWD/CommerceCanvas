@@ -10,8 +10,6 @@
  *     *                                              → 默认竞品分析页
  */
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Theme } from '@astryxdesign/core/theme';
-import { neutralTheme } from '@astryxdesign/theme-neutral/built';
 import { GlobalRail } from '@/components/layout/GlobalRail';
 import { PersistentTaskBar } from '@/components/layout/PersistentTaskBar';
 import { useLiveIntelligence, DemoControls, AmbientStatus } from '@/features/live-intelligence';
@@ -62,13 +60,11 @@ export function AppShell() {
   );
 }
 
-/** App：生产入口，BrowserRouter > Theme Provider > AppShell。 */
+/** App：生产入口，BrowserRouter > AppShell（Graphite Native，无 Astryx runtime）。 */
 export function App() {
   return (
     <BrowserRouter>
-      <Theme theme={neutralTheme}>
-        <AppShell />
-      </Theme>
+      <AppShell />
     </BrowserRouter>
   );
 }
