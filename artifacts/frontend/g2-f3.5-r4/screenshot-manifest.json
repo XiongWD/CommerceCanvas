@@ -1,0 +1,32 @@
+{
+  "sourceCommit": "858abb4fdc384f7f7040501323020351bc62cedb",
+  "sourceTreeHash": "5b635226abf78dca882b1c13c0822dabade719c2",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium 143.0.7499.4",
+  "screenshots": [
+    {
+      "file": "e1-foundation-balanced-overview.png",
+      "sha256": "9521ff31e6954ee0569018b448d3528824d233ab75ea81e39947b1c4dda7f827"
+    },
+    {
+      "file": "e2-typography-data-hierarchy.png",
+      "sha256": "9521ff31e6954ee0569018b448d3528824d233ab75ea81e39947b1c4dda7f827"
+    },
+    {
+      "file": "e3-status-salience.png",
+      "sha256": "45fe9d53c2dc3c0ef12fa0754aba63f57c7407fff5f9b040f10a5609535579cc"
+    },
+    {
+      "file": "e5-job-detail-recalibrated.png",
+      "sha256": "45fe9d53c2dc3c0ef12fa0754aba63f57c7407fff5f9b040f10a5609535579cc"
+    },
+    {
+      "file": "e4-overlay-keyboard.png",
+      "sha256": "9c9ea1e68a204b86fa8131586b3c6b248b5c2843f94ef6baa1e3b29d864db5a9"
+    },
+    {
+      "file": "e6-f3-regression.png",
+      "sha256": "a6cdb7197cc908518144b4fb4348aaa776f497b6e7ba685ce0eed4ed2f91f819"
+    }
+  ]
+}

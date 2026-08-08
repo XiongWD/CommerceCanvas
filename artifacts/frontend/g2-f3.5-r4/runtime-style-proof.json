@@ -1,0 +1,14 @@
+{
+  "body": {
+    "bg": "rgb(12, 14, 18)",
+    "color": "rgb(180, 185, 193)"
+  },
+  "textInput": {
+    "bg": "rgb(38, 38, 38)",
+    "color": "rgb(250, 250, 250)"
+  },
+  "primaryButton": {
+    "bg": "rgb(37, 99, 235)",
+    "color": "rgb(255, 255, 255)"
+  }
+}

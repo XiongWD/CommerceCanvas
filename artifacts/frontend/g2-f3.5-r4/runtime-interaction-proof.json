@@ -1,0 +1,9 @@
+{
+  "dropdownMenu": {
+    "escapeClosesMenu": true
+  },
+  "dialog": {
+    "dialogVisible": true,
+    "dialogClosed": true
+  }
+}

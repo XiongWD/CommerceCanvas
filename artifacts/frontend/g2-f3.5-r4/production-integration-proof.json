@@ -1,0 +1,13 @@
+{
+  "statusTreatment": {
+    "hasStatusIndicator": true,
+    "siTone": "success",
+    "siEmphasis": "subtle",
+    "hasBadge": false
+  },
+  "foundationMarkers": {
+    "textCount": 7,
+    "statusIndicatorCount": 1,
+    "total": 8
+  }
+}
