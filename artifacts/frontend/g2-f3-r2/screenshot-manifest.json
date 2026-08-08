@@ -1,0 +1,38 @@
+{
+  "sourceCommit": "7d22335d212d3dba5dbc6a5f188f4f40ae593f8c",
+  "sourceTreeHash": "e77a7d6ae3249f17cd15c66a28e94d4fc7d1a6d7",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium (独立，非 IAB)",
+  "browserVersion": "143.0.7499.4",
+  "captureRules": "所有跨页操作点击真实 UI；禁止 history.pushState/PopStateEvent/page.goto(/jobs) 代替导航",
+  "screenshots": [
+    {
+      "file": "e1-artifact-lineage.png",
+      "sha256": "92ba2bd6d428460aa0a4e5eb8bc7825164690e2f7f9b265000d2ac7b5c6e1f58"
+    },
+    {
+      "file": "e2-artifact-metrics.png",
+      "sha256": "92ba2bd6d428460aa0a4e5eb8bc7825164690e2f7f9b265000d2ac7b5c6e1f58"
+    },
+    {
+      "file": "e3-cost-audit.png",
+      "sha256": "a479c2e5ec2b70947b0d23d4158b296f8bfcc0d8e8daec53cdf613ce7d44f100"
+    },
+    {
+      "file": "e4-node-source-audit.png",
+      "sha256": "eb2f26c5346d79525bcd0363cf8745ce283c1ff3c180cd5d047d216fecfc570a"
+    },
+    {
+      "file": "e5-cross-route-persistence.png",
+      "sha256": "6a13704213071bd622aa228d203eb05dd911aeb0292ba31a01054d46efc4feec"
+    },
+    {
+      "file": "e6-browser-back.png",
+      "sha256": "bc17437b3296ae3bd42afa7a4159f8f9bab1ff7b8094c8b06d7e9eab55be48be"
+    },
+    {
+      "file": "e7-qc-evidence.png",
+      "sha256": "8f542004f38e25cdbb42acb4bc3839ca218e7ea1c10b8dc16192f2b0e72247bc"
+    }
+  ]
+}

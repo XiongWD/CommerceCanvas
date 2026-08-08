@@ -1,0 +1,100 @@
+{
+  "normal": {
+    "generatedAt": "2026-08-08T10:53:44.315Z",
+    "scenario": "normal",
+    "jobId": "job-normal-001",
+    "nodes": {
+      "total": 7,
+      "withSourceEvents": 7,
+      "withStartedAt": 7,
+      "withAttemptCount": 7,
+      "withFindings": 6,
+      "missingIds": []
+    },
+    "artifacts": {
+      "total": 5,
+      "withSourceEvents": 5,
+      "withLineage": 4,
+      "missingIds": []
+    },
+    "qc": {
+      "total": 5,
+      "withEvidence": 5,
+      "withSourceEvents": 5,
+      "requiresReviewBalanced": true,
+      "missingIds": []
+    },
+    "cost": {
+      "estimatedCents": 21,
+      "actualCents": 19,
+      "deltaCents": -2,
+      "expectedActualCents": 19,
+      "balanced": true
+    },
+    "retries": {
+      "attempts": 0,
+      "lifecycleEvents": 0,
+      "attemptsBalanced": true
+    },
+    "routeUpgrades": {
+      "total": 0,
+      "withChineseReason": 0,
+      "withCostImpact": 0,
+      "withTimeImpact": 0
+    },
+    "crossPageTargets": {
+      "total": 5,
+      "resolvable": 5,
+      "missingIds": []
+    }
+  },
+  "risk": {
+    "generatedAt": "2026-08-08T10:53:44.312Z",
+    "scenario": "risk",
+    "jobId": "job-risk-002",
+    "nodes": {
+      "total": 7,
+      "withSourceEvents": 7,
+      "withStartedAt": 7,
+      "withAttemptCount": 7,
+      "withFindings": 5,
+      "missingIds": []
+    },
+    "artifacts": {
+      "total": 5,
+      "withSourceEvents": 5,
+      "withLineage": 4,
+      "missingIds": []
+    },
+    "qc": {
+      "total": 5,
+      "withEvidence": 5,
+      "withSourceEvents": 5,
+      "requiresReviewBalanced": true,
+      "missingIds": []
+    },
+    "cost": {
+      "estimatedCents": 21,
+      "actualCents": 36,
+      "deltaCents": 15,
+      "expectedActualCents": 36,
+      "balanced": true
+    },
+    "retries": {
+      "attempts": 1,
+      "lifecycleEvents": 3,
+      "attemptsBalanced": true
+    },
+    "routeUpgrades": {
+      "total": 1,
+      "withChineseReason": 1,
+      "withCostImpact": 1,
+      "withTimeImpact": 1
+    },
+    "crossPageTargets": {
+      "total": 5,
+      "resolvable": 5,
+      "missingIds": []
+    }
+  }
+}
