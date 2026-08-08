@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "a3c44dc9a00dd72888979118fe81cf5b3b032396",
+  "sourceTreeHash": "0febb2b984df6f8a2ff03d5b32a9d0cf3e70b3ef",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium (独立，非 IAB)",
+  "browserVersion": "143.0.7499.4",
+  "captureRules": "E1/E2 独立 context；expected 从真实 QC DOM 读取；Browser Back 用 page.goBack；初始 goto 仅建立测试起点",
+  "screenshots": [
+    {
+      "file": "e1-qc-evidence-exact-sequence.png",
+      "sha256": "799fc64110995b018cc3991ef1dbd168d49ba67812868202f984063b318520a5"
+    },
+    {
+      "file": "e2-browser-back-same-job.png",
+      "sha256": "71894dd11ecdeffe8bf9fa4565974b3695285ef6eb1eb84bf287a42cad11c08b"
+    }
+  ]
+}
