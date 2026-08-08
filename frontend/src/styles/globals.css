@@ -1,19 +1,10 @@
 /**
- * F3.5 R1 — Graphite Canvas × Astryx CSS Cascade（官方 setup 修正）
+ * F3.5 R2 — Graphite Canvas × Astryx CSS Cascade（dark theme 修正）。
  *
- * Astryx 官方 import order（README Quick Start）：
- *   reset.css  (@layer reset)      — 全局 box-sizing / margin reset
- *   astryx.css (@layer astryx-base) — Astryx component StyleX styles
- *   theme.css  (@layer astryx-theme)— Astryx theme tokens（@scope [data-astryx-theme]）
+ * Layer order（从低到高优先级）：
+ *   reset → tw-preflight → astryx-base → astryx-theme → graphite-base → tw-components → tw-utilities
  *
- * CommerceCanvas layer order（从低到高优先级）：
- *   reset            — Astryx core reset.css
- *   tw-preflight     — Tailwind v3 preflight（@tailwind base 放入显式 layer）
- *   astryx-base      — Astryx component styles
- *   astryx-theme     — Astryx theme tokens
- *   graphite-base    — CommerceCanvas Graphite Canvas 全局 base（body / scrollbar / mono）
- *   tw-components    — Tailwind v3 components
- *   tw-utilities     — Tailwind v3 utilities（最高优先级，布局工具类）
+ * 关键：color-scheme: dark 必须 unlayered（!important in layer 优先级反转，无法跨层覆盖）
  */
 @layer reset, tw-preflight, astryx-base, astryx-theme, graphite-base, tw-components, tw-utilities;
 
@@ -24,13 +15,23 @@
 @import '@astryxdesign/core/astryx.css';
 @import '@astryxdesign/theme-neutral/theme.css';
 
-/* Tailwind v3 preflight 放入显式 layer（避免 unlayered 覆盖 Astryx） */
+/* Tailwind v3 preflight 放入显式 layer */
 @layer tw-preflight {
   @tailwind base;
 }
 
 @tailwind components;
 @tailwind utilities;
+
+/* F3.5 R2 P0-1：强制 dark color-scheme（unlayered，优先级高于所有 layer）。
+   Astryx StyleX 编译的 component class 在 @layer astryx-base 嵌入了
+   color-scheme: light dark。CSS layer 中 !important 优先级反转（早 layer >
+   晚 layer），因此 graphite-base 内的 !important 无法覆盖 astryx-base。
+   Unlayered !important 优先级高于所有 layer 的 !important。 */
+[data-astryx-theme="neutral"],
+[data-astryx-theme="neutral"] * {
+  color-scheme: dark !important;
+}
 
 /* Graphite Canvas 全局 base */
 @layer graphite-base {
@@ -48,18 +49,15 @@
     font-size: 13px;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    /* 桌面生产工作台：允许内部纵向滚动，但 shell 自身满屏 */
     overflow: hidden;
   }
 
-  /* 等宽数据字体仅用于 ID / 时间 / 数值 / 事件码（FD-027 / 任务书 §7.2）*/
   .font-mono,
   .gc-data {
     font-family: var(--gc-font-mono);
     font-variant-numeric: tabular-nums;
   }
 
-  /* 克制滚动条，匹配 Graphite Canvas */
   *::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -77,20 +75,17 @@
 }
 
 @layer tw-components {
-  /* 内容分隔标题：低对比、无大标题（任务书 §7.2）*/
   .gc-section-label {
     @apply text-2xs font-medium uppercase tracking-wider;
     color: var(--gc-text-faint);
     letter-spacing: 0.08em;
   }
 
-  /* 极弱单像素分隔（任务书 §7.3：依赖分割线组织内容）*/
   .gc-divider {
     height: 1px;
     background: var(--gc-line);
   }
 
-  /* 状态点 */
   .gc-dot {
     @apply inline-block;
     width: 6px;
@@ -98,7 +93,6 @@
     border-radius: 9999px;
   }
 
-  /* 等宽数据 chip：仅用于 SKU / Trace ID / 数值等技术标识 */
   .gc-mono-chip {
     @apply font-mono text-2xs;
     color: var(--gc-text-lo);
@@ -107,7 +101,6 @@
     border: 1px solid var(--gc-line);
   }
 
-  /* 用户偏好减少动态时仍可理解状态（计划 §8 / prefers-reduced-motion）*/
   @media (prefers-reduced-motion: reduce) {
     * {
       transition-duration: 0.01ms !important;

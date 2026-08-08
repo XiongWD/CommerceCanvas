@@ -29,7 +29,7 @@ export { TabList, Tab } from './TabList';
 export type { TabListProps, TabProps, TabListSize, TabListLayout } from './TabList';
 
 export { Tooltip } from './Tooltip';
-export type { TooltipProps, TooltipFocusTrigger } from './Tooltip';
+export type { TooltipProps } from './Tooltip';
 
 export { Dialog, DialogHeader } from './Dialog';
 export type {

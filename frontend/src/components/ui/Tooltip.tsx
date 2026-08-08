@@ -1,53 +1,42 @@
-import { useState, type ReactNode } from 'react';
-
 /**
- * 极简中文 Tooltip。
- * 任务书 §6.1：全局图标栏悬停显示中文 Tooltip，无大段文字。
- * 不引入 Radix 以控制 F0 依赖（任务书 §四：未引入则不提前加）。
+ * F3.5 R2 §17-20 — Tooltip B Wrapper（唯一 canonical path）。
+ *
+ * 基于 Astryx Tooltip，提供兼容 adapter 支持 F0-F3 旧 API：
+ *   - 旧 API: label + side ('right'|'top'|'bottom')
+ *   - 新 API: content + placement ('start'|'end'|'above'|'below')
+ *
+ * F4+ canonical import: import { Tooltip } from '@/components/ui/Tooltip'
+ * F0-F3 consumers 不需要改（label/side 自动映射）。
  */
-interface TooltipProps {
-  label: string;
+import { Tooltip as AstryxTooltip } from '@astryxdesign/core/Tooltip';
+import type { ReactNode } from 'react';
+import type { LayerPlacement } from '@astryxdesign/core/Layer';
+
+/** F0-F3 旧 side 值 → Astryx placement 映射 */
+const SIDE_TO_PLACEMENT: Record<string, LayerPlacement> = {
+  right: 'end',
+  top: 'above',
+  bottom: 'below',
+};
+
+export interface TooltipProps {
+  /** 旧 API alias for content（F0-F3 兼容） */
+  label?: string;
+  /** 新 API（Astryx canonical） */
+  content?: ReactNode;
   children: ReactNode;
+  /** 旧 API: 'right'|'top'|'bottom'（映射到 Astryx placement） */
   side?: 'right' | 'top' | 'bottom';
+  /** 新 API: Astryx placement */
+  placement?: LayerPlacement;
 }
 
-export function Tooltip({ label, children, side = 'right' }: TooltipProps) {
-  const [open, setOpen] = useState(false);
-
-  const positionClass =
-    side === 'right'
-      ? 'left-full top-1/2 -translate-y-1/2 ml-2'
-      : side === 'top'
-        ? 'bottom-full left-1/2 -translate-x-1/2 mb-2'
-        : 'top-full left-1/2 -translate-x-1/2 mt-2';
-
+export function Tooltip({ label, content, children, side, placement }: TooltipProps) {
+  const resolvedContent = content ?? label;
+  const resolvedPlacement = placement ?? (side ? SIDE_TO_PLACEMENT[side] : 'end');
   return (
-    <span
-      className="relative inline-flex"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
-      onBlur={() => setOpen(false)}
-    >
+    <AstryxTooltip content={resolvedContent} placement={resolvedPlacement}>
       {children}
-      {open && (
-        <span
-          role="tooltip"
-          className={`pointer-events-none absolute z-50 whitespace-nowrap ${positionClass}`}
-          style={{
-            background: 'var(--gc-bg-elev-2)',
-            color: 'var(--gc-text-hi)',
-            border: '1px solid var(--gc-line-strong)',
-            padding: '4px 8px',
-            fontSize: '11px',
-            lineHeight: '16px',
-            borderRadius: '2px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-          }}
-        >
-          {label}
-        </span>
-      )}
-    </span>
+    </AstryxTooltip>
   );
 }
