@@ -52,12 +52,12 @@
    color-icon-accent / color-border-blue 也同步到 Graphite blue，避免 selected
    ring / icon 出现中性灰与蓝色不一致。 */
 [data-astryx-theme="neutral"] {
-  --color-accent: var(--gc-accent-blue);
+  --color-accent: #2563eb;
   --color-accent-muted: var(--gc-accent-blue-soft);
-  --color-text-accent: var(--gc-accent-blue);
-  --color-icon-accent: var(--gc-accent-blue);
-  --color-border-blue: var(--gc-accent-blue);
-  --color-on-accent: var(--gc-text-hi);
+  --color-text-accent: #4d8dff;
+  --color-icon-accent: #4d8dff;
+  --color-border-blue: var(--gc-accent-blue-line);
+  --color-on-accent: #ffffff;
 }
 
 /* Graphite Canvas 全局 base */
