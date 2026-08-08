@@ -1,0 +1,32 @@
+{
+  "sourceCommit": "06e401976f0c50927a0adab45012a3360a974718",
+  "sourceTreeHash": "655b7e1a1af0b3b343daf2d0f966cb1928807a3e",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium 143.0.7499.4",
+  "screenshots": [
+    {
+      "file": "e1-foundation-dark-overview.png",
+      "sha256": "cf0e49bcdfbe17889062c8ad13ea6d14cfbe5f5483e0788830d77e4e70194516"
+    },
+    {
+      "file": "e2-dark-form-typography.png",
+      "sha256": "cf0e49bcdfbe17889062c8ad13ea6d14cfbe5f5483e0788830d77e4e70194516"
+    },
+    {
+      "file": "e3-table-wrapper-density.png",
+      "sha256": "c3288569f94b876036b1a25ab867ba90d71bc3b6dbda423d50821496b4537c32"
+    },
+    {
+      "file": "e4-overlay-interactions.png",
+      "sha256": "1dce77909bdcdc17291a4dc305ace89ad663e7e0fe670d37f308184eb803a098"
+    },
+    {
+      "file": "e5-production-surface.png",
+      "sha256": "bd591c6dadd916aaa5745247fec437160a0775bceb58772fb9663232eee78253"
+    },
+    {
+      "file": "e6-f3-regression.png",
+      "sha256": "af4711468260b663c41c8cfd16bba7fe7481a1f130c5f85de2bd29d32574e6e6"
+    }
+  ]
+}

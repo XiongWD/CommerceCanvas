@@ -1,0 +1,20 @@
+{
+  "popover": {
+    "opened": true,
+    "contentVisible": true,
+    "closedAfterEscape": true
+  },
+  "dropdownMenu": {
+    "opened": true,
+    "itemVisible": true,
+    "closedAfterEscape": true
+  },
+  "dialog": {
+    "triggerFocused": true,
+    "dialogVisible": true,
+    "focusInside": true,
+    "focusContained": true,
+    "dialogClosed": true,
+    "focusReturned": true
+  }
+}
