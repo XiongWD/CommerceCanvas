@@ -35,6 +35,13 @@ export interface LiveIntelligenceApi {
   simulatorStatus: SimulatorStatus;
   speed: 0.5 | 1 | 2;
   scenarioId: ScenarioId;
+  /**
+   * F3-R2 P1-2：Simulator 实例稳定标识（test-only identity）。
+   * 与 useRef 持有的 EventSimulator 实例生命周期绑定：同一 Provider 期间不变，
+   * 跨路由切换也保持（证明 Router 切页不重建 Simulator）。
+   * 仅用于读取 identity，不改变生产状态。
+   */
+  simulatorInstanceId: string;
   start: () => void;
   pause: () => void;
   resume: () => void;
@@ -61,6 +68,8 @@ export function useLiveIntelligence(initial: ScenarioId = 'normal'): LiveIntelli
   const [highlightedSequence, setHighlightedSequence] = useState<number | undefined>(undefined);
 
   const simulatorRef = useRef<EventSimulator | null>(null);
+  // F3-R2 P1-2：simulatorInstanceId 与 simulatorRef 生命周期绑定（同实例不变，跨路由保持）
+  const instanceIdRef = useRef<string>('');
   if (simulatorRef.current === null) {
     simulatorRef.current = new EventSimulator({
       onEvent: (event) => dispatch({ type: 'apply_event', event }),
@@ -81,6 +90,10 @@ export function useLiveIntelligence(initial: ScenarioId = 'normal'): LiveIntelli
       },
     });
     simulatorRef.current.load(initial);
+    // F3-R2 P1-2：为该 Simulator 实例分配稳定标识（crypto.randomUUID 在 jsdom/浏览器均可用）
+    instanceIdRef.current = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `sim-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
   useEffect(() => {
@@ -136,6 +149,8 @@ export function useLiveIntelligence(initial: ScenarioId = 'normal'): LiveIntelli
     simulatorStatus,
     speed,
     scenarioId,
+    // F3-R2 P1-2：test-only identity（读取，不改变生产状态）
+    simulatorInstanceId: instanceIdRef.current,
     start,
     pause,
     resume,

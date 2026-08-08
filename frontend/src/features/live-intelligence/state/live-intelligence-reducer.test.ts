@@ -165,12 +165,15 @@ describe('场景 A 正常完成（业务事实）', () => {
     expect(a.events.map((e) => e.eventId)).toEqual(b.events.map((e) => e.eventId));
   });
 
-  it('终态 completed，findings=24，risks=3，artifacts=1，recipe=7/7', () => {
+  it('终态 completed，findings=24，risks=3，artifacts=5(含 lineage)，recipe=7/7', () => {
     const s = dispatchAll(buildNormalScenario().events, 'normal', 'job-normal-001');
     expect(s.jobStatus).toBe('completed');
     expect(s.summaryMetrics.findings).toBe(24);
     expect(s.summaryMetrics.risks).toBe(3);
-    expect(s.summaryMetrics.artifacts).toBe(1);
+    // F3-R2 P0-2：summaryMetrics.artifacts 与 artifactMetrics.total 单一口径（5 个含 lineage）
+    expect(s.summaryMetrics.artifacts).toBe(5);
+    expect(s.artifactMetrics.total).toBe(5);
+    expect(s.artifactMetrics.intermediate + s.artifactMetrics.final).toBe(s.artifactMetrics.total);
     // 7 字段全 true
     expect(Object.values(s.recipe).every(Boolean)).toBe(true);
   });

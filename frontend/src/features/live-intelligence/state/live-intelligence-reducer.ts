@@ -16,6 +16,7 @@ import type {
   ArtifactAuditRecord,
   RetryAttemptState,
   RouteUpgradeRecord,
+  ArtifactMetrics,
 } from '@/types/live-event';
 import { shouldShowInTrace } from '../mappings/event-presentation-map';
 import {
@@ -424,6 +425,10 @@ function applyOneImmutable(state: LiveIntelligenceState, event: LiveEventEnvelop
   next = applyArtifactAudit(next, event);
   next = applyRetryAttempt(next, event);
   next = applyRouteUpgrade(next, event);
+  // F3-R2 P0-2：artifactAudit 变更后同步派生唯一权威 artifactMetrics
+  if (next.artifactAudit !== state.artifactAudit) {
+    next.artifactMetrics = deriveArtifactMetrics(next.artifactAudit);
+  }
 
   // —— 任务终态 ——
   if (event.kind === 'job.completed') {
@@ -439,6 +444,24 @@ function applyOneImmutable(state: LiveIntelligenceState, event: LiveEventEnvelop
   }
 
   return next;
+}
+
+/**
+ * F3-R2 P0-2：从 artifactAudit 派生唯一权威 Artifact Metrics。
+ * 所有展示产物数量的地方必须读这里的结果，不得各自 count。
+ *   total       = artifactAudit 长度
+ *   intermediate = role === 'intermediate'
+ *   final        = role === 'final'
+ */
+function deriveArtifactMetrics(audit: Record<string, ArtifactAuditRecord>): ArtifactMetrics {
+  const records = Object.values(audit);
+  let intermediate = 0;
+  let final = 0;
+  for (const r of records) {
+    if (r.role === 'final') final += 1;
+    else intermediate += 1;
+  }
+  return { total: records.length, intermediate, final };
 }
 
 /**
@@ -461,8 +484,23 @@ function applyStageAudit(state: LiveIntelligenceState, event: LiveEventEnvelope)
 
   let updated: StageAuditState | null = null;
   const touch = () => {
-    if (!updated) updated = { ...audit, artifactIds: audit.artifactIds.slice() };
+    if (!updated) updated = {
+      ...audit,
+      artifactIds: audit.artifactIds.slice(),
+      sourceEventIds: audit.sourceEventIds.slice(),
+      sourceSequences: audit.sourceSequences.slice(),
+    };
   };
+
+  // F3-R2 P0-4：归属该 stage 的真实事件累计（去重）
+  // 任何带 stageId 的事件都算该 stage 的 source event（包括 retry.*）
+  if (!audit.sourceEventIds.includes(event.eventId)) {
+    touch();
+    updated!.sourceEventIds.push(event.eventId);
+    if (!updated!.sourceSequences.includes(event.sequence)) {
+      updated!.sourceSequences.push(event.sequence);
+    }
+  }
 
   switch (event.kind) {
     case 'stage.started': {
@@ -538,12 +576,19 @@ function applyStageAudit(state: LiveIntelligenceState, event: LiveEventEnvelope)
 }
 
 /**
- * F3-R1 §四：Artifact 审计记录归并。
- * 修复 R0 字段错配（producer 用 event.artifactRefs，projection 错读 metrics.artifactRefs）：
- * 统一读 event.artifactRefs；归并为权威 ArtifactAuditRecord，含 lineage。
+ * F3-R1 §四 / F3-R2 P0-1：Artifact 审计记录归并。
  *
- * artifact.created  → 新建记录（若 metrics.artifactType / version / parentArtifactIds / linkedAssetIds 存在则用之）
- * artifact.linked   → 在已有记录上追加 linkedAssetIds（lineage 衍生关系）
+ * F3-R2 P0-1 关键修复：
+ *   producer（生产）vs linked（关联）必须区分。
+ *   - artifact.created 才设置 producerStageId / producerEventId / role。
+ *     producer 由真正生成/定稿该 Artifact 的事件决定。
+ *   - artifact.linked 只追加 linkedAssetIds / parentArtifactIds（lineage 衍生关系），
+ *     绝不覆盖 producerStageId / producerEventId / role。
+ *   - 若 artifact.linked 先于 artifact.created 到达（仅 producer 未定），producer 暂为 undefined，
+ *     后续 artifact.created 到达时补齐。
+ *
+ * role 语义：intermediate（中间产物）/ final（最终产物）。
+ *   默认：type === 'Creative Recipe' 或 metrics.artifactRole === 'final' → final；否则 intermediate。
  */
 function applyArtifactAudit(state: LiveIntelligenceState, event: LiveEventEnvelope): LiveIntelligenceState {
   const m = (event.metrics ?? {}) as Record<string, unknown>;
@@ -555,17 +600,40 @@ function applyArtifactAudit(state: LiveIntelligenceState, event: LiveEventEnvelo
     const statusZh = typeof m.artifactStatus === 'string' ? m.artifactStatus : '已生成';
     const parents = Array.isArray(m.parentArtifactIds) ? (m.parentArtifactIds as string[]) : [];
     const linked = Array.isArray(m.linkedAssetIds) ? (m.linkedAssetIds as string[]) : [];
+    // role：优先 metrics.artifactRole，否则 type==='Creative Recipe' → final，否则 intermediate
+    const role: 'intermediate' | 'final' =
+      m.artifactRole === 'final' ? 'final' :
+      m.artifactRole === 'intermediate' ? 'intermediate' :
+      typeZh === 'Creative Recipe' ? 'final' : 'intermediate';
     for (const aid of event.artifactRefs) {
-      if (!audit[aid]) {
+      const existing = audit[aid];
+      if (existing) {
+        // artifact.created 到达但记录已存在（可能由先前 linked 创建）：
+        // 补齐 producer（linked 不可覆盖 producer，但 created 才是权威生产事件）
+        audit[aid] = {
+          ...existing,
+          producerStageId: existing.producerStageId ?? event.stageId,
+          producerEventId: existing.producerEventId || event.eventId,
+          producerSequence: existing.producerSequence || event.sequence,
+          // created 权威覆盖 nameZh/type/status（生产语义优先于 linked）
+          nameZh: event.titleZh,
+          type: typeZh,
+          status: statusZh,
+          role,
+        };
+      } else {
         const rec: ArtifactAuditRecord = {
           artifactId: aid,
           nameZh: event.titleZh,
           type: typeZh,
-          generatedByStage: event.stageId,
+          producerStageId: event.stageId,
+          producerEventId: event.eventId,
+          producerSequence: event.sequence,
           createdAt: event.occurredAt,
           sourceEventId: event.eventId,
           sourceSequence: event.sequence,
           version,
+          role,
           linkedAssetIds: linked.slice(),
           parentArtifactIds: parents.slice(),
           status: statusZh,
@@ -583,22 +651,27 @@ function applyArtifactAudit(state: LiveIntelligenceState, event: LiveEventEnvelo
     for (const aid of event.artifactRefs) {
       const existing = audit[aid];
       if (existing) {
+        // linked 只追加 lineage，不覆盖 producer / role（F3-R2 P0-1 核心）
         const mergedLinked = [...existing.linkedAssetIds];
         for (const l of linked) if (!mergedLinked.includes(l)) mergedLinked.push(l);
         const mergedParents = [...existing.parentArtifactIds];
         for (const p of parents) if (!mergedParents.includes(p)) mergedParents.push(p);
         audit[aid] = { ...existing, linkedAssetIds: mergedLinked, parentArtifactIds: mergedParents };
       } else {
-        // 新建一个 link 记录（artifact.linked 可能在 created 之前/之后）
+        // artifact.linked 先于 created 到达：producer 暂为 undefined（待 created 补齐）
+        // 不设 producerEventId（空串表示未定），让 created 后续补齐
         audit[aid] = {
           artifactId: aid,
           nameZh: typeof m.artifactName === 'string' ? m.artifactName : aid,
           type: typeof m.artifactType === 'string' ? m.artifactType : 'linked',
-          generatedByStage: event.stageId,
+          producerStageId: undefined,
+          producerEventId: '',
+          producerSequence: 0,
           createdAt: event.occurredAt,
           sourceEventId: event.eventId,
           sourceSequence: event.sequence,
           version: typeof m.version === 'string' ? m.version : 'v1',
+          role: 'intermediate',
           linkedAssetIds: linked.slice(),
           parentArtifactIds: parents.slice(),
           status: '已链接',

@@ -112,7 +112,8 @@ function projectOverview(
     imageProgress: { processed: live.processedImages, total: live.totalImages },
     findings: live.summaryMetrics.findings,
     risks: live.summaryMetrics.risks,
-    artifacts: live.summaryMetrics.artifacts,
+    // F3-R2 P0-2：使用唯一权威 artifactMetrics，不再用 summaryMetrics.artifacts（口径冲突）
+    artifacts: live.artifactMetrics.total,
     requiresAction: live.requiresAction,
     connection: selectConnectionZh(live).labelZh,
   };
@@ -183,18 +184,21 @@ function projectTimeline(live: LiveIntelligenceState): JobTimelineItem[] {
 }
 
 /**
- * 产物投影（F3-R1：读权威 artifactAudit，含 lineage）。
+ * 产物投影（F3-R1 / F3-R2 P0-1：读权威 artifactAudit，含 lineage 与真实 producer）。
  * 不再扫 trace 错读 metrics.artifactRefs；artifactAudit 由 reducer 归并 event.artifactRefs。
+ * F3-R2 P0-1：producer 来自 producerStageId（仅 artifact.created 设置，linked 不覆盖）。
  */
 function projectArtifacts(live: LiveIntelligenceState): ArtifactProjection[] {
   const records = Object.values(live.artifactAudit);
-  // 按 sourceSequence 排序，保证稳定展示顺序
-  records.sort((a, b) => a.sourceSequence - b.sourceSequence);
+  // 按 producerSequence 排序，保证稳定展示顺序
+  records.sort((a, b) => a.producerSequence - b.producerSequence);
   return records.map((a) => ({
     artifactId: a.artifactId,
     nameZh: a.nameZh,
     type: a.type,
-    generatedByStage: a.generatedByStage,
+    // F3-R2 P0-1：producer = 真实生产阶段（producerStageId），非 linked stage
+    generatedByStage: a.producerStageId,
+    role: a.role,
     createdAt: a.createdAt,
     status: a.status,
     version: a.version,
@@ -324,6 +328,8 @@ export function projectJobDetail(
     nodes: projectNodes(live),
     timelineItems: projectTimeline(live),
     artifacts: projectArtifacts(live),
+    // F3-R2 P0-2：唯一权威 artifactMetrics，与 Overview / Persistent Task / Audit 同源
+    artifactMetrics: live.artifactMetrics,
     qcResults: projectQCResults(live),
     costSummary: projectCostSummary(live),
     retryRecords: projectRetryRecords(live),

@@ -37,7 +37,10 @@ export interface JobAuditResult {
   cost: {
     estimatedCents: number;
     actualCents: number;
-    eventTotalCents: number;
+    /** F3-R2 P0-3：Σ deltaCents（成本变更累计） */
+    deltaCents: number;
+    /** F3-R2 P0-3：expectedActual = estimated + Σ delta；balanced = actual === expectedActual */
+    expectedActualCents: number;
     balanced: boolean;
   };
   retries: {
@@ -64,10 +67,12 @@ export interface JobAuditResult {
  */
 export function generateJobAudit(state: LiveIntelligenceState): JobAuditResult {
   // —— 节点（来自 stageAudit） ——
+  // F3-R2 P0-4：withSourceEvents 由真实 sourceEventIds.length > 0 派生，不再硬编码 = total
   const stageIds = state.stageOrder;
   let nodesWithStartedAt = 0;
   let nodesWithAttemptCount = 0;
   let nodesWithFindings = 0;
+  let nodesWithSourceEvents = 0;
   const nodeMissingIds: string[] = [];
   for (const sid of stageIds) {
     const audit = state.stageAudit[sid];
@@ -78,6 +83,9 @@ export function generateJobAudit(state: LiveIntelligenceState): JobAuditResult {
     if (audit.firstStartedAt) nodesWithStartedAt += 1;
     if (audit.attemptCount > 0) nodesWithAttemptCount += 1;
     if (audit.findingsProduced > 0) nodesWithFindings += 1;
+    // F3-R2 P0-4：真实 source event 累计判定（非常量）
+    if (audit.sourceEventIds.length > 0) nodesWithSourceEvents += 1;
+    else if (!nodeMissingIds.includes(sid)) nodeMissingIds.push(sid);
   }
 
   // —— Artifact（来自 artifactAudit，含 lineage） ——
@@ -115,9 +123,11 @@ export function generateJobAudit(state: LiveIntelligenceState): JobAuditResult {
   const requiresReviewBalanced = qcBooleanOk;
 
   // —— 成本（扫 cost.* 事件） ——
+  // F3-R2 P0-3：balanced 必须真实对账 actualCents === estimatedCents + Σ deltaCents。
+  //   旧实现 Math.abs(actual - est - (actual - est)) >= 0 恒为 true（伪 audit）。
   let estimatedCents = 0;
   let actualCents = 0;
-  let eventTotalCents = 0;
+  let sumDeltaCents = 0;
   let hasCostEvents = false;
   for (const t of state.trace) {
     if (t.kind !== 'cost.estimate.created' && t.kind !== 'cost.updated') continue;
@@ -126,22 +136,13 @@ export function generateJobAudit(state: LiveIntelligenceState): JobAuditResult {
     const est = typeof m.estimatedCents === 'number' ? m.estimatedCents : undefined;
     const act = typeof m.actualCents === 'number' ? m.actualCents : undefined;
     const delta = typeof m.deltaCents === 'number' ? m.deltaCents : undefined;
-    if (est !== undefined) {
-      estimatedCents = est;
-      eventTotalCents += est;
-    }
-    if (act !== undefined) {
-      actualCents = act;
-      eventTotalCents += act;
-    }
-    if (delta !== undefined) eventTotalCents += delta;
+    if (est !== undefined) estimatedCents = est;
+    if (act !== undefined) actualCents = act;
+    if (delta !== undefined) sumDeltaCents += delta;
   }
-  // 对账：估算/实际与事件给出的值一致（允许 delta 推导）
-  const costBalanced =
-    hasCostEvents &&
-    estimatedCents >= 0 &&
-    actualCents >= 0 &&
-    Math.abs(actualCents - estimatedCents - (actualCents - estimatedCents)) >= 0;
+  // 真实对账：expectedActual = estimated + Σ delta；balanced = actual === expectedActual（整数严格比较）
+  const expectedActualCents = estimatedCents + sumDeltaCents;
+  const costBalanced = hasCostEvents && actualCents === expectedActualCents;
 
   // —— 重试（来自 retryAttempts，归并后的 attempt 数） ——
   const retryAttemptList = Object.values(state.retryAttempts);
@@ -185,7 +186,8 @@ export function generateJobAudit(state: LiveIntelligenceState): JobAuditResult {
     jobId: state.jobId,
     nodes: {
       total: stageIds.length,
-      withSourceEvents: stageIds.length, // stageAudit 全部由事件归并而来
+      // F3-R2 P0-4：真实 source event 累计派生，不再硬编码 = total
+      withSourceEvents: nodesWithSourceEvents,
       withStartedAt: nodesWithStartedAt,
       withAttemptCount: nodesWithAttemptCount,
       withFindings: nodesWithFindings,
@@ -207,7 +209,8 @@ export function generateJobAudit(state: LiveIntelligenceState): JobAuditResult {
     cost: {
       estimatedCents,
       actualCents,
-      eventTotalCents,
+      deltaCents: sumDeltaCents,
+      expectedActualCents,
       balanced: costBalanced,
     },
     retries: {

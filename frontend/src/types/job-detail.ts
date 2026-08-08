@@ -27,6 +27,7 @@ export interface JobOverviewProjection {
   imageProgress: { processed: number; total: number };
   findings: number;
   risks: number;
+  /** F3-R2 P0-2：总产物数（来自唯一权威 artifactMetrics.total） */
   artifacts: number;
   requiresAction: boolean;
   connection: string;
@@ -65,12 +66,16 @@ export interface JobTimelineItem {
 /**
  * 产物投影（去重，含 lineage）。
  * F3-R1 §四：sourceEventId 必填非空；parentArtifactIds 表达谱系。
+ * F3-R2 P0-1：generatedByStage = producerStageId（真实生产阶段，非 linked stage）；role 区分中间/最终。
  */
 export interface ArtifactProjection {
   artifactId: string;
   nameZh: string;
   type: string;
+  /** F3-R2 P0-1：真实生产阶段（producerStageId） */
   generatedByStage?: string;
+  /** F3-R2 P0-2：intermediate / final */
+  role: 'intermediate' | 'final';
   createdAt: string;
   status: string;
   version: string;
@@ -153,6 +158,8 @@ export interface JobDetailProjection {
   nodes: JobNodeProjection[];
   timelineItems: JobTimelineItem[];
   artifacts: ArtifactProjection[];
+  /** F3-R2 P0-2：唯一权威 artifactMetrics（与 Overview / Persistent Task / Audit 同源） */
+  artifactMetrics: { total: number; intermediate: number; final: number };
   qcResults: QCResultProjection[];
   costSummary: CostSummaryProjection;
   retryRecords: RetryProjection[];

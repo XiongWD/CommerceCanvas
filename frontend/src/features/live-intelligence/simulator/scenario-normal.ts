@@ -77,6 +77,23 @@ export function buildNormalScenario(): ScenarioScript {
         summaryZh: '可定位到对应图片',
         evidenceRefs: [{ assetId: 'img-01', layer: 'subject' }],
       });
+      // F3-R2 P0-1：用途分类结果由 classify_purpose 真实生产（producer = classify_purpose）
+      emit({
+        kind: 'artifact.created',
+        stageId: 'classify_purpose',
+        titleZh: '图片用途分类结果',
+        summaryZh: '12 张图片 · 4 种用途分类完成',
+        artifactRefs: ['art-purpose'],
+        metrics: {
+          artifactType: '用途分类结果',
+          version: 'v1',
+          artifactStatus: '已生成',
+          artifactRole: 'intermediate',
+          linkedAssetIds: ['img-01', 'img-02', 'img-03', 'img-04', 'img-05', 'img-06', 'img-07', 'img-08', 'img-09', 'img-10', 'img-11', 'img-12'],
+          parentArtifactIds: [],
+        },
+        resultRefs: { classifiedAssetIds: ['img-01', 'img-02', 'img-03', 'img-04', 'img-05', 'img-06', 'img-07', 'img-08', 'img-09', 'img-10', 'img-11', 'img-12'] },
+      });
     },
     onComplete: (emit) => {
       emit({
@@ -102,6 +119,22 @@ export function buildNormalScenario(): ScenarioScript {
           { assetId: 'img-01', layer: 'subject' },
           { assetId: 'img-01', layer: 'safe' },
         ],
+      });
+      // F3-R2 P0-1：Evidence 索引由 segment_subject 真实生产（producer = segment_subject）
+      emit({
+        kind: 'artifact.created',
+        stageId: 'segment_subject',
+        titleZh: 'Evidence 索引',
+        summaryZh: '商品主体与背景分离证据索引',
+        artifactRefs: ['art-evidence'],
+        metrics: {
+          artifactType: 'Evidence 索引',
+          version: 'v1',
+          artifactStatus: '已生成',
+          artifactRole: 'intermediate',
+          linkedAssetIds: ['img-01', 'img-02'],
+          parentArtifactIds: ['art-purpose'],
+        },
       });
     },
   });
@@ -151,6 +184,23 @@ export function buildNormalScenario(): ScenarioScript {
         titleZh: '已将 7 处竞品标识加入禁止继承清单',
         summaryZh: '生成时不会复用这些区域',
       });
+      // F3-R2 P0-1：风险排除清单由 detect_text_logo 真实生产（producer = detect_text_logo）
+      emit({
+        kind: 'artifact.created',
+        stageId: 'detect_text_logo',
+        titleZh: '风险排除清单',
+        summaryZh: '7 处品牌资产 + 3 项普通风险排除',
+        artifactRefs: ['art-risk-list'],
+        metrics: {
+          artifactType: '风险排除清单',
+          version: 'v1',
+          artifactStatus: '已生成',
+          artifactRole: 'intermediate',
+          linkedAssetIds: ['img-01', 'img-03', 'img-08', 'img-12'],
+          parentArtifactIds: ['art-evidence'],
+        },
+        resultRefs: { riskItemIds: ['risk-logo', 'risk-model', 'risk-packaging', 'risk-inear', 'risk-exclusive-feature'] },
+      });
     },
     onComplete: (emit) => {
       // R1 修复：正常场景 0 项结构冲突
@@ -196,6 +246,23 @@ export function buildNormalScenario(): ScenarioScript {
         titleZh: '该构图适合作为自有商品场景卖点图模板',
         summaryZh: '保留构图与光线语言',
       });
+      // F3-R2 P0-1：构图聚类由 extract_composition 真实生产（producer = extract_composition）
+      emit({
+        kind: 'artifact.created',
+        stageId: 'extract_composition',
+        titleZh: '构图聚类',
+        summaryZh: '4 种构图模式聚类结果',
+        artifactRefs: ['art-clusters'],
+        metrics: {
+          artifactType: '构图聚类',
+          version: 'v1',
+          artifactStatus: '已生成',
+          artifactRole: 'intermediate',
+          linkedAssetIds: ['img-01', 'img-03', 'img-05', 'img-07'],
+          parentArtifactIds: ['art-evidence'],
+        },
+        resultRefs: { clusterIds: ['cluster-a', 'cluster-b', 'cluster-c', 'cluster-d'] },
+      });
     },
     onComplete: (emit) => {
       emit({
@@ -230,7 +297,9 @@ export function buildNormalScenario(): ScenarioScript {
   });
 
   // 阶段 7：形成套图 Creative Recipe —— R1：7 字段全部标记
-  // F3-R1 §四：真正产生 Artifact lineage（多 Artifact + 父子关系）
+  // F3-R2 P0-1：上游 Artifact 已由各自阶段真实生产（classify_purpose/segment_subject/
+  //   extract_composition/detect_text_logo）。本阶段只生产最终 Creative Recipe（final），
+  //   其 parentArtifactIds 指向真实上游 Artifact，形成可对账 lineage。
   emitStage(ctx, out, 'build_recipe', {
     durationSec: 6,
     inline: (emit) => {
@@ -249,68 +318,8 @@ export function buildNormalScenario(): ScenarioScript {
         metrics: { recipeFields: ['ratio', 'background', 'lighting'] },
         resultRefs: { recipeFields: ['ratio', 'background', 'lighting'] },
       });
-      // F3-R1：Artifact 1 — 用途分类结果（由 classify_purpose 产出，此处引用为 lineage 根）
-      // 用 artifact.linked 建立：用途分类结果 → 构图聚类 → 风险排除 → Recipe 谱系
-      emit({
-        kind: 'artifact.linked',
-        stageId: 'build_recipe',
-        titleZh: '用途分类结果已纳入 Recipe 谱系',
-        summaryZh: '12 张图片用途分类作为 Recipe 的输入',
-        artifactRefs: ['art-purpose'],
-        metrics: {
-          artifactName: '图片用途分类结果',
-          artifactType: '用途分类结果',
-          version: 'v1',
-          linkedAssetIds: ['img-01', 'img-02', 'img-03', 'img-04', 'img-05', 'img-06', 'img-07', 'img-08', 'img-09', 'img-10', 'img-11', 'img-12'],
-          parentArtifactIds: [],
-        },
-      });
-      // F3-R1：Artifact 2 — Evidence 索引
-      emit({
-        kind: 'artifact.linked',
-        stageId: 'build_recipe',
-        titleZh: 'Evidence 索引已纳入 Recipe 谱系',
-        summaryZh: '商品主体与背景分离证据索引',
-        artifactRefs: ['art-evidence'],
-        metrics: {
-          artifactName: 'Evidence 索引',
-          artifactType: 'Evidence 索引',
-          version: 'v1',
-          linkedAssetIds: ['img-01', 'img-02'],
-          parentArtifactIds: ['art-purpose'],
-        },
-      });
-      // F3-R1：Artifact 3 — 构图聚类
-      emit({
-        kind: 'artifact.linked',
-        stageId: 'build_recipe',
-        titleZh: '构图聚类已纳入 Recipe 谱系',
-        summaryZh: '4 种构图模式聚类结果',
-        artifactRefs: ['art-clusters'],
-        metrics: {
-          artifactName: '构图聚类',
-          artifactType: '构图聚类',
-          version: 'v1',
-          linkedAssetIds: ['img-01', 'img-03', 'img-05', 'img-07'],
-          parentArtifactIds: ['art-evidence'],
-        },
-      });
-      // F3-R1：Artifact 4 — 风险排除清单
-      emit({
-        kind: 'artifact.linked',
-        stageId: 'build_recipe',
-        titleZh: '风险排除清单已纳入 Recipe 谱系',
-        summaryZh: '7 处品牌资产 + 3 项普通风险排除',
-        artifactRefs: ['art-risk-list'],
-        metrics: {
-          artifactName: '风险排除清单',
-          artifactType: '风险排除清单',
-          version: 'v1',
-          linkedAssetIds: ['img-01', 'img-03', 'img-08', 'img-12'],
-          parentArtifactIds: ['art-evidence'],
-        },
-      });
-      // F3-R1：Artifact 5 — Creative Recipe（最终，父 = 聚类 + 风险清单）
+      // F3-R2 P0-1：最终 Creative Recipe 由 build_recipe 生产（producer = build_recipe, role = final）
+      // parentArtifactIds = 真实上游（构图聚类 + 风险排除清单），可对账 lineage
       emit({
         kind: 'artifact.created',
         stageId: 'build_recipe',
@@ -322,6 +331,7 @@ export function buildNormalScenario(): ScenarioScript {
           artifactType: 'Creative Recipe',
           version: 'v1',
           artifactStatus: '已生成',
+          artifactRole: 'final',
           linkedAssetIds: ['img-01'],
           parentArtifactIds: ['art-clusters', 'art-risk-list'],
         },

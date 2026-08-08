@@ -50,6 +50,10 @@ export function PersistentTaskBar({ live }: { live: LiveIntelligenceApi }) {
   return (
     <footer
       data-testid="persistent-task-bar"
+      data-received-count={state.receivedCount}
+      data-run-id={state.runId}
+      data-simulator-identity={live.simulatorInstanceId}
+      data-job-status={state.jobStatus}
       className="relative flex shrink-0 flex-col"
       style={{
         borderTop: '1px solid var(--gc-line)',

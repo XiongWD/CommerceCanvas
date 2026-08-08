@@ -142,7 +142,10 @@ export function JobDetailPage() {
           <Metric label="图片"><span className="gc-data">{o.imageProgress.processed}/{o.imageProgress.total}</span></Metric>
           <Metric label="发现"><span className="gc-data">{o.findings}</span></Metric>
           <Metric label="风险"><span className="gc-data" style={{ color: o.risks ? 'var(--gc-accent-amber)' : undefined }}>{o.risks}</span></Metric>
-          <Metric label="产物"><span className="gc-data">{o.artifacts}</span></Metric>
+          <Metric label="产物">
+            <span className="gc-data">{detail.artifactMetrics.total}</span>
+            <span className="gc-data" style={{ color: 'var(--gc-text-faint)' }}>（中间 {detail.artifactMetrics.intermediate} · 最终 {detail.artifactMetrics.final}）</span>
+          </Metric>
           <Metric label="已用时"><span className="gc-data">{formatElapsed(o.elapsedSeconds)}</span></Metric>
           <Metric label="连接"><span style={{ color: 'var(--gc-text-mid)' }}>{o.connection}</span></Metric>
           <span style={{ color: o.requiresAction ? 'var(--gc-accent-amber)' : 'var(--gc-accent-green)' }}>
@@ -233,8 +236,13 @@ export function JobDetailPage() {
           </div>
         </Section>
 
-        {/* —— 4.4 Artifact 关系（F3-R1：含 lineage 谱系） —— */}
+        {/* —— 4.4 Artifact 关系（F3-R2 P0-1：真实 producer；P0-2：单一口径 metrics） —— */}
         <Section title="Artifact 关系" icon={<FileText size={13} />}>
+          <div className="mb-1 flex items-center gap-3 text-2xs" style={{ color: 'var(--gc-text-faint)' }}>
+            <span data-testid="artifact-metrics-total">产物 {detail.artifactMetrics.total}</span>
+            <span>中间 {detail.artifactMetrics.intermediate}</span>
+            <span>最终 {detail.artifactMetrics.final}</span>
+          </div>
           <div className="flex flex-col gap-1">
             {detail.artifacts.length === 0 ? (
               <div className="px-2 py-3 text-center text-xs" style={{ color: 'var(--gc-text-faint)' }}>暂无产物</div>
@@ -242,17 +250,22 @@ export function JobDetailPage() {
               detail.artifacts.map((a) => (
                 <div key={a.artifactId} data-testid={`job-artifact-${a.artifactId}`}
                   data-source-event={a.sourceEventId}
+                  data-producer-stage={a.generatedByStage ?? ''}
                   data-parent-count={a.parentArtifactIds.length}
+                  data-role={a.role}
                   className="rounded-sm px-2 py-1.5" style={{ background: 'var(--gc-bg-app)', border: '1px solid var(--gc-line)' }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium" style={{ color: 'var(--gc-text-hi)' }}>{a.nameZh}</span>
                     <span className="gc-data text-2xs" style={{ color: 'var(--gc-text-faint)' }}>{a.version}</span>
                     <span className="text-2xs" style={{ color: a.status === '待确认' ? 'var(--gc-accent-amber)' : 'var(--gc-accent-green)' }}>{a.status}</span>
+                    <span className="text-2xs" style={{ color: a.role === 'final' ? 'var(--gc-accent-blue)' : 'var(--gc-text-faint)' }}>
+                      {a.role === 'final' ? '最终产物' : '中间产物'}
+                    </span>
                   </div>
                   <div className="mt-0.5 flex flex-wrap gap-x-3 text-2xs" style={{ color: 'var(--gc-text-faint)' }}>
                     <span className="gc-data">{a.type}</span>
-                    {a.generatedByStage && <span>来源：{STAGE_LABEL_ZH[a.generatedByStage as keyof typeof STAGE_LABEL_ZH] ?? a.generatedByStage}</span>}
+                    {a.generatedByStage && <span>生产：{STAGE_LABEL_ZH[a.generatedByStage as keyof typeof STAGE_LABEL_ZH] ?? a.generatedByStage}</span>}
                     <span>事件 #{a.sourceSequence}</span>
                     {a.linkedAssetCount > 0 && <span>关联 {a.linkedAssetCount} 张</span>}
                     {a.parentArtifactIds.length > 0 && (

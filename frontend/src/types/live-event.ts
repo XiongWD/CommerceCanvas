@@ -238,9 +238,12 @@ export interface QCResultInfo {
 // ===== F3-R1 审计态类型（reducer 权威归并，不再扫 trace 猜测） =====
 
 /**
- * 单阶段审计态（F3-R1 §二）。
+ * 单阶段审计态（F3-R1 §二 / F3-R2 P0-4）。
  * 由 stage.queued / started / progress / completed / awaiting_review / retry.* 归并。
  * 客户 trace 继续降噪（stage.* 多为 ambient），但 Job Detail 节点只读权威 audit state。
+ *
+ * F3-R2 P0-4：新增 sourceEventIds / sourceSequences，真实累计每个归属该 stage 的事件。
+ *   withSourceEvents 由 sourceEventIds.length > 0 真实派生，不再硬编码 = total。
  */
 export interface StageAuditState {
   stageId: StageId;
@@ -260,12 +263,22 @@ export interface StageAuditState {
   progressMode: 'determinate' | 'indeterminate';
   /** 该阶段进度（determinate 时） */
   progress?: { current: number; total: number; unitZh?: string };
+  /** F3-R2 P0-4：归属该 stage 的真实事件 ID（去重累计） */
+  sourceEventIds: string[];
+  /** F3-R2 P0-4：归属该 stage 的真实事件 sequence（去重累计） */
+  sourceSequences: number[];
 }
 
 /**
- * Artifact 审计记录（F3-R1 §四）。
+ * Artifact 审计记录（F3-R1 §四 / F3-R2 P0-1）。
  * 修复 R0 producer(event.artifactRefs) vs projection(metrics.artifactRefs) 字段错配：
  * 统一读 event.artifactRefs，并在 reducer 归并为权威结构，含 lineage。
+ *
+ * F3-R2 P0-1：区分 produced（生产）与 linked（关联）。
+ *   producerStageId   只由真正生成/定稿该 Artifact 的 artifact.created 事件决定。
+ *                     artifact.linked 只追加 lineage，不覆盖 producer。
+ *   producerEventId   生产事件的 eventId（非空）。
+ *   role              intermediate（中间产物）/ final（最终产物）。
  */
 export interface ArtifactAuditRecord {
   artifactId: string;
@@ -273,16 +286,26 @@ export interface ArtifactAuditRecord {
   nameZh: string;
   /** 类型（用途分类结果 / Evidence 索引 / 构图聚类 / 风险排除清单 / Creative Recipe） */
   type: string;
-  /** 生成节点 stageId */
-  generatedByStage?: StageId;
-  /** 生成时间（ISO） */
+  /**
+   * 真正生成/定稿该 Artifact 的阶段（F3-R2 P0-1）。
+   * 仅由 artifact.created 设置；artifact.linked 不覆盖。
+   * 向后兼容：等价于旧 generatedByStage 的语义，但语义更明确。
+   */
+  producerStageId?: StageId;
+  /** 生产事件 ID（artifact.created 的 eventId，非空） */
+  producerEventId: string;
+  /** 生产事件 sequence */
+  producerSequence: number;
+  /** 生成时间（ISO，来自生产事件） */
   createdAt: string;
-  /** 来源事件 ID（必填，非空） */
+  /** 来源事件 ID（必填，非空；= producerEventId，保留兼容） */
   sourceEventId: string;
-  /** 来源事件 sequence */
+  /** 来源事件 sequence（= producerSequence，保留兼容） */
   sourceSequence: number;
   /** 版本（如 v1 / 草案） */
   version: string;
+  /** 角色分类：intermediate（中间产物）/ final（最终产物） */
+  role: 'intermediate' | 'final';
   /** 关联的资产 ID 列表 */
   linkedAssetIds: string[];
   /** 父 Artifact ID 列表（lineage 谱系：本 artifact 由哪些 artifact 衍生） */
@@ -324,6 +347,20 @@ export interface RouteUpgradeRecord {
   timeDeltaSeconds?: number;
   sourceEventId: string;
   sourceSequence: number;
+}
+
+/**
+ * F3-R2 P0-2：唯一权威 Artifact Metrics。
+ * 所有展示 Artifact 数量的地方（Overview / Persistent Task / Artifact 区 / Audit）必须使用同一来源，
+ * 禁止各自 count 形成多个口径。
+ */
+export interface ArtifactMetrics {
+  /** 总产物数 = artifactAudit 长度 */
+  total: number;
+  /** 中间产物数（role === 'intermediate'） */
+  intermediate: number;
+  /** 最终产物数（role === 'final'） */
+  final: number;
 }
 
 /**

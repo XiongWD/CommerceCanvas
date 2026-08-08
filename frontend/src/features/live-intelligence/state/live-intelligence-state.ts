@@ -24,6 +24,7 @@ import type {
   ArtifactAuditRecord,
   RetryAttemptState,
   RouteUpgradeRecord,
+  ArtifactMetrics,
 } from '@/types/live-event';
 
 /** 单个阶段归并态 */
@@ -226,6 +227,12 @@ export interface LiveIntelligenceState {
    * 路由升级记录：含 from/to 策略 + 中文原因 + 成本/耗时影响。
    */
   routeUpgradeRecords: RouteUpgradeRecord[];
+  /**
+   * F3-R2 P0-2：唯一权威 Artifact Metrics。
+   * Overview / Persistent Task / Artifact 区 / Audit 全部读这里，不再各自 count。
+   * 由 reducer 在 artifactAudit 变更时同步派生。
+   */
+  artifactMetrics: ArtifactMetrics;
 }
 
 /** 阶段中文展示名（映射层的一部分，与 event-presentation-map 协同） */
@@ -272,6 +279,8 @@ export function createInitialState(scenario = 'normal'): LiveIntelligenceState {
       findingsProduced: 0,
       artifactIds: [],
       progressMode: 'determinate',
+      sourceEventIds: [],
+      sourceSequences: [],
     };
   }
   return {
@@ -322,6 +331,8 @@ export function createInitialState(scenario = 'normal'): LiveIntelligenceState {
     artifactAudit: {},
     retryAttempts: {},
     routeUpgradeRecords: [],
+    // F3-R2 P0-2：权威 Artifact Metrics 初始值
+    artifactMetrics: { total: 0, intermediate: 0, final: 0 },
   };
 }
 
