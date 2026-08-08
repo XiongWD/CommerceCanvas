@@ -12,6 +12,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
+import { Theme } from '@astryxdesign/core/theme';
+import { neutralTheme } from '@astryxdesign/theme-neutral/built';
 import { AppShell } from '@/app/App';
 import { liveReducer } from '@/features/live-intelligence/state/live-intelligence-reducer';
 import { createInitialState } from '@/features/live-intelligence/state/live-intelligence-state';
@@ -42,7 +44,7 @@ function dispatchAll(events: LiveEventEnvelope[], scenario: string, jobId: strin
 }
 
 function renderApp(initialPath = '/') {
-  return render(<MemoryRouter initialEntries={[initialPath]}><AppShell /></MemoryRouter>);
+  return render(<MemoryRouter initialEntries={[initialPath]}><Theme theme={neutralTheme}><AppShell /></Theme></MemoryRouter>);
 }
 
 function BackTrigger() {
@@ -50,7 +52,7 @@ function BackTrigger() {
   return <button data-testid="test-back" onClick={() => navigate(-1)} style={{ display: 'none' }}>back</button>;
 }
 function renderAppWithBack(initialPath = '/') {
-  return render(<MemoryRouter initialEntries={[initialPath]}><AppShell /><BackTrigger /></MemoryRouter>);
+  return render(<MemoryRouter initialEntries={[initialPath]}><Theme theme={neutralTheme}><AppShell /><BackTrigger /></Theme></MemoryRouter>);
 }
 
 function readInstrument() {

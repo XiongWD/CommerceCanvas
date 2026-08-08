@@ -15,6 +15,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
+import { Theme } from '@astryxdesign/core/theme';
+import { neutralTheme } from '@astryxdesign/theme-neutral/built';
 import { AppShell } from '@/app/App';
 
 // jsdom 未实现 matchMedia；MilestoneReveal 在完整场景运行时调用它。环境补全，非生产伪造。
@@ -39,7 +41,9 @@ beforeAll(() => {
 function renderApp(initialPath = '/') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
-      <AppShell />
+      <Theme theme={neutralTheme}>
+        <AppShell />
+      </Theme>
     </MemoryRouter>,
   );
 }
@@ -57,8 +61,10 @@ function BackTrigger() {
 function renderAppWithBack(initialPath = '/') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
-      <AppShell />
-      <BackTrigger />
+      <Theme theme={neutralTheme}>
+        <AppShell />
+        <BackTrigger />
+      </Theme>
     </MemoryRouter>,
   );
 }

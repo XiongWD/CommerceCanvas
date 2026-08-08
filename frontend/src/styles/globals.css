@@ -1,25 +1,28 @@
 /**
- * F3.5 R0 — Graphite Canvas × Astryx CSS Cascade
+ * F3.5 R1 — Graphite Canvas × Astryx CSS Cascade（官方 setup 修正）
  *
- * Layer order（从低到高优先级）：
- *   reset            — 全局 box-sizing / margin reset
+ * Astryx 官方 import order（README Quick Start）：
+ *   reset.css  (@layer reset)      — 全局 box-sizing / margin reset
+ *   astryx.css (@layer astryx-base) — Astryx component StyleX styles
+ *   theme.css  (@layer astryx-theme)— Astryx theme tokens（@scope [data-astryx-theme]）
+ *
+ * CommerceCanvas layer order（从低到高优先级）：
+ *   reset            — Astryx core reset.css
  *   tw-preflight     — Tailwind v3 preflight（@tailwind base 放入显式 layer）
- *   astryx-reset     — Astryx theme-neutral reset（@layer reset from theme.css）
- *   astryx-base      — Astryx component base styles（@layer astryx-base from astryx.css）
+ *   astryx-base      — Astryx component styles
  *   astryx-theme     — Astryx theme tokens
  *   graphite-base    — CommerceCanvas Graphite Canvas 全局 base（body / scrollbar / mono）
  *   tw-components    — Tailwind v3 components
  *   tw-utilities     — Tailwind v3 utilities（最高优先级，布局工具类）
- *
- * 原则：Astryx reset 不会静默覆盖 Graphite Canvas；Tailwind utilities 保持最高优先级。
  */
-@layer reset, tw-preflight, astryx-reset, astryx-base, astryx-theme, graphite-base, tw-components, tw-utilities;
+@layer reset, tw-preflight, astryx-base, astryx-theme, graphite-base, tw-components, tw-utilities;
 
 @import './tokens.css';
 
-/* Astryx CSS imports（使用 package exports map 指定的路径） */
-@import '@astryxdesign/theme-neutral/theme.css';
+/* Astryx 官方 CSS imports（顺序：reset → astryx → theme） */
+@import '@astryxdesign/core/reset.css';
 @import '@astryxdesign/core/astryx.css';
+@import '@astryxdesign/theme-neutral/theme.css';
 
 /* Tailwind v3 preflight 放入显式 layer（避免 unlayered 覆盖 Astryx） */
 @layer tw-preflight {
