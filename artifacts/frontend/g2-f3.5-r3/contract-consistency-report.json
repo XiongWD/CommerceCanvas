@@ -1,0 +1,11 @@
+{
+  "singleSource": "frontend/src/design/component-policy.ts",
+  "bWrappersAllVerified": true,
+  "noPlannedStatus": true,
+  "f4MapAligned": true,
+  "r3Increments": {
+    "buttonPrimaryGraphiteBlue": true,
+    "popoverKeyboardClosureHardAsserted": true,
+    "dropdownMenuKeyboardClosureHardAsserted": true
+  }
+}

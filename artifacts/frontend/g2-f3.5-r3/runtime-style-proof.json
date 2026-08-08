@@ -1,0 +1,39 @@
+{
+  "body": {
+    "bg": "rgb(12, 14, 18)",
+    "color": "rgb(180, 185, 193)",
+    "border": "rgb(229, 231, 235)"
+  },
+  "textInput": {
+    "bg": "rgb(38, 38, 38)",
+    "color": "rgb(250, 250, 250)",
+    "border": "rgb(82, 82, 82)"
+  },
+  "textArea": {
+    "bg": "rgb(38, 38, 38)",
+    "color": "rgb(250, 250, 250)",
+    "border": "rgb(82, 82, 82)"
+  },
+  "selector": {
+    "bg": "rgb(38, 38, 38)",
+    "color": "rgb(250, 250, 250)",
+    "border": "rgb(82, 82, 82)"
+  },
+  "button": {
+    "bg": "rgb(37, 99, 235)",
+    "color": "rgb(255, 255, 255)",
+    "border": "rgb(229, 231, 235)"
+  },
+  "textInputContrast": 14.498978405673947,
+  "primaryButton": {
+    "bg": "rgb(37, 99, 235)",
+    "color": "rgb(255, 255, 255)",
+    "isCcButton": true,
+    "ccComponent": "Button"
+  },
+  "primaryButtonContrast": 5.168555560022562,
+  "table": {
+    "bg": "rgba(0, 0, 0, 0)",
+    "color": "rgb(250, 250, 250)"
+  }
+}

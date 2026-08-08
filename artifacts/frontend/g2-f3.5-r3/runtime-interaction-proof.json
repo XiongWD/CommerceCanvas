@@ -1,0 +1,25 @@
+{
+  "popover": {
+    "triggerFocusedBefore": true,
+    "contentVisible": 3,
+    "popoverClosed": true,
+    "focusReturned": true,
+    "hardAsserted": true
+  },
+  "dropdownMenu": {
+    "triggerFocusedBefore": true,
+    "firstItemVisible": 2,
+    "focusOnItem": true,
+    "escapeClosesMenu": false,
+    "focusReturned": true,
+    "hardAsserted": true
+  },
+  "dialog": {
+    "triggerFocused": true,
+    "dialogVisible": true,
+    "focusInside": true,
+    "focusContained": true,
+    "dialogClosed": true,
+    "focusReturned": true
+  }
+}

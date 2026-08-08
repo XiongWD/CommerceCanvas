@@ -1,0 +1,40 @@
+{
+  "sourceCommit": "6f915753aed1553ee30e7cad1757a461c6964198",
+  "sourceTreeHash": "7a3eac8b6bb5989c67d8f4407015150002c811c0",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium 143.0.7499.4",
+  "screenshots": [
+    {
+      "file": "e1-foundation-dark-overview.png",
+      "sha256": "9521ff31e6954ee0569018b448d3528824d233ab75ea81e39947b1c4dda7f827"
+    },
+    {
+      "file": "e2-dark-form-typography.png",
+      "sha256": "9521ff31e6954ee0569018b448d3528824d233ab75ea81e39947b1c4dda7f827"
+    },
+    {
+      "file": "e3-table-wrapper-density.png",
+      "sha256": "b1591ed069f716f3398d9ee514b8fb2db845302733b9ced3256fc1fc0a75cad5"
+    },
+    {
+      "file": "e4a-popover-closed-focus-returned.png",
+      "sha256": "1823f3b8ce0bf72243c2844334ddb0bbff7fc50513d4a852fce8f44155c1b49b"
+    },
+    {
+      "file": "e4b-dropdownmenu-closed-focus-returned.png",
+      "sha256": "e6ec9d91dec00f3a19aa5b6be3569755fd351942099722ade74875d0811b4b0a"
+    },
+    {
+      "file": "e4c-dialog-closed-focus-returned.png",
+      "sha256": "9c9ea1e68a204b86fa8131586b3c6b248b5c2843f94ef6baa1e3b29d864db5a9"
+    },
+    {
+      "file": "e5-production-surface.png",
+      "sha256": "79765344bf08f1e60a3cb5e523d7e764cd2c6b9d24ae8a919e8d4e2988ae4b64"
+    },
+    {
+      "file": "e6-f3-regression.png",
+      "sha256": "ede68ed594568b063e55b0597d453f1634f281e0f76fe5467e7abbdd890707ab"
+    }
+  ]
+}
