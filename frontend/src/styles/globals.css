@@ -33,6 +33,33 @@
   color-scheme: dark !important;
 }
 
+/* F3.5 R3 P0-2：Button primary 视觉主权 — Astryx neutral theme 的 --color-accent
+   在 dark 模式下为 #ebebeb（light neutral，rgb(235,235,235)），渲染出的 primary
+   button 偏灰白，与 Graphite Canvas 深色工作台气质冲突（component-policy.md §1.1：
+   "blue 主操作"）。Astryx Button primary variant 的 background-color 来自
+   --color-accent（core/dist/astryx.css: `background-color:var(--color-accent)`），
+   因此映射 --color-accent → Graphite Canvas --gc-accent-blue 即可让所有依赖
+   accent 的组件（Button primary、focus ring、selected indicator 等）切换到
+   Graphite blue，无需在 Button.tsx 内联样式（符合 component-policy.md §1.1
+   "Wrapper remaps Astryx token → --gc-accent-*"）。
+
+   必须 unlayered：--color-accent 由 @astryxdesign/theme-neutral 在 @layer
+   astryx-theme 内定义（line 172），任何 layer 内覆盖都会因 layer 优先级被压制；
+   unlayered 普通声明优先级高于所有 layer 内的同特异性声明。
+
+   on-accent 文字色：neutral dark --color-on-accent 为 #171717（深字），蓝底深字
+   对比不足；改为 --gc-text-hi（接近白）保证 AA 对比度。color-text-accent /
+   color-icon-accent / color-border-blue 也同步到 Graphite blue，避免 selected
+   ring / icon 出现中性灰与蓝色不一致。 */
+[data-astryx-theme="neutral"] {
+  --color-accent: var(--gc-accent-blue);
+  --color-accent-muted: var(--gc-accent-blue-soft);
+  --color-text-accent: var(--gc-accent-blue);
+  --color-icon-accent: var(--gc-accent-blue);
+  --color-border-blue: var(--gc-accent-blue);
+  --color-on-accent: var(--gc-text-hi);
+}
+
 /* Graphite Canvas 全局 base */
 @layer graphite-base {
   html,

@@ -15,6 +15,10 @@ import { formatElapsed } from '@/features/live-intelligence/state/live-intellige
 import { categoryTone } from '@/features/live-intelligence/mappings/event-presentation-map';
 import { ShieldCheck, DollarSign, RefreshCw, ArrowRight, Stethoscope, ArrowLeft, Activity, FileText } from 'lucide-react';
 import type { TraceCategoryZh } from '@/types/live-event';
+// F3.5 R3 P0-4：生产集成 — 仅替换展示原子（Text / Badge），不影响业务逻辑/投影/导航/数据流。
+import { Text } from '@/components/ui/Text';
+import { Badge } from '@/components/ui/Badge';
+import type { BadgeVariant } from '@/components/ui/Badge';
 
 type TimelineFilter = '全部' | '关键事件' | '风险' | 'Artifact' | 'QC' | '成本' | '重试与路由' | '系统';
 
@@ -148,9 +152,13 @@ export function JobDetailPage() {
           </Metric>
           <Metric label="已用时"><span className="gc-data">{formatElapsed(o.elapsedSeconds)}</span></Metric>
           <Metric label="连接"><span style={{ color: 'var(--gc-text-mid)' }}>{o.connection}</span></Metric>
-          <span style={{ color: o.requiresAction ? 'var(--gc-accent-amber)' : 'var(--gc-accent-green)' }}>
-            {o.status}
-          </span>
+          {/* F3.5 R3 P0-4：状态展示用 Foundation Badge（语义色 variant 映射 requiresAction），
+              仅替换展示原子，o.status / o.requiresAction 数据流不变。 */}
+          <Badge
+            variant={(o.requiresAction ? 'warning' : 'success') as BadgeVariant}
+            label={o.status}
+            testId="job-detail-status-badge"
+          />
         </div>
       </header>
 
@@ -445,7 +453,9 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
 function Metric({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <span className="flex items-baseline gap-1">
-      <span style={{ color: 'var(--gc-text-faint)' }}>{label}</span>
+      {/* F3.5 R3 P0-4：metric 标签用 Foundation Text（supporting 字号 + disabled 文字色，
+          映射到 --gc-text-faint），仅替换展示原子，children 数值/逻辑不变。 */}
+      <Text type="supporting" color="disabled">{label}</Text>
       <span style={{ color: 'var(--gc-text-mid)' }}>{children}</span>
     </span>
   );

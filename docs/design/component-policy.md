@@ -7,6 +7,11 @@
 > **Owner:** Graphite Canvas Design Authority
 > **Last Updated:** 2026-08-08
 > **Upstream:** `docs/design/graphite-astryx-foundation.md` §8 references this file.
+> **Structured mirror:** `frontend/src/design/component-policy.ts` is the single
+> authoritative structured source for Policy classification and canonical import paths
+> (`ccWrapperPath`). This markdown is the FROZEN normative contract; the TS file MUST stay
+> in 1:1 sync with §1 (A/B/C) and §2 (Custom surface) of this document. When in doubt,
+> the TS `COMPONENT_POLICY` array and the tables below must agree — any divergence is a bug.
 
 ---
 
@@ -97,6 +102,14 @@ CommerceCanvas 的视觉主权属于 Graphite Canvas；Astryx 提供 UI grammar�
 > Implementation note: any component marked **PROVISIONAL** in future revisions must be
 > resolved to **LOCKED** before it can be referenced from a feature spec. No feature task
 > may depend on a PROVISIONAL primitive.
+
+> **Canonical import paths (Policy B):** every Policy B primitive above has its wrapper at
+> `frontend/src/components/ui/<Component>` and MUST be imported as `@/components/ui/<Component>`.
+> The structured mirror `frontend/src/design/component-policy.ts` records the exact
+> `ccWrapperPath` for each; if the markdown table and the TS array disagree, the TS array is
+> the structured authority for tooling, but the FROZEN Policy classification in this document
+> governs. Policy A primitives are imported directly from `@astryxdesign/core` (or the
+> documented subpath for Heading / Code / ListItem).
 
 ---
 
