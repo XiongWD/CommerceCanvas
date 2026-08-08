@@ -39,7 +39,7 @@ export function DesignFoundationPage() {
   const [inputVal, setInputVal] = useState('');
 
   return (
-    <div data-testid="design-foundation-page" style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+    <div data-testid="design-foundation-page" data-astryx-theme="neutral" style={{ padding: 24, maxWidth: 1200, margin: '0 auto', minHeight: '100vh' }}>
       {/* —— Typography —— */}
       <section data-testid="foundation-typography" style={{ marginBottom: 32 }}>
         <Heading level={1} type="display-1">CommerceCanvas 设计基础</Heading>

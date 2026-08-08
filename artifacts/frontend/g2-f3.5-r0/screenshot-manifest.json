@@ -1,0 +1,32 @@
+{
+  "sourceCommit": "05b725c41940196bbabaa1d3c552b9b98299b4df",
+  "sourceTreeHash": "7a12ed1043d5c6d9063d2c389a0288a88b8c53c5",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium 143.0.7499.4",
+  "screenshots": [
+    {
+      "file": "e1-foundation-overview.png",
+      "sha256": "54c49cb08d64bf01b83677021e7fa063aaa2291ed8db5dba17eb6bee3346b80b"
+    },
+    {
+      "file": "e2-dense-chinese-ui.png",
+      "sha256": "dc40abaec18646c63598fb19bb3ccbffa2f2c6abfd2e447b893ff422c8e88f75"
+    },
+    {
+      "file": "e3-interactive-states.png",
+      "sha256": "fba14258d9c44befb96408a7363504825397f5b959e69dd4e789d772b1366a78"
+    },
+    {
+      "file": "e4-keyboard-focus.png",
+      "sha256": "cc9c3a4abdfcf7a97bfb03e3e039b5123021e3bcf34144e10dd7934c07399c96"
+    },
+    {
+      "file": "e5-graphite-astryx-surface.png",
+      "sha256": "54c49cb08d64bf01b83677021e7fa063aaa2291ed8db5dba17eb6bee3346b80b"
+    },
+    {
+      "file": "e6-f3-regression.png",
+      "sha256": "46a7e9fed6272a0959471d961d4a74eaefe765a89c013c804feb71c828179ba0"
+    }
+  ]
+}

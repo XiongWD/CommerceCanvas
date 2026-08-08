@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-08-08T14:41:17.471Z",
+  "browser": "Playwright Chromium 143.0.7499.4",
+  "react": "19.2.8",
+  "astryx": "0.3.0",
+  "evidence": {
+    "e1": "Foundation Overview — Typography/Button/Input/Tabs/Badge/List/Progress/Dialog 全渲染",
+    "e2": "Dense Chinese UI — 竞品套图分析/SKU OW-A31-BLK/job-normal-001/Qwen-Image-Edit-2511 全中文语义",
+    "e3": "Interactive States — disabled/loading/hover Badge variants",
+    "e4": "Keyboard/Focus — Tab focus + Dialog open/Escape close",
+    "e5": "Graphite × Astryx — 深色背景保持 + Astryx 组件渲染",
+    "e6": "F3 Regression — Competitor Analysis + Job Detail + 7 nodes + Event Simulator 推进"
+  }
+}
