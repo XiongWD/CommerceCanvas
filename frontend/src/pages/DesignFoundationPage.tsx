@@ -1,35 +1,35 @@
 /**
- * F3.5 R1 Phase E — Foundation Smoke Test（dev-only route /__dev/design-foundation）。
+ * F3.5 R2 — Foundation Smoke Test（dev-only route /__dev/design-foundation）。
  *
- * R1 修正：
- * - Policy B 组件使用 @/components/ui/ wrapper（不直接 import Astryx）
+ * R2 修正：
+ * - 所有 Policy B 组件使用 @/components/ui/ wrapper（不直接 import Astryx）
  * - Policy A 组件直接 import Astryx
- * - 补齐 Table / Popover / DropdownMenu
- * - Theme Provider 提供 Astryx theme context
+ * - Table/Popover/DropdownMenu 使用 wrapper
+ * - Dark theme 修正后所有控件 dark surface
  */
 import { useState } from 'react';
-// Policy B — CommerceCanvas Wrapper
+// Policy B — CommerceCanvas Wrapper（全部从 @/components/ui/ 导入）
 import { Button } from '@/components/ui/Button';
+import { IconButton } from '@/components/ui/IconButton';
 import { Text } from '@/components/ui/Text';
 import { Heading } from '@/components/ui/Heading';
+import { TextInput } from '@/components/ui/TextInput';
+import { TextArea } from '@/components/ui/TextArea';
+import { Selector } from '@/components/ui/Selector';
 import { Badge } from '@/components/ui/Badge';
 import { TabList, Tab } from '@/components/ui/TabList';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { Popover } from '@/components/ui/Popover';
+import { DropdownMenu } from '@/components/ui/DropdownMenu';
 import { Dialog, DialogHeader } from '@/components/ui/Dialog';
+import { Table, TableRow, TableCell, TableHeaderCell, TableHeader, TableBody } from '@/components/ui/Table';
 import { List, ListItem } from '@/components/ui/List';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { EmptyState } from '@/components/ui/EmptyState';
 // Policy A — Astryx Direct
-import { IconButton } from '@astryxdesign/core/IconButton';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { TextArea } from '@astryxdesign/core/TextArea';
-import { Selector } from '@astryxdesign/core/Selector';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Switch } from '@astryxdesign/core/Switch';
-import { Popover } from '@astryxdesign/core/Popover';
-import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
-import { Table, TableRow, TableCell, TableHeaderCell, TableHeader, TableBody } from '@astryxdesign/core/Table';
-import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Code } from '@astryxdesign/core/Code';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Stack } from '@astryxdesign/core/Stack';
