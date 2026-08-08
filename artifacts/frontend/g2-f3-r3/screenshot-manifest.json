@@ -1,7 +1,7 @@
 {
-  "sourceCommit": "9edd532ccc65a1b36a2e2152ade6233aa35a4310",
-  "sourceTreeHash": "294a6080f19e99cc6472e43ec7f44ba1b93fb2a4",
-  "evidencePayloadCommit": "pending",
+  "sourceCommit": "78a766ceec83f0ea2b38a16f3d90a9f4b20af508",
+  "sourceTreeHash": "d227f0a8c7061e092ae347f84ce1082277b7cf6c",
+  "evidencePayloadCommit": "632ead4e7a885953a9ca56612b77c142e68bdeb0",
   "browser": "Playwright Chromium (独立，非 IAB)",
   "browserVersion": "143.0.7499.4",
   "captureRules": "所有跨页操作点击真实 UI；Browser Back 用 page.goBack()；每截图前 exact assert",
