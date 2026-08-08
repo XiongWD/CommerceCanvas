@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "6dea9a30549d05e3ece8c376f808fc5b9dd7925a",
+  "sourceTreeHash": "032d7d33ab3c1d6ec9a8a9c97e9e0a5fed572cbf",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium (独立，非 IAB)",
+  "browserVersion": "143.0.7499.4",
+  "captureRules": "canonical URL join；named route useParams instrumentation；page.goBack；runtime-proof.json 自动生成",
+  "screenshots": [
+    {
+      "file": "e1-qc-evidence-exact.png",
+      "sha256": "4be959a6f9c351fad971d17c970dc816e8733e6c0f06709b432ef096e23f08ce"
+    },
+    {
+      "file": "e2-browser-back-canonical-route.png",
+      "sha256": "71894dd11ecdeffe8bf9fa4565974b3695285ef6eb1eb84bf287a42cad11c08b"
+    }
+  ]
+}

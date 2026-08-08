@@ -1,0 +1,33 @@
+{
+  "qc": {
+    "expectedAsset": "img-06",
+    "actualAsset": "img-06",
+    "expectedLayer": "subject",
+    "actualLayer": "subject",
+    "expectedRegion": "",
+    "actualRegion": "",
+    "expectedTraceSequence": 61,
+    "actualTraceSequence": 61
+  },
+  "browserBack": {
+    "pathnameBefore": "/products/ow-a31-blk/competitor-analysis/job-normal-001",
+    "pathnameOnJob": "/jobs/job-normal-001",
+    "pathnameAfter": "/products/ow-a31-blk/competitor-analysis/job-normal-001",
+    "pathnameHasDoubleSlash": false,
+    "routeProductIdBefore": "ow-a31-blk",
+    "routeProductIdAfter": "ow-a31-blk",
+    "routeRunIdBefore": "job-normal-001",
+    "routeRunIdAfter": "job-normal-001",
+    "activeJobIdBefore": "job-normal-001",
+    "activeJobIdOnJob": "job-normal-001",
+    "activeJobIdAfter": "job-normal-001",
+    "receivedBefore": 12,
+    "receivedOnJob": 18,
+    "receivedAfter": 22,
+    "simulatorIdentityBefore": "c5dbfd8d-01b6-4462-899d-be3bb783e8e6",
+    "simulatorIdentityOnJob": "c5dbfd8d-01b6-4462-899d-be3bb783e8e6",
+    "simulatorIdentityAfter": "c5dbfd8d-01b6-4462-899d-be3bb783e8e6",
+    "jobStatusOnJob": "running",
+    "jobStatusAfter": "running"
+  }
+}
