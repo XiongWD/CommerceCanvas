@@ -7,6 +7,7 @@
  *   AnalysisTrace/MilestoneReveal key、所有 data-* 测试钩子。
  */
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import { ContextSidebar } from '@/components/layout/ContextSidebar';
 import { InspectorPanel } from '@/components/layout/InspectorPanel';
 import { CompetitorAnalysisCanvas } from '@/components/competitor/CompetitorAnalysisCanvas';
@@ -32,6 +33,9 @@ import type { CanvasViewMode, InspectorTab } from '@/types/competitor-analysis';
 export function CompetitorAnalysisPage() {
   const live = useLiveContext();
   const analysisState = competitorAnalysisMock;
+  // F3-R5 §6：只读 Router params instrumentation。区分正式 named route 命中 vs `*` fallback。
+  // 仅读取 Router 已有值，禁止 test-only setter 或从 live.state.jobId 伪造。
+  const { productId = '', runId = '' } = useParams();
 
   // —— 页面级状态 ——
   const [viewMode, setViewMode] = useState<CanvasViewMode>('single');
@@ -228,6 +232,8 @@ export function CompetitorAnalysisPage() {
       data-selected-recipe-field={selectedRecipeField ?? ''}
       data-focused-evidence-region={live.focus?.regionId ?? ''}
       data-highlighted-trace-sequence={live.highlightedSequence ?? ''}
+      data-route-product-id={productId}
+      data-route-run-id={runId}
     >
       <ContextSidebar
         key={`context-${sessionKey}`}

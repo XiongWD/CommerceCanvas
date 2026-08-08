@@ -241,3 +241,22 @@ describe('F3-R4 §Test2 Browser Back route contract', () => {
     expect(screen.queryByTestId('job-detail-page')).toBeNull();
   }, 60000);
 });
+
+// =========================================================================
+// F3-R5 §8: Route contract test（正式 named route 命中 vs wildcard fallback）
+// =========================================================================
+describe('F3-R5 §Route contract named-route match', () => {
+  it('正式 route 命中时 useParams productId/runId 非空且 routeRunId === activeJobId', async () => {
+    const { container } = renderAppWithBack('/products/ow-a31-blk/competitor-analysis/job-normal-001');
+    await screen.findByTestId('persistent-task-bar');
+    await startScenario('场景 A · 正常完成');
+    await waitForReceived(3);
+    // 正式 named route 命中：useParams 返回 productId/runId
+    const analysisRoot = container.querySelector('[data-selected-cluster-id]');
+    expect(analysisRoot?.getAttribute('data-route-product-id')).toBe('ow-a31-blk');
+    expect(analysisRoot?.getAttribute('data-route-run-id')).toBe('job-normal-001');
+    // routeRunId === activeJobId（同一 Job）
+    const activeJobId = readInstrument()!.jobId;
+    expect(analysisRoot?.getAttribute('data-route-run-id')).toBe(activeJobId);
+  }, 60000);
+});
