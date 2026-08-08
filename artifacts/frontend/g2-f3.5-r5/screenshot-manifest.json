@@ -1,0 +1,24 @@
+{
+  "sourceCommit": "0193f539232828f50e0733ee09654f061379ea36",
+  "sourceTreeHash": "18b5d5414e3ed7260fab3b2a04f81447eb126c84",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium 143.0.7499.4",
+  "screenshots": [
+    {
+      "file": "e3-job-detail-r5-native.png",
+      "sha256": "da805dc23d447ef05c0791583a888ffbd69c8dda60c13a42b2e485feb843810e"
+    },
+    {
+      "file": "e4-native-typography-metrics.png",
+      "sha256": "da805dc23d447ef05c0791583a888ffbd69c8dda60c13a42b2e485feb843810e"
+    },
+    {
+      "file": "e5-native-table-density.png",
+      "sha256": "5193297e15deb16e56e51b9e5c26f0879c8b5869fade93fd4074e23b71ab9a7d"
+    },
+    {
+      "file": "e6-f3-regression.png",
+      "sha256": "60082dd5ea28adfaafd6c5098784b9d9d9fe61cd000de7f64fd88a6303bcb11d"
+    }
+  ]
+}
