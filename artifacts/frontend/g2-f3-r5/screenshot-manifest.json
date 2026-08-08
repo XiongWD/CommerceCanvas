@@ -1,7 +1,7 @@
 {
-  "sourceCommit": "6dea9a30549d05e3ece8c376f808fc5b9dd7925a",
-  "sourceTreeHash": "032d7d33ab3c1d6ec9a8a9c97e9e0a5fed572cbf",
-  "evidencePayloadCommit": "pending",
+  "sourceCommit": "df1e013f2a8ef2a0cf2ca76b4c8158030904aabf",
+  "sourceTreeHash": "a540df4249a87fec2cec179df37e6c0472fe4917",
+  "evidencePayloadCommit": "0a5b359a9de3a95b539d9945225664c2a0418cd7",
   "browser": "Playwright Chromium (独立，非 IAB)",
   "browserVersion": "143.0.7499.4",
   "captureRules": "canonical URL join；named route useParams instrumentation；page.goBack；runtime-proof.json 自动生成",
