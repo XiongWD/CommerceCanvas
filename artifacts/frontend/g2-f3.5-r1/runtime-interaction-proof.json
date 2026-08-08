@@ -1,0 +1,9 @@
+{
+  "dialog": {
+    "triggerFocused": "打开确认对话框",
+    "dialogVisible": true,
+    "focusMovedInside": true,
+    "closedAfterEscape": true,
+    "focusReturnedToTrigger": true
+  }
+}

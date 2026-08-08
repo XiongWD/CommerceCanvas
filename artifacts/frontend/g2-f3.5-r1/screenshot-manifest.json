@@ -1,0 +1,32 @@
+{
+  "sourceCommit": "06611d4c448a6dfe12aa30dd38341049377fcd07",
+  "sourceTreeHash": "8d38187a2e847640cbfdc60bfb4da521755878a2",
+  "evidencePayloadCommit": "pending",
+  "browser": "Playwright Chromium 143.0.7499.4",
+  "screenshots": [
+    {
+      "file": "e1-foundation-overview.png",
+      "sha256": "bc98b14635815aceeb8a4e14f7049e001ca240bd9b2b21b5d71b62066e58661d"
+    },
+    {
+      "file": "e2-dark-form-and-typography.png",
+      "sha256": "bc98b14635815aceeb8a4e14f7049e001ca240bd9b2b21b5d71b62066e58661d"
+    },
+    {
+      "file": "e3-table-density.png",
+      "sha256": "25a0f60069d404c7eebc227dcff10d23fc2c235faa4a173043ede0033be0774d"
+    },
+    {
+      "file": "e4-overlay-keyboard.png",
+      "sha256": "cb6152095f66000b65af1e3715c30d009b68f7425bb258f25dfaf1ee3353bc28"
+    },
+    {
+      "file": "e5-graphite-astryx-production-surface.png",
+      "sha256": "f43a92bf22ff1017d084098c88122964e331ff61c2e796c10a7b4ab8faacb0e3"
+    },
+    {
+      "file": "e6-f3-regression.png",
+      "sha256": "bd591c6dadd916aaa5745247fec437160a0775bceb58772fb9663232eee78253"
+    }
+  ]
+}
