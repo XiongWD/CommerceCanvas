@@ -291,6 +291,10 @@ export function JobDetailPage() {
                   <div key={qc.id} data-testid={`job-qc-${qc.id}`}
                     data-qc-status={qc.status}
                     data-qc-review={qc.requiresReview ? 'true' : 'false'}
+                    data-qc-source-sequence={qc.sourceSequence ?? ''}
+                    data-qc-evidence-asset={qc.evidenceRefs?.[0]?.assetId ?? ''}
+                    data-qc-evidence-layer={qc.evidenceRefs?.[0]?.layer ?? ''}
+                    data-qc-evidence-region={qc.evidenceRefs?.[0]?.regionId ?? ''}
                     onClick={() => qc.status !== 'pass' && handleQcNavigate(qc.id)}
                     className="cursor-pointer rounded-sm px-2 py-1.5 transition-colors hover:bg-[var(--gc-bg-elev-1)]"
                     style={{ background: 'var(--gc-bg-app)', borderLeft: `2px solid ${tone}` }}

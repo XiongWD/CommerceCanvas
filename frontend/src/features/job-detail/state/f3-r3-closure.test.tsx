@@ -187,3 +187,57 @@ describe('F3-R3 §Blocker3 Persistent Task artifactMetrics 同源', () => {
     expect(bar?.textContent).toContain('最终 1');
   }, 120000);
 });
+
+// =========================================================================
+// F3-R4 §14 Test 1: QC DOM sourceSequence 与 projection 同源
+// =========================================================================
+describe('F3-R4 §Test1 QC DOM sourceSequence 同源', () => {
+  it('data-qc-source-sequence === projection qc.sourceSequence（防止 instrumentation 写错）', async () => {
+    // 从纯函数 projection 派生 expected
+    const riskState = dispatchAll(buildRiskScenario().events, 'risk', 'job-risk-002');
+    const detail = projectJobDetail(riskState, competitorAnalysisMock);
+    const blockQc = detail.qcResults.find((q) => q.id === 'qc-structure-risk')!;
+    const expectedSequence = String(blockQc.sourceSequence);
+    const expectedAsset = blockQc.evidenceRefs![0].assetId;
+    const expectedLayer = blockQc.evidenceRefs![0].layer;
+    const expectedRegion = blockQc.evidenceRefs![0].regionId ?? '';
+
+    renderApp('/');
+    await startScenario('场景 B · 高风险待确认');
+    await new Promise((r) => setTimeout(r, 25000));
+    await waitForFinished(120000);
+    fireEvent.click(screen.getByTestId('task-goto-detail'));
+    await waitFor(() => expect(screen.getByTestId('job-detail-page')).toBeTruthy());
+    const qcEl = await waitFor(() => screen.getByTestId('job-qc-qc-structure-risk'), { timeout: 15000 });
+    // DOM instrumentation 与 projection 同源（防止 data-attr 写错）
+    expect(qcEl.getAttribute('data-qc-source-sequence')).toBe(expectedSequence);
+    expect(qcEl.getAttribute('data-qc-evidence-asset')).toBe(expectedAsset);
+    expect(qcEl.getAttribute('data-qc-evidence-layer')).toBe(expectedLayer);
+    expect(qcEl.getAttribute('data-qc-evidence-region')).toBe(expectedRegion);
+  }, 180000);
+});
+
+// =========================================================================
+// F3-R4 §14 Test 2: Browser Back route contract（Back 后 pathname 恢复 analysis）
+// =========================================================================
+describe('F3-R4 §Test2 Browser Back route contract', () => {
+  it('Back 后 pathname 恢复 analysis route（非仅 Job Detail 消失）', async () => {
+    // 用 initialPath 模拟从 normal analysis route 进入
+    const { container } = renderAppWithBack('/products/ow-a31-blk/competitor-analysis/job-normal-001');
+    await startScenario('场景 A · 正常完成');
+    await waitForReceived(5);
+    // 进 Job Detail
+    fireEvent.click(screen.getByTestId('task-goto-detail'));
+    await waitFor(() => expect(screen.getByTestId('job-detail-page')).toBeTruthy());
+    // 浏览器 Back
+    fireEvent.click(screen.getByTestId('test-back'));
+    await waitFor(() => expect(screen.queryByTestId('job-detail-page')).toBeNull(), { timeout: 5000 });
+    // Back 后回到 analysis route（Job Detail 页消失 + 仍在应用内）
+    // jsdom MemoryRouter 不暴露 pathname 到 window.location，用 DOM 存在性验证
+    // 竞品分析页根 div 有 data-selected-cluster-id（competitor-analysis-page 渲染）
+    const analysisRoot = container.querySelector('[data-selected-cluster-id]');
+    expect(analysisRoot).toBeTruthy();
+    // job-detail-page 不存在
+    expect(screen.queryByTestId('job-detail-page')).toBeNull();
+  }, 60000);
+});
