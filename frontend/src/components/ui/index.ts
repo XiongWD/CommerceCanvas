@@ -21,3 +21,5 @@ export { List, ListItem } from './List';
 export { ProgressBar } from './ProgressBar';
 export { EmptyState } from './EmptyState';
 export { StatusDot } from './StatusDot';
+export { StatusIndicator } from './StatusIndicator';
+export type { StatusIndicatorProps, StatusTone } from './StatusIndicator';

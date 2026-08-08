@@ -49,6 +49,12 @@
   --gc-accent-red: #e0594f;
   --gc-accent-red-soft: rgba(224, 89, 79, 0.16);
 
+  /* —— F3.5 R4 Visual Salience semantic tokens —— */
+  --gc-action-primary: #2563eb; /* S4: primary CTA button background */
+  --gc-action-text: var(--gc-accent-blue); /* S3: inline action/link text */
+  --gc-selection-accent: var(--gc-accent-blue); /* S3: selected tab/row */
+  --gc-focus-ring: var(--gc-accent-blue); /* S3: keyboard focus ring */
+
   /* —— 证据框语义色（中央画布叠加层）—— */
   --gc-evidence-subject: var(--gc-accent-blue); /* 商品主体识别区 */
   --gc-evidence-logo: var(--gc-accent-red); /* Logo / 文字风险（禁止继承）*/

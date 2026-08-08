@@ -33,31 +33,21 @@
   color-scheme: dark !important;
 }
 
-/* F3.5 R3 P0-2：Button primary 视觉主权 — Astryx neutral theme 的 --color-accent
-   在 dark 模式下为 #ebebeb（light neutral，rgb(235,235,235)），渲染出的 primary
-   button 偏灰白，与 Graphite Canvas 深色工作台气质冲突（component-policy.md §1.1：
-   "blue 主操作"）。Astryx Button primary variant 的 background-color 来自
-   --color-accent（core/dist/astryx.css: `background-color:var(--color-accent)`），
-   因此映射 --color-accent → Graphite Canvas --gc-accent-blue 即可让所有依赖
-   accent 的组件（Button primary、focus ring、selected indicator 等）切换到
-   Graphite blue，无需在 Button.tsx 内联样式（符合 component-policy.md §1.1
-   "Wrapper remaps Astryx token → --gc-accent-*"）。
+/* F3.5 R4 P0：Visual Salience — 拆分 Astryx accent 到 Graphite semantic tokens。
+   R3 错误：全局 --color-accent = #2563eb 让 Button primary / Tab selected /
+   focus ring / icon / link 全部使用同一高饱和蓝。R4 按 visual-salience-contract.md
+   拆分：primary CTA 深蓝，selection/focus 更弱，text/link 最弱。
 
-   必须 unlayered：--color-accent 由 @astryxdesign/theme-neutral 在 @layer
-   astryx-theme 内定义（line 172），任何 layer 内覆盖都会因 layer 优先级被压制；
-   unlayered 普通声明优先级高于所有 layer 内的同特异性声明。
-
-   on-accent 文字色：neutral dark --color-on-accent 为 #171717（深字），蓝底深字
-   对比不足；改为 --gc-text-hi（接近白）保证 AA 对比度。color-text-accent /
-   color-icon-accent / color-border-blue 也同步到 Graphite blue，避免 selected
-   ring / icon 出现中性灰与蓝色不一致。 */
+   必须 unlayered：Astryx theme 在 @layer astryx-theme 定义，layer 内覆盖无效。 */
 [data-astryx-theme="neutral"] {
-  --color-accent: #2563eb;
+  /* S4: primary CTA — deep blue, high contrast with white text */
+  --color-accent: var(--gc-action-primary);
   --color-accent-muted: var(--gc-accent-blue-soft);
-  --color-text-accent: #4d8dff;
-  --color-icon-accent: #4d8dff;
-  --color-border-blue: var(--gc-accent-blue-line);
   --color-on-accent: #ffffff;
+  /* S3: selection/focus accent — softer blue, less visual weight than CTA */
+  --color-text-accent: var(--gc-action-text);
+  --color-icon-accent: var(--gc-action-text);
+  --color-border-blue: var(--gc-accent-blue-line);
 }
 
 /* Graphite Canvas 全局 base */

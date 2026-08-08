@@ -15,10 +15,10 @@ import { formatElapsed } from '@/features/live-intelligence/state/live-intellige
 import { categoryTone } from '@/features/live-intelligence/mappings/event-presentation-map';
 import { ShieldCheck, DollarSign, RefreshCw, ArrowRight, Stethoscope, ArrowLeft, Activity, FileText } from 'lucide-react';
 import type { TraceCategoryZh } from '@/types/live-event';
-// F3.5 R3 P0-4：生产集成 — 仅替换展示原子（Text / Badge），不影响业务逻辑/投影/导航/数据流。
+// F3.5 R4：生产集成 — Foundation primitive（Text + StatusIndicator）。
+// R3 用 Badge 表示 running（过重），R4 改用 StatusIndicator（dot+text subtle）。
 import { Text } from '@/components/ui/Text';
-import { Badge } from '@/components/ui/Badge';
-import type { BadgeVariant } from '@/components/ui/Badge';
+import { StatusIndicator } from '@/components/ui/StatusIndicator';
 
 type TimelineFilter = '全部' | '关键事件' | '风险' | 'Artifact' | 'QC' | '成本' | '重试与路由' | '系统';
 
@@ -152,13 +152,16 @@ export function JobDetailPage() {
           </Metric>
           <Metric label="已用时"><span className="gc-data">{formatElapsed(o.elapsedSeconds)}</span></Metric>
           <Metric label="连接"><span style={{ color: 'var(--gc-text-mid)' }}>{o.connection}</span></Metric>
-          {/* F3.5 R3 P0-4：状态展示用 Foundation Badge（语义色 variant 映射 requiresAction），
-              仅替换展示原子，o.status / o.requiresAction 数据流不变。 */}
-          <Badge
-            variant={(o.requiresAction ? 'warning' : 'success') as BadgeVariant}
-            label={o.status}
-            testId="job-detail-status-badge"
-          />
+          {/* F3.5 R4：Status Treatment Contract — running/completed = Tier A (dot+text, subtle)。
+              awaiting_review = Tier B (warning tone, subtle)。block = Tier C (strong)。
+              不使用 filled Badge 表示 normal running 状态。 */}
+          <StatusIndicator
+            tone={o.requiresAction ? 'warning' : 'success'}
+            emphasis={o.requiresAction ? 'strong' : 'subtle'}
+            testId="job-detail-status"
+          >
+            {o.status}
+          </StatusIndicator>
         </div>
       </header>
 
